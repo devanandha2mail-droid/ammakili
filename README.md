@@ -131,6 +131,19 @@ Default Admin Login:
 
 ---
 
+## 🎨 Official Brand & Logo Guidelines (Section 3A)
+
+The brand identity centers on the client's embossed bronze and crimson medallion reading *"NEST By Ammakkili, Online Nighty Shop"*.
+
+- **Assets Location:** All official source assets are housed in [`public/img/brand/`](file:///c:/Users/karth/OneDrive/Desktop/karthi/zero/ammakaili/public/img/brand/).
+- **Header:** Employs the medallion at 56px (`srcset` 128w/256w/512w with WebP support) with clear space (> 8%) beside the wordmark; automatically collapses subtitle on mobile.
+- **Hero & About:** Showcases the large medallion (260px+) in a responsive glass frame with interactive 3D pointer tilt.
+- **Footer & Admin Login:** Renders the full medallion in high-contrast glass rings.
+- **Device Icons & PWA:** Configured in `<head>` and [`public/site.webmanifest`](file:///c:/Users/karth/OneDrive/Desktop/karthi/zero/ammakaili/public/site.webmanifest) with maskable 512px icon.
+- **Social Sharing:** Default Open Graph image set to [`og-image-1200x630.png`](file:///c:/Users/karth/OneDrive/Desktop/karthi/zero/ammakaili/public/img/brand/og-image-1200x630.png).
+
+---
+
 ## 🔑 Setting Up Google OAuth 2.0 ("Sign in with Google")
 
 To allow customers to sign in with their Google accounts:

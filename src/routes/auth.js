@@ -18,3 +18,4 @@ router.get('/auth/google/callback', authLimiter, customerAuthController.handleGo
 router.get('/auth/google/test-login', authLimiter, customerAuthController.getGoogleTestLogin);
 
 module.exports = router;
+

@@ -15,9 +15,25 @@
   <header class="admin-header">
     <div class="admin-bar">
       <div style="display:flex; align-items:center; gap:16px;">
-        <a href="/admin" style="display:flex; align-items:center; gap:8px;">
-          <img src="/img/logo.svg" alt="Nest by Ammakkili" height="34">
-          <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.12em; background:var(--admin-c1); color:#fff; padding:2px 8px; border-radius:4px;">Admin</span>
+        <a href="/admin" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
+          <div style="background:rgba(255, 255, 255, 0.95); border-radius:50%; padding:4px; box-shadow:0 3px 10px rgba(137, 34, 69, 0.15); display:grid; place-items:center;">
+            <picture>
+              <source srcset="/img/brand/logo-full-512.webp" type="image/webp">
+              <img 
+                src="/img/brand/logo-full-128.png" 
+                srcset="/img/brand/logo-full-128.png 128w, /img/brand/logo-full-256.png 256w" 
+                sizes="56px" 
+                width="56" 
+                height="56" 
+                alt="Nest by Ammakkili logo"
+                style="display:block;"
+              >
+            </picture>
+          </div>
+          <div>
+            <div style="font-family:var(--serif); font-size:1.35rem; font-style:italic; color:var(--admin-c1); line-height:1;">Nest by Ammakkili</div>
+            <span style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.12em; background:var(--admin-c1); color:#fff; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:2px;">Admin Panel</span>
+          </div>
         </a>
       </div>
 

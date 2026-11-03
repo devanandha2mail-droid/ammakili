@@ -1,8 +1,25 @@
 <header>
   <div class="wrap bar">
-    <!-- Brand Logo -->
+    <!-- Brand Logo & Wordmark -->
     <a class="brand" href="/" aria-label="Nest by Ammakkili - Home">
-      <img src="/img/logo.svg" alt="Nest by Ammakkili" width="200" height="46">
+      <div class="brand-logo-wrap">
+        <picture>
+          <source srcset="/img/brand/logo-full-512.webp" type="image/webp">
+          <img 
+            src="/img/brand/logo-full-256.png" 
+            srcset="/img/brand/logo-full-128.png 128w, /img/brand/logo-full-256.png 256w, /img/brand/logo-full-512.png 512w" 
+            sizes="56px" 
+            width="56" 
+            height="56" 
+            alt="Nest by Ammakkili logo"
+            class="brand-logo-img"
+          >
+        </picture>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">Nest</span>
+        <span class="brand-subtitle">by Ammakkili</span>
+      </div>
     </a>
 
     <!-- Main Navigation -->

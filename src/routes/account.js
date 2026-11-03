@@ -15,3 +15,4 @@ router.post('/wishlist/sync', accountController.postSyncWishlist);
 router.post('/delete', accountController.postDeleteAccount);
 
 module.exports = router;
+

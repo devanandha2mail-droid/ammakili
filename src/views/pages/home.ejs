@@ -5,11 +5,22 @@
     <a class="btn" href="/shop"><%= t('home.exploreCollection') %></a>
     <a class="tlink" href="/sizes"><%= t('home.findYourSize') %></a>
   </div>
-  <div class="arch" aria-hidden="true">
-    <svg viewBox="0 0 60 100" aria-hidden="true">
-      <path d="M22 4h16l3 14 6 6-5 8 9 60H9l9-60-5-8 6-6z"/>
-    </svg>
-    <small><%= t('home.featuredPhoto') %></small>
+  <div class="arch hero-brand-arch" aria-label="Nest by Ammakkili emblem">
+    <div class="logo-hero-frame">
+      <picture>
+        <source srcset="/img/brand/logo-full-512.webp" type="image/webp">
+        <img 
+          src="/img/brand/logo-full-512.png" 
+          srcset="/img/brand/logo-full-256.png 256w, /img/brand/logo-full-512.png 512w, /img/brand/logo-full-1024.png 1024w" 
+          sizes="(max-width: 600px) 240px, 280px" 
+          width="280" 
+          height="280" 
+          alt="Nest by Ammakkili logo"
+          class="hero-medallion-img"
+        >
+      </picture>
+    </div>
+    <small>Kerala's Artisanal Nightwear</small>
   </div>
 </div>
 

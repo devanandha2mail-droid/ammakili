@@ -51,4 +51,16 @@ This document logs all key assumptions, technical trade-offs, and architectural 
 - **Right to Erasure / GDPR:** When a customer triggers "Delete My Account", their profile, saved addresses, and synced wishlist are permanently purged, and their Google ID is severed. Historical orders are preserved for GST/accounting compliance but detached (`customerId: null`).
 - **Development & Test Mode:** If placeholder Google credentials are used in `.env`, a simulated authentication endpoint `/auth/google/test-login` allows seamless automated testing of account flows and saved addresses.
 
+### 8. Official Brand & Medallion Logo Integration (Section 3A)
+- **Asset Placement:** Client logo assets from `logo-assets.zip` extracted to `public/img/brand/` containing all multi-resolution files (1024, 512, 256, 128, webp, icons, og-image).
+- **Legibility Rules:**
+  - Header displays `logo-full-256.png` (with `logo-full-512.webp` and `srcset`) at 56px minimum alongside wordmark on desktop, shortening the subtitle on phones while preserving clear space (> 8% of diameter) and never dropping below legible resolution.
+  - Home Hero and About pages feature large 260px medallion renderings in glass frames with 3D tilt and specular shine.
+  - Footer and Admin Login display the 100px+ medallion inside a protective glass ring that ensures high contrast in both light and dark themes.
+  - Packing slips and confirmation pages prominently feature the round medallion at the top.
+  - Browser icons configured with `favicon.ico`, `favicon-32.png`, `favicon-16.png`, `apple-touch-icon-180.png`, and a valid PWA `site.webmanifest` with maskable 512x512 icon.
+  - Default social sharing (`og:image` and Twitter card) set to `og-image-1200x630.png`.
+  - Site-wide `Organization` schema in JSON-LD references the high-resolution logo.
+
+
 

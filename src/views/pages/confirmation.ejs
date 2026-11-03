@@ -1,7 +1,16 @@
 <div class="wrap pg narrow">
-  <hr class="rule" style="margin-left:0;">
-  <h2><%= t('confirmation.thankYou', { name: order.customer.name.split(' ')[0] }) %></h2>
-  <p class="lead" style="max-width:none;">
+  <div style="text-align:center; margin-bottom:20px;">
+    <div style="display:inline-block; padding:6px; border-radius:50%; background:var(--glass2); box-shadow:var(--sh);">
+      <picture>
+        <source srcset="/img/brand/logo-full-512.webp" type="image/webp">
+        <img src="/img/brand/logo-full-128.png" srcset="/img/brand/logo-full-128.png 128w, /img/brand/logo-full-256.png 256w" sizes="80px" width="80" height="80" alt="Nest by Ammakkili logo" style="display:block;">
+      </picture>
+    </div>
+  </div>
+
+  <hr class="rule" style="margin-left:auto; margin-right:auto;">
+  <h2 style="text-align:center;"><%= t('confirmation.thankYou', { name: order.customer.name.split(' ')[0] }) %></h2>
+  <p class="lead" style="max-width:none; text-align:center;">
     <%= t('confirmation.receivedMsg', { orderId: order.orderId }) %>
   </p>
 

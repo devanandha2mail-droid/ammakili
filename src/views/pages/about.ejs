@@ -1,6 +1,24 @@
 <div class="wrap pg narrow">
-  <hr class="rule" style="margin-left:0;">
-  <h2><%= t('about.title') %></h2>
+  <!-- Brand Medallion in Glass Frame -->
+  <div style="text-align:center; margin-bottom:36px;">
+    <div class="item" style="display:inline-block; padding:24px; border-radius:36px; background:var(--glass2); box-shadow:var(--sh);">
+      <picture>
+        <source srcset="/img/brand/logo-full-512.webp" type="image/webp">
+        <img 
+          src="/img/brand/logo-full-512.png" 
+          srcset="/img/brand/logo-full-256.png 256w, /img/brand/logo-full-512.png 512w, /img/brand/logo-full-1024.png 1024w" 
+          sizes="260px" 
+          width="260" 
+          height="260" 
+          alt="Nest by Ammakkili logo"
+          style="display:block; max-width:100%; height:auto; filter:drop-shadow(0 8px 18px rgba(137, 34, 69, 0.25));"
+        >
+      </picture>
+    </div>
+  </div>
+
+  <hr class="rule" style="margin-left:auto; margin-right:auto;">
+  <h2 style="text-align:center;"><%= t('about.title') %></h2>
   <p class="lead" style="max-width:none; margin-bottom:20px;"><%= t('about.p1') %></p>
   <p class="lead" style="max-width:none; margin-bottom:20px;"><%= t('about.p2') %></p>
   <p class="lead" style="max-width:none; margin-bottom:20px;"><%= t('about.p3') %></p>

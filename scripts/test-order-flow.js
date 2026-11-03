@@ -5,6 +5,12 @@ const Order = require('../src/models/Order');
 async function testOrderFlow() {
   await mongoose.connect('mongodb://127.0.0.1:27017/nest_ammakkili');
 
+  // Ensure test product has at least 5 in stock for size M
+  await Product.updateOne(
+    { slug: 'rose-garden-nighty', 'sizes.size': 'M' },
+    { $set: { 'sizes.$.stock': 6 } }
+  );
+
   // Find demo product
   const product = await Product.findOne({ slug: 'rose-garden-nighty' });
   const initialStock = product.sizes.find(s => s.size === 'M').stock;
