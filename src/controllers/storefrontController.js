@@ -4,14 +4,19 @@ const Order = require('../models/Order');
 // Home Page
 exports.getHome = async (req, res, next) => {
   try {
-    const newArrivals = await Product.find({ active: true })
-      .sort({ createdAt: -1 })
-      .limit(6);
+    const [newArrivals, featuredProduct] = await Promise.all([
+      Product.find({ active: true }).sort({ createdAt: -1 }).limit(6),
+      Product.findOne({ active: true, featured: true })
+    ]);
+
+    // Use explicit featured product, or fallback to the first active product
+    const heroProduct = featuredProduct || newArrivals[0] || null;
 
     res.render('pages/home', {
       title: res.locals.t('site.tagline'),
       metaDesc: res.locals.t('site.description'),
-      products: newArrivals
+      products: newArrivals,
+      featuredProduct: heroProduct
     });
   } catch (err) {
     next(err);

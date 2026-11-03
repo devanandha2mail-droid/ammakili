@@ -1,82 +1,125 @@
-<header>
-  <div class="wrap bar">
-    <!-- Brand Logo & Wordmark -->
-    <a class="brand" href="/" aria-label="Nest by Ammakkili - Home">
-      <div class="brand-logo-wrap">
-        <picture>
-          <source srcset="/img/brand/logo-full-512.webp" type="image/webp">
-          <img 
-            src="/img/brand/logo-full-256.png" 
-            srcset="/img/brand/logo-full-128.png 128w, /img/brand/logo-full-256.png 256w, /img/brand/logo-full-512.png 512w" 
-            sizes="56px" 
-            width="56" 
-            height="56" 
-            alt="Nest by Ammakkili logo"
-            class="brand-logo-img"
-          >
-        </picture>
-      </div>
-      <div class="brand-text">
-        <span class="brand-title">Nest</span>
-        <span class="brand-subtitle">by Ammakkili</span>
-      </div>
+<header class="site-header" id="siteHeader">
+  <div class="hdr">
+    <!-- 1. Left Zone: Logo & Wordmark Lockup -->
+    <a class="lockup" href="/" aria-label="Nest by Ammakkili, home">
+      <img src="/img/brand/logo-full-128.png"
+           srcset="/img/brand/logo-full-128.png 1x, /img/brand/logo-full-256.png 2x"
+           width="52" height="52" alt="Nest by Ammakkili logo">
+      <span class="lockup-text"><b>Nest</b><small>by Ammakkili</small></span>
     </a>
 
-    <!-- Main Navigation -->
-    <nav id="nav" aria-label="Main Navigation">
-      <a href="/shop" class="<%= path === '/shop' ? 'active' : '' %>"><%= t('nav.shop') %></a>
-      <a href="/sizes" class="<%= path === '/sizes' ? 'active' : '' %>"><%= t('nav.sizes') %></a>
-      <a href="/how-to-order" class="<%= path === '/how-to-order' ? 'active' : '' %>"><%= t('nav.howToOrder') %></a>
-      <a href="/about" class="<%= path === '/about' ? 'active' : '' %>"><%= t('nav.about') %></a>
-      <a href="/contact" class="<%= path === '/contact' ? 'active' : '' %>"><%= t('nav.contact') %></a>
-      <a href="/track" class="<%= path === '/track' ? 'active' : '' %>"><%= t('nav.track') %></a>
-      <a class="mo" href="/wishlist"><%= t('nav.wishlist') %></a>
+    <!-- 2. Centre Zone: Exactly 4 Links -->
+    <nav class="main-nav" aria-label="Main">
+      <a href="/shop" class="<%= path === '/shop' ? 'active' : '' %>" <%= path === '/shop' ? 'aria-current="page"' : '' %>><%= t('nav.shop') %></a>
+      <a href="/sizes" class="<%= path === '/sizes' ? 'active' : '' %>" <%= path === '/sizes' ? 'aria-current="page"' : '' %>><%= t('nav.sizes') %></a>
+      <a href="/about" class="<%= path === '/about' ? 'active' : '' %>" <%= path === '/about' ? 'aria-current="page"' : '' %>><%= t('nav.about') %></a>
+      <a href="/contact" class="<%= path === '/contact' ? 'active' : '' %>" <%= path === '/contact' ? 'aria-current="page"' : '' %>><%= t('nav.contact') %></a>
     </nav>
 
-    <!-- Right utility controls -->
-    <div class="right">
-      <!-- Language Toggle -->
-      <a href="/set-lang/<%= lang === 'en' ? 'ml' : 'en' %>" class="lang-btn" title="Change Language / ഭാഷ മാറ്റുക" aria-label="Toggle language">
-        <span><%= lang === 'en' ? 'മലയാളം' : 'EN' %></span>
-      </a>
-
-      <!-- Dark / Light Theme Toggle -->
-      <button type="button" class="theme-btn" id="theme-toggle" aria-label="Toggle theme">☾</button>
-
-      <!-- Customer Account / Google Sign-in -->
-      <% if (customer) { %>
-        <a class="cartbtn" href="/account" title="My Account" aria-label="My Account">
-          <% if (customer.avatarUrl) { %>
-            <img src="<%= customer.avatarUrl %>" alt="" style="width:20px; height:20px; border-radius:50%; object-fit:cover;">
+    <!-- 3. Right Zone: Tool Icons (Language, Account, Wishlist, Cart, Burger) -->
+    <div class="tools">
+      <a href="/set-lang/<%= lang === 'en' ? 'ml' : 'en' %>" class="tool lang" title="Change Language / ഭാഷ മാറ്റുക"><%= lang === 'en' ? 'മലയാളം' : 'EN' %></a>
+      
+      <!-- Account Dropdown Trigger -->
+      <div class="acc-dropdown-wrap">
+        <button class="tool" id="accBtn" type="button" aria-label="Account" aria-haspopup="menu" aria-expanded="false">
+          <% if (customer && customer.avatarUrl) { %>
+            <img src="<%= customer.avatarUrl %>" alt="" style="width:26px; height:26px; border-radius:50%; object-fit:cover;">
           <% } else { %>
-            <span>👤</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           <% } %>
-          <span><%= customer.name.split(' ')[0] %></span>
-        </a>
-      <% } else { %>
-        <a class="cartbtn" href="/login" title="Sign in with Google" aria-label="Sign in">
-          <span>👤</span>
-          <span>Sign In</span>
-        </a>
-      <% } %>
+        </button>
+        
+        <!-- Account Glass Dropdown -->
+        <div class="acc-dropdown" id="accDropdown" role="menu" aria-label="Account Menu">
+          <% if (customer) { %>
+            <div class="acc-dd-header">
+              <strong><%= customer.name %></strong>
+              <small><%= customer.email %></small>
+            </div>
+            <a href="/account" class="acc-dd-item" role="menuitem">My account</a>
+            <a href="/account?tab=orders" class="acc-dd-item" role="menuitem">Orders</a>
+            <a href="/wishlist" class="acc-dd-item" role="menuitem">Wishlist</a>
+            <a href="/track" class="acc-dd-item" role="menuitem">Track order</a>
+            <button type="button" class="acc-dd-item theme-switch-item" role="menuitem" id="ddThemeToggle">
+              <span>Theme</span> <span class="theme-state-text">☾ Dark</span>
+            </button>
+            <form method="POST" action="/logout" style="margin:0;">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button type="submit" class="acc-dd-item acc-dd-danger" role="menuitem">Sign out</button>
+            </form>
+          <% } else { %>
+            <a href="/login" class="acc-dd-item acc-dd-primary" role="menuitem">
+              <svg width="16" height="16" viewBox="0 0 48 48" style="margin-right:8px; vertical-align:middle;"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.79l7.97-6.2z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+              Sign in with Google
+            </a>
+            <a href="/track" class="acc-dd-item" role="menuitem">Track order</a>
+            <a href="/wishlist" class="acc-dd-item" role="menuitem">Wishlist</a>
+            <button type="button" class="acc-dd-item theme-switch-item" role="menuitem" id="ddThemeToggle">
+              <span>Theme</span> <span class="theme-state-text">☾ Dark</span>
+            </button>
+          <% } %>
+        </div>
+      </div>
 
-      <!-- Wishlist -->
-      <a class="cartbtn wl" href="/wishlist" aria-label="View Wishlist">
-        <span>♥</span>
-        <span class="wish-count" id="wc">0</span>
+      <!-- Wishlist with live count badge -->
+      <a class="tool" href="/wishlist" aria-label="Wishlist">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span class="badge" id="wc" data-zero="true">0</span>
       </a>
 
-      <!-- Cart -->
-      <a class="cartbtn" href="/cart" aria-label="View Cart">
-        <span><%= t('nav.cart') %></span>
-        <span>(<span class="cart-count" id="cc">0</span>)</span>
+      <!-- Cart with live count badge -->
+      <a class="tool" href="/cart" aria-label="Cart">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="badge" id="cc" data-zero="true">0</span>
       </a>
 
-      <!-- Mobile Menu Hamburger -->
-      <button class="menu" id="menu" aria-expanded="false" aria-controls="nav" aria-label="Toggle navigation menu">
-        <%= t('nav.menu') %>
+      <!-- Burger Icon for Mobile Drawer -->
+      <button class="tool burger" id="burgerBtn" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mobileDrawer">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
     </div>
   </div>
-</header>
 
+  <!-- Mobile Full-height Glass Drawer -->
+  <div class="mobile-drawer-overlay" id="drawerOverlay" aria-hidden="true"></div>
+  <div class="mobile-drawer" id="mobileDrawer" role="dialog" aria-modal="true" aria-label="Navigation Menu">
+    <div class="drawer-header">
+      <a class="lockup" href="/" aria-label="Nest by Ammakkili, home">
+        <img src="/img/brand/logo-full-128.png" srcset="/img/brand/logo-full-128.png 1x, /img/brand/logo-full-256.png 2x" width="44" height="44" alt="">
+        <span class="lockup-text"><b>Nest</b><small>by Ammakkili</small></span>
+      </a>
+      <button type="button" class="drawer-close" id="drawerClose" aria-label="Close navigation">&times;</button>
+    </div>
+
+    <nav class="drawer-nav">
+      <a href="/shop"><%= t('nav.shop') %></a>
+      <a href="/sizes"><%= t('nav.sizes') %></a>
+      <a href="/about"><%= t('nav.about') %></a>
+      <a href="/contact"><%= t('nav.contact') %></a>
+      <div class="drawer-divider"></div>
+      <a href="/how-to-order" class="drawer-sublink"><%= t('nav.howToOrder') %></a>
+      <a href="/track" class="drawer-sublink"><%= t('nav.track') %></a>
+      <a href="/wishlist" class="drawer-sublink"><%= t('nav.wishlist') %></a>
+    </nav>
+
+    <div class="drawer-footer">
+      <div class="drawer-actions">
+        <a href="/set-lang/<%= lang === 'en' ? 'ml' : 'en' %>" class="btn small ghost" style="width:100%; justify-content:center;">
+          <%= lang === 'en' ? 'മലയാളം' : 'English' %>
+        </a>
+        <button type="button" class="btn small ghost" id="drawerThemeToggle" style="width:100%; justify-content:center;">
+          <span class="theme-state-text">Theme</span>
+        </button>
+      </div>
+
+      <div style="margin-top:14px;">
+        <% if (customer) { %>
+          <a href="/account" class="btn small" style="width:100%; justify-content:center;">My Account (<%= customer.name.split(' ')[0] %>)</a>
+        <% } else { %>
+          <a href="/login" class="btn small" style="width:100%; justify-content:center;">Sign In with Google</a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</header>
