@@ -23,6 +23,8 @@ This document logs every Malayalam string introduced across the storefront and d
 | `nav.wishlist` | വിഷ്‌ലിസ്റ്റ് | Wishlist | [ ] Verified |
 | `nav.cart` | കാർട്ട് | Cart | [ ] Verified |
 | `nav.track` | ഓർഡർ ട്രാക്ക് ചെയ്യാം | Track order | [ ] Verified |
+| `nav.login` | സൈൻ ഇൻ | Sign In | [ ] Verified |
+| `nav.account` | എന്റെ അക്കൗണ്ട് | My Account | [ ] Verified |
 
 ---
 
@@ -75,3 +77,4 @@ This document logs every Malayalam string introduced across the storefront and d
 | `petal-print-nighty` | പെറ്റൽ പ്രിന്റ് നൈറ്റി | പൂക്കളുടെ മനോഹരമായ ഡിസൈനുള്ള കോട്ടൺ നൈറ്റി. |
 | `dusk-floral-nighty` | ഡസ്ക് ഫ്ലോറൽ നൈറ്റി | മനോഹരമായ ഡസ്ക് ഫ്ലോറൽ ഡിസൈനിലുള്ള നൈറ്റി. |
 | `cloud-soft-nighty` | ക്ലൗഡ് സോഫ്റ്റ് നൈറ്റി | വളരെ മൃദുവായ പ്യുവർ കോട്ടൺ പ്ലെയിൻ നൈറ്റി. |
+

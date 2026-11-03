@@ -7,25 +7,54 @@
   <div class="two2">
     <!-- Delivery Details & Consent Form -->
     <form id="cform" novalidate>
-      <div class="hd" style="font-family:var(--serif); font-size:1.5rem; margin-bottom:14px;"><%= t('checkout.deliveryDetails') %></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+        <div class="hd" style="font-family:var(--serif); font-size:1.5rem; margin:0;"><%= t('checkout.deliveryDetails') %></div>
+        <% if (!customer) { %>
+          <a href="/login?returnTo=/checkout" class="tlink" style="margin-left:0; font-size:0.82rem;">
+            Sign in with Google for saved addresses →
+          </a>
+        <% } %>
+      </div>
+
+      <% if (customer && savedAddresses && savedAddresses.length > 0) { %>
+        <div style="margin-bottom:18px; padding:16px; border-radius:14px; background:var(--glass2); border:1px solid var(--gb);">
+          <label for="address-selector" style="font-weight:500; color:var(--ink); margin-bottom:8px;">Choose from your saved addresses:</label>
+          <select id="address-selector">
+            <option value="">-- Enter a new address below --</option>
+            <% savedAddresses.forEach(function(addr, idx) { %>
+              <option 
+                value="<%= idx %>" 
+                <%= addr.isDefault ? 'selected' : '' %>
+                data-name="<%= addr.name %>"
+                data-phone="<%= addr.phone %>"
+                data-address="<%= addr.address %>"
+                data-city="<%= addr.city %>"
+                data-pin="<%= addr.pin %>"
+              >
+                <%= addr.label %>: <%= addr.name %>, <%= addr.city %> (<%= addr.pin %>) <%= addr.isDefault ? '[Default]' : '' %>
+              </option>
+            <% }); %>
+          </select>
+        </div>
+      <% } %>
       
       <div class="form">
         <div class="f">
           <label for="f-name"><%= t('checkout.fullName') %> *</label>
-          <input id="f-name" name="name" required autocomplete="name" placeholder="e.g. Anjali Menon">
+          <input id="f-name" name="name" required autocomplete="name" placeholder="e.g. Anjali Menon" value="<%= customer ? customer.name : '' %>">
           <p class="err" id="e-name"></p>
         </div>
 
         <div class="h">
           <label for="f-phone"><%= t('checkout.mobileNumber') %> *</label>
-          <input id="f-phone" name="phone" type="tel" inputmode="numeric" required maxlength="10" autocomplete="tel" placeholder="10-digit mobile number">
+          <input id="f-phone" name="phone" type="tel" inputmode="numeric" required maxlength="10" autocomplete="tel" placeholder="10-digit mobile number" value="<%= customer && customer.phone ? customer.phone : '' %>">
           <small style="color:var(--muted); font-size:0.75rem;"><%= t('checkout.mobileHelp') %></small>
           <p class="err" id="e-phone"></p>
         </div>
 
         <div class="h">
           <label for="f-email"><%= t('checkout.email') %></label>
-          <input id="f-email" name="email" type="email" autocomplete="email" placeholder="name@example.com">
+          <input id="f-email" name="email" type="email" autocomplete="email" placeholder="name@example.com" value="<%= customer ? customer.email : '' %>" <%= customer ? 'readonly style="opacity:0.85;"' : '' %>>
         </div>
 
         <div class="f">
@@ -46,6 +75,13 @@
           <p class="err" id="e-pin"></p>
         </div>
       </div>
+
+      <% if (customer) { %>
+        <label class="chk" style="margin-top:14px;">
+          <input type="checkbox" id="f-save-addr" name="saveAddress" value="true">
+          <span>Save this delivery address to my account for future orders</span>
+        </label>
+      <% } %>
 
       <div class="hd" style="font-family:var(--serif); font-size:1.5rem; margin:28px 0 10px;"><%= t('checkout.payment') %></div>
       <div class="pay">
@@ -99,6 +135,25 @@
   var submitBtn = document.getElementById('submit-order-btn');
   var btnText = document.getElementById('btn-text');
   var validatedTotal = 0;
+
+  // Address picker auto-fill
+  var addrSelector = document.getElementById('address-selector');
+  function applySelectedAddress() {
+    if (!addrSelector) return;
+    var opt = addrSelector.options[addrSelector.selectedIndex];
+    if (opt && opt.value !== '') {
+      if (opt.dataset.name) document.getElementById('f-name').value = opt.dataset.name;
+      if (opt.dataset.phone) document.getElementById('f-phone').value = opt.dataset.phone;
+      if (opt.dataset.address) document.getElementById('f-addr').value = opt.dataset.address;
+      if (opt.dataset.city) document.getElementById('f-city').value = opt.dataset.city;
+      if (opt.dataset.pin) document.getElementById('f-pin').value = opt.dataset.pin;
+    }
+  }
+  if (addrSelector) {
+    addrSelector.addEventListener('change', applySelectedAddress);
+    // Apply default on initial render
+    applySelectedAddress();
+  }
 
   // Fetch verified order summary from server
   fetch('/cart/validate', {
@@ -170,6 +225,8 @@
       pin: document.getElementById('f-pin').value.trim().replace(/\D/g, '')
     };
 
+    var saveAddressCheckbox = document.getElementById('f-save-addr');
+
     // 1. Post to /checkout/create
     fetch('/checkout/create', {
       method: 'POST',
@@ -180,7 +237,8 @@
       body: JSON.stringify({
         items: cart,
         customer: customer,
-        agreeNoReturns: document.getElementById('f-ok').checked
+        agreeNoReturns: document.getElementById('f-ok').checked,
+        saveAddress: saveAddressCheckbox ? saveAddressCheckbox.checked : false
       })
     })
     .then(function(res) { return res.json(); })
@@ -281,3 +339,4 @@
   }
 })();
 </script>
+

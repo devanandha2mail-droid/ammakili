@@ -66,3 +66,4 @@ const i18nMiddleware = (req, res, next) => {
 };
 
 module.exports = i18nMiddleware;
+

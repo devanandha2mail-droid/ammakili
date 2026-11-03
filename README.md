@@ -131,6 +131,35 @@ Default Admin Login:
 
 ---
 
+## 🔑 Setting Up Google OAuth 2.0 ("Sign in with Google")
+
+To allow customers to sign in with their Google accounts:
+
+1. **Go to Google Cloud Console:**
+   - Open [Google Cloud Console](https://console.cloud.google.com/) and create or select a project.
+2. **Configure the OAuth Consent Screen:**
+   - Navigate to **APIs & Services > OAuth consent screen**.
+   - Select **External** user type and click **Create**.
+   - Enter your App Name ("Nest by Ammakkili"), User support email, and Developer contact email.
+   - Under Scopes, add `userinfo.email` and `userinfo.profile`.
+   - **Crucial Note:** While in "Testing" mode, only approved test users can sign in. Before launching to real shoppers, you must click **Publish App** on the OAuth consent screen.
+3. **Create OAuth Client ID Credentials:**
+   - Navigate to **APIs & Services > Credentials > Create Credentials > OAuth client ID**.
+   - Choose Application type: **Web application**.
+   - Under **Authorised redirect URIs**, add:
+     - For local development: `http://localhost:3000/auth/google/callback`
+     - For production: `https://your-domain.com/auth/google/callback`
+   - Click **Create** and copy your **Client ID** and **Client Secret**.
+4. **Update `.env`:**
+   ```env
+   GOOGLE_CLIENT_ID=your_actual_google_client_id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=your_actual_google_client_secret
+   GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+   REQUIRE_LOGIN_AT_CHECKOUT=false
+   ```
+
+---
+
 ## 💳 Testing Razorpay Payments
 
 1. **Test Mode by Default:**
@@ -187,3 +216,4 @@ Default Admin Login:
 | **Order Tracking** | Customer enters readable Order ID (e.g. `NEST-000123`) and phone to check status. | ✅ Yes |
 | **Admin Fulfillment** | Admin can change order status, add tracking info, print packing slip, and export CSV. | ✅ Yes |
 | **Bilingual Toggle** | Switching between English and Malayalam seamlessly translates all storefront text. | ✅ Yes |
+

@@ -8,3 +8,4 @@ router.post('/verify', checkoutController.verifyPayment);
 router.get('/confirmation/:orderId', checkoutController.getConfirmation);
 
 module.exports = router;
+

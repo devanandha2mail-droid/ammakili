@@ -43,3 +43,12 @@ This document logs all key assumptions, technical trade-offs, and architectural 
 
 ### 6. Image Uploads
 - **Multer + Cloudinary:** Cloudinary storage used if `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are provided. Otherwise, seamlessly falls back to saving to local `public/uploads/` with public serving.
+
+### 7. Customer Accounts & Google OAuth 2.0
+- **Strict Role Separation:** Admin sessions are managed via `req.session.adminId`. Customer sessions are managed via Passport user serialization (`req.user`). The two scopes are completely isolated: customer sessions can never access `/admin`, and admin credentials do not grant customer privileges.
+- **Open Redirect Prevention:** All return addresses in `returnTo` parameters are strictly checked via `safeReturnUrl`: only relative paths starting with a single `/` (and not `//` or `/\`) are accepted.
+- **Verified Emails Only:** The OAuth callback strictly requires `profile.emails[0].verified !== false` to ensure email legitimacy.
+- **Right to Erasure / GDPR:** When a customer triggers "Delete My Account", their profile, saved addresses, and synced wishlist are permanently purged, and their Google ID is severed. Historical orders are preserved for GST/accounting compliance but detached (`customerId: null`).
+- **Development & Test Mode:** If placeholder Google credentials are used in `.env`, a simulated authentication endpoint `/auth/google/test-login` allows seamless automated testing of account flows and saved addresses.
+
+

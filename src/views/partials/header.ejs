@@ -26,6 +26,23 @@
       <!-- Dark / Light Theme Toggle -->
       <button type="button" class="theme-btn" id="theme-toggle" aria-label="Toggle theme">☾</button>
 
+      <!-- Customer Account / Google Sign-in -->
+      <% if (customer) { %>
+        <a class="cartbtn" href="/account" title="My Account" aria-label="My Account">
+          <% if (customer.avatarUrl) { %>
+            <img src="<%= customer.avatarUrl %>" alt="" style="width:20px; height:20px; border-radius:50%; object-fit:cover;">
+          <% } else { %>
+            <span>👤</span>
+          <% } %>
+          <span><%= customer.name.split(' ')[0] %></span>
+        </a>
+      <% } else { %>
+        <a class="cartbtn" href="/login" title="Sign in with Google" aria-label="Sign in">
+          <span>👤</span>
+          <span>Sign In</span>
+        </a>
+      <% } %>
+
       <!-- Wishlist -->
       <a class="cartbtn wl" href="/wishlist" aria-label="View Wishlist">
         <span>♥</span>
@@ -45,3 +62,4 @@
     </div>
   </div>
 </header>
+

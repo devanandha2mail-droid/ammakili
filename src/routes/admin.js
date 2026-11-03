@@ -30,6 +30,10 @@ router.get('/orders/:id', adminController.getOrderDetail);
 router.post('/orders/:id/status', adminController.postUpdateOrderStatus);
 router.get('/orders/:id/packing-slip', adminController.getPackingSlip);
 
+// Customers (Read-Only)
+router.get('/customers', adminController.getCustomers);
+router.get('/customers/:id', adminController.getCustomerDetail);
+
 // Banners
 router.get('/banners', adminController.getBanners);
 router.post('/banners/create', adminController.postCreateBanner);
@@ -40,3 +44,4 @@ router.get('/settings', adminController.getSettings);
 router.post('/settings', adminController.postSettings);
 
 module.exports = router;
+

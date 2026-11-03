@@ -3,6 +3,7 @@ const slugify = require('slugify');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const Admin = require('../models/Admin');
+const Customer = require('../models/Customer');
 const Settings = require('../models/Settings');
 const Banner = require('../models/Banner');
 const { processUploadedFiles } = require('../services/upload');
@@ -462,6 +463,66 @@ exports.exportOrdersCsv = async (req, res, next) => {
   }
 };
 
+// ==================== CUSTOMERS (READ-ONLY) ====================
+
+// List Customers
+exports.getCustomers = async (req, res, next) => {
+  try {
+    const { q } = req.query;
+    const filter = {};
+
+    if (q) {
+      const regex = new RegExp(q.trim(), 'i');
+      filter.$or = [{ name: regex }, { email: regex }, { phone: regex }];
+    }
+
+    const customers = await Customer.find(filter).sort({ createdAt: -1 });
+
+    // Aggregate orders count for each customer
+    const customersWithStats = await Promise.all(
+      customers.map(async (c) => {
+        const orderCount = await Order.countDocuments({
+          $or: [{ customerId: c._id }, { 'customer.email': c.email }]
+        });
+        return {
+          ...c.toObject(),
+          orderCount
+        };
+      })
+    );
+
+    res.render('admin/customers', {
+      layout: 'layouts/admin',
+      title: 'Customer Directory',
+      customers: customersWithStats,
+      q: q || ''
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Customer Detail & Orders
+exports.getCustomerDetail = async (req, res, next) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+    if (!customer) return res.redirect('/admin/customers');
+
+    const orders = await Order.find({
+      $or: [{ customerId: customer._id }, { 'customer.email': customer.email }]
+    }).sort({ createdAt: -1 });
+
+    res.render('admin/customer-detail', {
+      layout: 'layouts/admin',
+      title: `Customer: ${customer.name}`,
+      customer,
+      orders
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // ==================== BANNERS ====================
 
 // List Banners
@@ -549,3 +610,4 @@ exports.postSettings = async (req, res, next) => {
     next(err);
   }
 };
+

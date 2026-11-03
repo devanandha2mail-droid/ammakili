@@ -44,3 +44,4 @@ templates.forEach(t => {
 });
 
 console.log('Generated placeholder SVGs successfully in', dir);
+

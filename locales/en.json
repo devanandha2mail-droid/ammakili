@@ -14,6 +14,8 @@
     "wishlist": "Wishlist",
     "cart": "Cart",
     "track": "Track order",
+    "login": "Sign In",
+    "account": "My Account",
     "menu": "Menu"
   },
   "banner": {
@@ -220,3 +222,4 @@
     "allRights": "All rights reserved. Designed for comfort."
   }
 }
+

@@ -87,3 +87,4 @@ productSchema.methods.getDescription = function(lang = 'en') {
 };
 
 module.exports = mongoose.model('Product', productSchema);
+

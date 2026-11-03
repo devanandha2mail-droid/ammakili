@@ -39,6 +39,12 @@ const orderSchema = new mongoose.Schema({
     index: true,
     trim: true
   },
+  customerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Customer',
+    default: null,
+    index: true
+  },
   items: [orderItemSchema],
   customer: {
     name: { type: String, required: true, trim: true },
@@ -91,3 +97,4 @@ const orderSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Order', orderSchema);
+

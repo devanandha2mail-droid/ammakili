@@ -30,3 +30,4 @@ bannerSchema.methods.getText = function(lang = 'en') {
 };
 
 module.exports = mongoose.model('Banner', bannerSchema);
+

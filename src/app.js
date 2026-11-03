@@ -10,6 +10,8 @@ const rateLimit = require('express-rate-limit');
 
 const i18nMiddleware = require('./middleware/i18n');
 const { csrfTokenMiddleware, doubleCsrfProtection } = require('./middleware/csrf');
+const passport = require('./config/passport');
+const { customerLocalsMiddleware } = require('./middleware/customerAuth');
 const Settings = require('./models/Settings');
 const Banner = require('./models/Banner');
 
@@ -61,7 +63,9 @@ app.use(
           'blob:',
           'https://res.cloudinary.com',
           'https://checkout.razorpay.com',
-          'https://img.youtube.com'
+          'https://img.youtube.com',
+          'https://lh3.googleusercontent.com',
+          'https://images.unsplash.com'
         ],
         connectSrc: [
           "'self'",
@@ -110,7 +114,12 @@ app.use(
   })
 );
 
-// 8. Internationalization (i18n)
+// 8. Passport Authentication (Customer Google Sign-in)
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(customerLocalsMiddleware);
+
+// 9. Internationalization (i18n)
 app.use(i18nMiddleware);
 
 // 9. Load Global Settings & Active Banner into res.locals
@@ -176,6 +185,8 @@ app.get('/set-lang/:lang', (req, res) => {
 
 // Import and mount routers
 const storefrontRouter = require('./routes/storefront');
+const authRouter = require('./routes/auth');
+const accountRouter = require('./routes/account');
 const cartRouter = require('./routes/cart');
 const checkoutRouter = require('./routes/checkout');
 const adminRouter = require('./routes/admin');
@@ -183,6 +194,8 @@ const webhookRouter = require('./routes/webhook');
 const seoRouter = require('./routes/seo');
 
 app.use('/', seoRouter); // sitemap.xml, robots.txt
+app.use('/', authRouter); // /login, /logout, /auth/google
+app.use('/account', accountRouter); // /account
 app.use('/', storefrontRouter);
 app.use('/cart', cartRouter);
 app.use('/checkout', checkoutLimiter, checkoutRouter);

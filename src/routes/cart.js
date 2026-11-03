@@ -6,3 +6,4 @@ router.get('/', cartController.getCart);
 router.post('/validate', cartController.validateCart);
 
 module.exports = router;
+

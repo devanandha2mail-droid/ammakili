@@ -31,19 +31,36 @@ async function decrementStockForOrder(order) {
 
 // Render Checkout Page
 exports.getCheckout = async (req, res) => {
+  // If login is strictly required at checkout
+  if (process.env.REQUIRE_LOGIN_AT_CHECKOUT === 'true' && (!req.isAuthenticated || !req.isAuthenticated())) {
+    return res.redirect('/login?returnTo=/checkout');
+  }
+
   const settings = await Settings.getSettings();
+  let savedAddresses = [];
+  if (req.user) {
+    savedAddresses = req.user.addresses || [];
+  }
+
   res.render('pages/checkout', {
     title: res.locals.t('checkout.title'),
     metaDesc: 'Complete your order with secure prepaid payment.',
     shippingCharge: settings.shippingCharge || 60,
-    razorpayKeyId: key_id
+    razorpayKeyId: key_id,
+    savedAddresses,
+    customer: req.user || null
   });
 };
 
 // Create Order & Initialize Razorpay Payment
 exports.createOrder = async (req, res) => {
   try {
-    const { items, customer, agreeNoReturns } = req.body;
+    const { items, customer, agreeNoReturns, saveAddress, addressLabel } = req.body;
+
+    // If login is required at checkout
+    if (process.env.REQUIRE_LOGIN_AT_CHECKOUT === 'true' && (!req.isAuthenticated || !req.isAuthenticated())) {
+      return res.status(401).json({ error: 'Please sign in to proceed with checkout.' });
+    }
 
     // 1. Validate mandatory policies checkbox
     if (!agreeNoReturns) {
@@ -65,6 +82,32 @@ exports.createOrder = async (req, res) => {
     const cleanPin = customer.pin.replace(/\D/g, '');
     if (!/^\d{6}$/.test(cleanPin)) {
       return res.status(400).json({ error: 'Please enter a valid 6-digit Indian PIN code.' });
+    }
+
+    // Optionally save address to customer profile if ticked
+    if (req.user && saveAddress) {
+      try {
+        const Customer = require('../models/Customer');
+        const dbCust = await Customer.findById(req.user._id);
+        if (dbCust) {
+          const exists = dbCust.addresses.some(a => a.address === customer.address.trim() && a.pin === cleanPin);
+          if (!exists) {
+            dbCust.addresses.push({
+              label: addressLabel?.trim() || 'Saved Address',
+              name: customer.name.trim(),
+              phone: cleanPhone,
+              address: customer.address.trim(),
+              city: customer.city.trim(),
+              state: customer.state || 'Kerala',
+              pin: cleanPin,
+              isDefault: dbCust.addresses.length === 0
+            });
+            await dbCust.save();
+          }
+        }
+      } catch (saveAddrErr) {
+        console.warn('Could not save address to customer profile:', saveAddrErr.message);
+      }
     }
 
     // 3. Validate Cart Items
@@ -136,6 +179,7 @@ exports.createOrder = async (req, res) => {
     // 8. Create Order Document with status 'pending_payment'
     const newOrder = await Order.create({
       orderId,
+      customerId: req.user ? req.user._id : null,
       items: orderItems,
       customer: {
         name: customer.name.trim(),
@@ -258,3 +302,4 @@ exports.getConfirmation = async (req, res, next) => {
     next(err);
   }
 };
+
