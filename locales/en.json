@@ -1,0 +1,222 @@
+{
+  "site": {
+    "title": "Nest by Ammakkili",
+    "tagline": "Nightwear, softly considered",
+    "description": "An online shop for women's nighties in Kerala. Discover soft fabrics, honest sizing, and prepaid ordering with direct WhatsApp support."
+  },
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "sizes": "Size guide",
+    "howToOrder": "How to order",
+    "about": "About",
+    "contact": "Contact",
+    "wishlist": "Wishlist",
+    "cart": "Cart",
+    "track": "Track order",
+    "menu": "Menu"
+  },
+  "banner": {
+    "defaultText": "Soft fabrics, honest sizing, and a shop that answers every message."
+  },
+  "home": {
+    "heroTitle": "Nightwear, <em>softly</em> considered",
+    "heroDesc": "An online shop for women’s nighties. Choose your design, find your size with our guide, and order securely online.",
+    "exploreCollection": "Explore the collection",
+    "findYourSize": "Find your size",
+    "featuredPhoto": "Featured photo",
+    "statement": "Soft fabrics, honest sizing, and a shop that answers every message.",
+    "newArrivals": "New arrivals",
+    "newArrivalsLead": "Our latest handpicked nighty designs.",
+    "browseByStyle": "Browse by style",
+    "styles": {
+      "cotton": "Cotton",
+      "cottonSub": "Everyday breathable comfort",
+      "satin": "Satin",
+      "satinSub": "Soft, smooth & luxurious",
+      "printed": "Printed",
+      "printedSub": "Florals and delicate motifs",
+      "plain": "Plain",
+      "plainSub": "Minimal, serene solids"
+    },
+    "beforeYouOrder": "Before you order",
+    "terms": {
+      "paymentTitle": "Prepaid only",
+      "paymentDesc": "All orders are prepaid online. Cash on delivery (COD) is strictly not available.",
+      "returnsTitle": "No returns or exchanges",
+      "returnsDesc": "Sizes cannot be altered or exchanged after placing an order. Please measure before ordering.",
+      "contactTitle": "WhatsApp messages only",
+      "contactDesc": "We answer every WhatsApp message promptly. We do not take phone calls."
+    },
+    "ytTitle": "See each design on YouTube",
+    "ytDesc": "Every new nighty is showcased on our YouTube channel so you can see the fabric, drape, and cut in real life before ordering.",
+    "ytBtn": "Visit our channel"
+  },
+  "shop": {
+    "title": "The collection",
+    "lead": "Thoughtfully crafted nightwear designed for relaxation.",
+    "searchPlaceholder": "Search designs...",
+    "allStyles": "All styles",
+    "sortDefault": "Featured",
+    "sortLowHigh": "Price: low to high",
+    "sortHighLow": "Price: high to low",
+    "sortAlphabetical": "Name: A to Z",
+    "designCount": "designs",
+    "singleDesignCount": "design",
+    "noResults": "No designs match your search or filter.",
+    "filter": "Filter",
+    "clearFilter": "Clear filter"
+  },
+  "product": {
+    "photo": "Photo",
+    "size": "Size",
+    "quantity": "Quantity",
+    "selectSize": "Select size",
+    "sizeGuide": "Size guide & bust calculator",
+    "addToCart": "Add to cart",
+    "viewCart": "View cart",
+    "soldOut": "Sold out",
+    "onlyLeft": "Only {n} left in {size}",
+    "inStock": "In stock ({n} available)",
+    "selectSizeFirst": "Please select your size first.",
+    "facts": {
+      "style": "Style: {style}",
+      "sizesRange": "Sizes available: M to 3XL",
+      "prepaidOnly": "Prepaid orders only (No COD)",
+      "noReturns": "No returns or size exchanges"
+    },
+    "watchVideo": "Watch on YouTube",
+    "relatedTitle": "You may also like"
+  },
+  "cart": {
+    "title": "Your cart",
+    "empty": "Your cart is empty.",
+    "continueShopping": "Continue shopping",
+    "summaryTitle": "Order summary",
+    "subtotal": "Subtotal",
+    "shipping": "Flat shipping",
+    "total": "Total",
+    "checkout": "Proceed to checkout",
+    "rulesReminder": "Prepaid orders only. No returns, exchanges, or size changes.",
+    "remove": "Remove",
+    "size": "Size"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "deliveryDetails": "Delivery details",
+    "fullName": "Full name",
+    "mobileNumber": "Mobile number (WhatsApp)",
+    "mobileHelp": "Used for order updates and shipping notifications via WhatsApp.",
+    "email": "Email address (optional)",
+    "address": "House name / Flat, Street address",
+    "city": "Town / City",
+    "state": "State",
+    "pin": "PIN code (6 digits)",
+    "payment": "Payment Method",
+    "prepaidNotice": "Online payment via Razorpay (UPI, Google Pay, PhonePe, Cards, Netbanking).",
+    "disclaimer": "I understand and agree that sizes cannot be changed once ordered, and there are strictly no returns or exchanges.",
+    "placeOrder": "Pay ₹{total} securely",
+    "placingOrder": "Securing order...",
+    "errors": {
+      "name": "Please enter your full name.",
+      "phone": "Please enter a valid 10-digit Indian mobile number.",
+      "addr": "Please enter your complete delivery address.",
+      "city": "Please enter your town or city.",
+      "pin": "Please enter a valid 6-digit PIN code.",
+      "agree": "You must confirm the size and no-return policy before proceeding.",
+      "stockUnavailable": "One or more items in your cart is no longer available in the selected size."
+    }
+  },
+  "confirmation": {
+    "title": "Order received",
+    "thankYou": "Thank you, {name}",
+    "receivedMsg": "Your order {orderId} has been successfully placed. We confirm orders and share tracking details over WhatsApp.",
+    "sendWhatsApp": "Send order details on WhatsApp",
+    "trackOrder": "Track order status",
+    "orderSummary": "Order summary",
+    "paymentStatus": "Payment: {status}",
+    "shippingCharge": "Shipping (Flat)"
+  },
+  "tracking": {
+    "title": "Track your order",
+    "lead": "Enter your readable Order ID (e.g. NEST-000123) and 10-digit mobile number to view status.",
+    "orderIdLabel": "Order ID",
+    "phoneLabel": "Mobile number",
+    "button": "Check status",
+    "statusHeading": "Order status",
+    "courier": "Courier partner",
+    "trackingId": "Tracking number",
+    "notFound": "No order found matching this Order ID and mobile number. Please check the details or message us on WhatsApp."
+  },
+  "wishlist": {
+    "title": "Your wishlist",
+    "lead": "Nighties you have saved for later.",
+    "empty": "Nothing saved yet. Tap the heart on any design to save it here."
+  },
+  "sizes": {
+    "title": "Size guide",
+    "lead": "Measure your bust and choose the matching size. Sizes cannot be changed once an order is placed.",
+    "calculatorTitle": "Find my size: enter your bust in inches",
+    "calculatorPlaceholder": "e.g. 38",
+    "calculatorHelp": "Your recommended size will appear here.",
+    "tableHeadSize": "Size",
+    "tableHeadBust": "Bust (in)",
+    "tableHeadLength": "Length (in)",
+    "note": "Measurements are standard tailored allowances. Check prior to ordering.",
+    "howToOrderTitle": "How to order",
+    "step1Title": "Choose a design",
+    "step1Desc": "Browse our collection or watch designs on YouTube.",
+    "step2Title": "Select your size",
+    "step2Desc": "Confirm your bust size using the guide above.",
+    "step3Title": "Add to cart",
+    "step3Desc": "Review selected designs, size, and quantity.",
+    "step4Title": "Prepay & confirm",
+    "step4Desc": "Pay securely online. We confirm and dispatch with love."
+  },
+  "about": {
+    "title": "About Nest by Ammakkili",
+    "p1": "Nest by Ammakkili is an online nightwear label founded on a simple philosophy: sleepwear should feel as gentle as a lullaby and withstand the warmth of everyday tropical living.",
+    "p2": "We specialize in women's nighties tailored from hand-inspected pure cotton, breathable prints, and soothing satins.",
+    "p3": "Every single design is showcased in high-definition video on our YouTube channel, letting you inspect the neckline, seams, texture, and fall before making a decision.",
+    "cta": "Shop the collection"
+  },
+  "contact": {
+    "title": "WhatsApp Support",
+    "lead": "We respond exclusively via WhatsApp messages. We do not accept voice calls.",
+    "yourName": "Your name",
+    "yourMessage": "Your question or order reference",
+    "sendBtn": "Send message on WhatsApp",
+    "ytNote": "You can also watch our channel on {link}."
+  },
+  "policies": {
+    "title": "Shop policies",
+    "paymentHeading": "Prepaid payment policy",
+    "paymentText": "All orders must be prepaid online via our secure payment gateway. Cash on Delivery (COD) is strictly not supported.",
+    "returnsHeading": "No returns or exchanges policy",
+    "returnsText": "Because nightwear is personal intimate clothing, and each piece is quality inspected prior to dispatch, we do not accept any returns, replacements, or size exchanges once an order is confirmed.",
+    "shippingHeading": "Shipping & delivery policy",
+    "shippingText": "We ship orders across India with trusted courier partners at a flat shipping fee of ₹60 per order. Orders are typically packed and dispatched within 1–2 business days.",
+    "privacyHeading": "Privacy policy",
+    "privacyText": "We collect customer names, phone numbers, and delivery addresses strictly to process, dispatch, and communicate regarding orders."
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "lead": "Clear answers to help you order with complete confidence.",
+    "q1": "Can I return or exchange a nighty?",
+    "a1": "No. To maintain hygiene and quality, we operate a strict no-return and no-exchange policy. Please consult our bust measurement guide prior to ordering.",
+    "q2": "Is Cash on Delivery (COD) available?",
+    "a2": "No. All orders are strictly prepaid via UPI, debit/credit cards, or netbanking.",
+    "q3": "Can I call the shop?",
+    "a3": "No. We handle customer support exclusively via WhatsApp messages. We do not operate a telephone call center.",
+    "q4": "How do I choose the correct size?",
+    "a4": "Measure around the fullest part of your bust in inches with a measuring tape. Match it to our Size Guide table or use the interactive Bust Calculator.",
+    "q5": "How do I know my order is confirmed?",
+    "a5": "Once payment succeeds, you will see the confirmation screen with an order ID. You can click 'Send order details on WhatsApp' to connect with us directly."
+  },
+  "footer": {
+    "desc": "Online shop for women's nighties • Kerala",
+    "shopHeading": "Shop",
+    "helpHeading": "Help & Policies",
+    "allRights": "All rights reserved. Designed for comfort."
+  }
+}

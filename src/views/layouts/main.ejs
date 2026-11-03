@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title><%= typeof title !== 'undefined' ? title + ' – Nest by Ammakkili' : 'Nest by Ammakkili – Nightwear, softly considered' %></title>
+  <meta name="description" content="<%= typeof metaDesc !== 'undefined' ? metaDesc : t('site.description') %>">
+  
+  <!-- Canonical & Open Graph -->
+  <link rel="canonical" href="<%= typeof canonicalUrl !== 'undefined' ? canonicalUrl : 'http://localhost:3000' + path %>">
+  <meta property="og:site_name" content="Nest by Ammakkili">
+  <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Nest by Ammakkili' %>">
+  <meta property="og:description" content="<%= typeof metaDesc !== 'undefined' ? metaDesc : t('site.description') %>">
+  <meta property="og:type" content="<%= typeof ogType !== 'undefined' ? ogType : 'website' %>">
+  <% if (typeof ogImage !== 'undefined') { %>
+    <meta property="og:image" content="<%= ogImage %>">
+  <% } else { %>
+    <meta property="og:image" content="/img/logo.svg">
+  <% } %>
+
+  <!-- Google Fonts: Cormorant Garamond, Jost, Noto Sans Malayalam, Noto Serif Malayalam -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&family=Noto+Sans+Malayalam:wght@300;400;500&family=Noto+Serif+Malayalam:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
+  <link rel="stylesheet" href="/css/glass.css">
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+  <meta name="theme-color" content="#892245">
+</head>
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+  <!-- Dynamic floating ambient glass elements -->
+  <div class="bg" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="glow" aria-hidden="true"></div>
+
+  <!-- Announcement Bar -->
+  <%- include('../partials/banner') %>
+
+  <!-- Header -->
+  <%- include('../partials/header') %>
+
+  <!-- Main Content -->
+  <main id="top" tabindex="-1">
+    <%- body %>
+  </main>
+
+  <!-- Footer -->
+  <%- include('../partials/footer') %>
+
+  <!-- Toast notification banner -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script src="/js/main.js"></script>
+  <% if (typeof script !== 'undefined') { %>
+    <%- script %>
+  <% } %>
+</body>
+</html>

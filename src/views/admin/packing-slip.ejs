@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Packing Slip – <%= order.orderId %></title>
+  <style>
+    @media print {
+      body { margin: 0; padding: 12mm; }
+      .no-print { display: none; }
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #000;
+      line-height: 1.5;
+      padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid #000;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+    }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background: #f5f5f5;
+    }
+    .text-right { text-align: right; }
+    .footer {
+      margin-top: 40px;
+      border-top: 1px dashed #999;
+      padding-top: 16px;
+      font-size: 13px;
+      color: #555;
+    }
+    .btn-print {
+      background: #892245;
+      color: #fff;
+      padding: 10px 20px;
+      border: 0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <button class="btn-print" onclick="window.print()">🖨️ Print Packing Slip</button>
+  </div>
+
+  <div class="header">
+    <div>
+      <h1>Nest by Ammakkili</h1>
+      <div>Online Nightwear Store • Kerala, India</div>
+      <div>WhatsApp Support: +<%= settings.whatsappNumber %></div>
+    </div>
+    <div style="text-align:right;">
+      <h2>PACKING SLIP</h2>
+      <div><strong>Order ID:</strong> <%= order.orderId %></div>
+      <div><strong>Date:</strong> <%= new Date(order.createdAt).toLocaleDateString('en-IN') %></div>
+    </div>
+  </div>
+
+  <div class="meta-grid">
+    <div>
+      <strong>SHIP TO:</strong><br>
+      <%= order.customer.name %><br>
+      <%= order.customer.address %><br>
+      <%= order.customer.city %>, <%= order.customer.state || 'Kerala' %> - <strong><%= order.customer.pin %></strong><br>
+      <strong>Phone:</strong> <%= order.customer.phone %>
+    </div>
+    <div>
+      <strong>ORDER SUMMARY:</strong><br>
+      Payment: <strong>PREPAID (PAID IN FULL)</strong><br>
+      Payment ID: <%= order.payment?.razorpayPaymentId || 'Online' %><br>
+      Courier: <%= order.tracking?.courier || 'Standard Courier' %><br>
+      Tracking ID: <%= order.tracking?.trackingId || 'Pending Dispatch' %>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Product Name</th>
+        <th style="text-align:center;">Size</th>
+        <th style="text-align:center;">Qty</th>
+        <th class="text-right">Price</th>
+        <th class="text-right">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% order.items.forEach(function(item, idx) { %>
+        <tr>
+          <td><%= idx + 1 %></td>
+          <td><strong><%= item.name %></strong></td>
+          <td style="text-align:center;"><%= item.size %></td>
+          <td style="text-align:center;"><%= item.quantity %></td>
+          <td class="text-right">₹<%= item.price.toLocaleString('en-IN') %></td>
+          <td class="text-right">₹<%= (item.price * item.quantity).toLocaleString('en-IN') %></td>
+        </tr>
+      <% }); %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="5" class="text-right"><strong>Subtotal:</strong></td>
+        <td class="text-right">₹<%= order.subtotal.toLocaleString('en-IN') %></td>
+      </tr>
+      <tr>
+        <td colspan="5" class="text-right"><strong>Flat Shipping:</strong></td>
+        <td class="text-right">₹<%= order.shipping.toLocaleString('en-IN') %></td>
+      </tr>
+      <tr>
+        <td colspan="5" class="text-right"><strong>Total Amount:</strong></td>
+        <td class="text-right"><strong>₹<%= order.total.toLocaleString('en-IN') %></strong></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="footer">
+    <strong>Notice:</strong> As per shop policy, sizes cannot be exchanged or returned. Each nighty has been individually inspected for flawless stitching and comfort before packing.<br>
+    Thank you for shopping with Nest by Ammakkili!
+  </div>
+</body>
+</html>

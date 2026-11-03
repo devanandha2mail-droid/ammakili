@@ -1,0 +1,110 @@
+<div class="wrap hero">
+  <div>
+    <h1><%- t('home.heroTitle') %></h1>
+    <p><%= t('home.heroDesc') %></p>
+    <a class="btn" href="/shop"><%= t('home.exploreCollection') %></a>
+    <a class="tlink" href="/sizes"><%= t('home.findYourSize') %></a>
+  </div>
+  <div class="arch" aria-hidden="true">
+    <svg viewBox="0 0 60 100" aria-hidden="true">
+      <path d="M22 4h16l3 14 6 6-5 8 9 60H9l9-60-5-8 6-6z"/>
+    </svg>
+    <small><%= t('home.featuredPhoto') %></small>
+  </div>
+</div>
+
+<div class="statement">
+  <div class="wrap">
+    <p><%= t('home.statement') %></p>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- New Arrivals Section -->
+  <section>
+    <div class="head">
+      <hr class="rule">
+      <h2><%= t('home.newArrivals') %></h2>
+      <p class="lead"><%= t('home.newArrivalsLead') %></p>
+    </div>
+    <div class="grid">
+      <% products.forEach(function(p) { %>
+        <div class="item">
+          <div class="pw">
+            <a class="ph" href="/product/<%= p.slug %>" aria-label="<%= p.getName(lang) %>">
+              <% if (p.images && p.images.length > 0) { %>
+                <img src="<%= p.images[0] %>" alt="<%= p.getName(lang) %>" loading="lazy" width="400" height="500">
+              <% } else { %>
+                <svg viewBox="0 0 60 100" aria-hidden="true"><path d="M22 4h16l3 14 6 6-5 8 9 60H9l9-60-5-8 6-6z"/></svg>
+              <% } %>
+              <% if (p.tag && p.tag !== 'None') { %>
+                <span class="badge <%= p.tag === 'Bestseller' ? 'bestseller' : '' %>"><%= p.tag %></span>
+              <% } %>
+            </a>
+            <button type="button" class="hbtn cardh" data-wish-id="<%= p._id %>" data-wish-name="<%= p.getName(lang) %>" aria-label="Save <%= p.getName(lang) %> to wishlist">♡</button>
+          </div>
+          <div class="meta">
+            <h3><a href="/product/<%= p.slug %>"><%= p.getName(lang) %></a></h3>
+            <div class="price">₹<%= p.price.toLocaleString('en-IN') %></div>
+            <small><%= p.style %></small>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </section>
+
+  <!-- Browse by Style Section -->
+  <section>
+    <div class="head">
+      <hr class="rule">
+      <h2><%= t('home.browseByStyle') %></h2>
+    </div>
+    <div class="index">
+      <a href="/shop?style=Cotton">
+        <b><%= t('home.styles.cotton') %></b>
+        <span><%= t('home.styles.cottonSub') %></span>
+      </a>
+      <a href="/shop?style=Satin">
+        <b><%= t('home.styles.satin') %></b>
+        <span><%= t('home.styles.satinSub') %></span>
+      </a>
+      <a href="/shop?style=Printed">
+        <b><%= t('home.styles.printed') %></b>
+        <span><%= t('home.styles.printedSub') %></span>
+      </a>
+      <a href="/shop?style=Plain">
+        <b><%= t('home.styles.plain') %></b>
+        <span><%= t('home.styles.plainSub') %></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Before You Order Policy Highlights -->
+  <section>
+    <div class="head">
+      <hr class="rule">
+      <h2><%= t('home.beforeYouOrder') %></h2>
+    </div>
+    <div class="terms">
+      <div>
+        <h3><%= t('home.terms.paymentTitle') %></h3>
+        <p><%= t('home.terms.paymentDesc') %></p>
+      </div>
+      <div>
+        <h3><%= t('home.terms.returnsTitle') %></h3>
+        <p><%= t('home.terms.returnsDesc') %></p>
+      </div>
+      <div>
+        <h3><%= t('home.terms.contactTitle') %></h3>
+        <p><%= t('home.terms.contactDesc') %></p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- YouTube Showcase Banner -->
+<div class="yt">
+  <h2><%= t('home.ytTitle') %></h2>
+  <p><%= t('home.ytDesc') %></p>
+  <a class="btn" href="https://www.youtube.com/@nestammakkili" target="_blank" rel="noopener"><%= t('home.ytBtn') %></a>
+</div>

@@ -1,0 +1,47 @@
+<header>
+  <div class="wrap bar">
+    <!-- Brand Logo -->
+    <a class="brand" href="/" aria-label="Nest by Ammakkili - Home">
+      <img src="/img/logo.svg" alt="Nest by Ammakkili" width="200" height="46">
+    </a>
+
+    <!-- Main Navigation -->
+    <nav id="nav" aria-label="Main Navigation">
+      <a href="/shop" class="<%= path === '/shop' ? 'active' : '' %>"><%= t('nav.shop') %></a>
+      <a href="/sizes" class="<%= path === '/sizes' ? 'active' : '' %>"><%= t('nav.sizes') %></a>
+      <a href="/how-to-order" class="<%= path === '/how-to-order' ? 'active' : '' %>"><%= t('nav.howToOrder') %></a>
+      <a href="/about" class="<%= path === '/about' ? 'active' : '' %>"><%= t('nav.about') %></a>
+      <a href="/contact" class="<%= path === '/contact' ? 'active' : '' %>"><%= t('nav.contact') %></a>
+      <a href="/track" class="<%= path === '/track' ? 'active' : '' %>"><%= t('nav.track') %></a>
+      <a class="mo" href="/wishlist"><%= t('nav.wishlist') %></a>
+    </nav>
+
+    <!-- Right utility controls -->
+    <div class="right">
+      <!-- Language Toggle -->
+      <a href="/set-lang/<%= lang === 'en' ? 'ml' : 'en' %>" class="lang-btn" title="Change Language / ഭാഷ മാറ്റുക" aria-label="Toggle language">
+        <span><%= lang === 'en' ? 'മലയാളം' : 'EN' %></span>
+      </a>
+
+      <!-- Dark / Light Theme Toggle -->
+      <button type="button" class="theme-btn" id="theme-toggle" aria-label="Toggle theme">☾</button>
+
+      <!-- Wishlist -->
+      <a class="cartbtn wl" href="/wishlist" aria-label="View Wishlist">
+        <span>♥</span>
+        <span class="wish-count" id="wc">0</span>
+      </a>
+
+      <!-- Cart -->
+      <a class="cartbtn" href="/cart" aria-label="View Cart">
+        <span><%= t('nav.cart') %></span>
+        <span>(<span class="cart-count" id="cc">0</span>)</span>
+      </a>
+
+      <!-- Mobile Menu Hamburger -->
+      <button class="menu" id="menu" aria-expanded="false" aria-controls="nav" aria-label="Toggle navigation menu">
+        <%= t('nav.menu') %>
+      </button>
+    </div>
+  </div>
+</header>

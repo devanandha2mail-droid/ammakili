@@ -1,0 +1,84 @@
+<div class="wrap pg">
+  <div class="head">
+    <hr class="rule">
+    <h2><%= t('shop.title') %></h2>
+    <p class="lead"><%= t('shop.lead') %></p>
+  </div>
+
+  <form method="GET" action="/shop" class="toolbar" id="shop-filter-form" style="margin-bottom:18px;">
+    <input 
+      id="q" 
+      name="q" 
+      type="search" 
+      placeholder="<%= t('shop.searchPlaceholder') %>" 
+      value="<%= searchQuery %>"
+      aria-label="<%= t('shop.searchPlaceholder') %>"
+    >
+    <select id="style" name="style" aria-label="<%= t('shop.allStyles') %>" onchange="this.form.submit()">
+      <option value=""><%= t('shop.allStyles') %></option>
+      <% styles.forEach(function(st) { %>
+        <option value="<%= st %>" <%= currentStyle === st ? 'selected' : '' %>><%= st %></option>
+      <% }); %>
+    </select>
+    <select id="sort" name="sort" aria-label="Sort by" onchange="this.form.submit()">
+      <option value="" <%= !currentSort ? 'selected' : '' %>><%= t('shop.sortDefault') %></option>
+      <option value="lo" <%= currentSort === 'lo' ? 'selected' : '' %>><%= t('shop.sortLowHigh') %></option>
+      <option value="hi" <%= currentSort === 'hi' ? 'selected' : '' %>><%= t('shop.sortHighLow') %></option>
+      <option value="az" <%= currentSort === 'az' ? 'selected' : '' %>><%= t('shop.sortAlphabetical') %></option>
+    </select>
+  </form>
+
+  <p class="cnt" style="color:var(--muted); font-size:0.9rem; margin:0 0 32px;">
+    <%= totalCount %> <%= totalCount === 1 ? t('shop.singleDesignCount') : t('shop.designCount') %>
+    <% if (searchQuery || currentStyle) { %>
+      <a href="/shop" style="margin-left:12px; color:var(--accent); text-decoration:underline;"><%= t('shop.clearFilter') %></a>
+    <% } %>
+  </p>
+
+  <% if (products.length === 0) { %>
+    <div class="narrow" style="text-align:center; margin:30px auto;">
+      <p style="color:var(--muted);"><%= t('shop.noResults') %></p>
+      <a href="/shop" class="btn small" style="margin-top:14px;"><%= t('shop.clearFilter') %></a>
+    </div>
+  <% } else { %>
+    <div class="grid">
+      <% products.forEach(function(p) { %>
+        <div class="item">
+          <div class="pw">
+            <a class="ph" href="/product/<%= p.slug %>" aria-label="<%= p.getName(lang) %>">
+              <% if (p.images && p.images.length > 0) { %>
+                <img src="<%= p.images[0] %>" alt="<%= p.getName(lang) %>" loading="lazy" width="400" height="500">
+              <% } else { %>
+                <svg viewBox="0 0 60 100" aria-hidden="true"><path d="M22 4h16l3 14 6 6-5 8 9 60H9l9-60-5-8 6-6z"/></svg>
+              <% } %>
+              <% if (p.tag && p.tag !== 'None') { %>
+                <span class="badge <%= p.tag === 'Bestseller' ? 'bestseller' : '' %>"><%= p.tag %></span>
+              <% } %>
+            </a>
+            <button type="button" class="hbtn cardh" data-wish-id="<%= p._id %>" data-wish-name="<%= p.getName(lang) %>" aria-label="Save <%= p.getName(lang) %> to wishlist">♡</button>
+          </div>
+          <div class="meta">
+            <h3><a href="/product/<%= p.slug %>"><%= p.getName(lang) %></a></h3>
+            <div class="price">₹<%= p.price.toLocaleString('en-IN') %></div>
+            <small><%= p.style %></small>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+      <div style="display:flex; justify-content:center; gap:8px; margin-top:56px;">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <a 
+            href="/shop?page=<%= i %>&style=<%= currentStyle %>&q=<%= searchQuery %>&sort=<%= currentSort %>" 
+            class="btn small <%= currentPage === i ? '' : 'ghost' %>"
+            style="width:42px; height:42px; padding:0; border-radius:50%;"
+          >
+            <%= i %>
+          </a>
+        <% } %>
+      </div>
+    <% } %>
+  <% } %>
+</div>

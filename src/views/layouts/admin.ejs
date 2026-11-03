@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> – Nest by Ammakkili Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
+  <link rel="stylesheet" href="/css/glass.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <div class="admin-bar">
+      <div style="display:flex; align-items:center; gap:16px;">
+        <a href="/admin" style="display:flex; align-items:center; gap:8px;">
+          <img src="/img/logo.svg" alt="Nest by Ammakkili" height="34">
+          <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.12em; background:var(--admin-c1); color:#fff; padding:2px 8px; border-radius:4px;">Admin</span>
+        </a>
+      </div>
+
+      <nav class="admin-nav">
+        <a href="/admin" class="<%= path === '/admin' ? 'active' : '' %>">Dashboard</a>
+        <a href="/admin/products" class="<%= path.startsWith('/admin/products') ? 'active' : '' %>">Products</a>
+        <a href="/admin/orders" class="<%= path.startsWith('/admin/orders') ? 'active' : '' %>">Orders</a>
+        <a href="/admin/banners" class="<%= path.startsWith('/admin/banners') ? 'active' : '' %>">Banners</a>
+        <a href="/admin/settings" class="<%= path.startsWith('/admin/settings') ? 'active' : '' %>">Settings</a>
+        <a href="/" target="_blank" rel="noopener" style="opacity:0.7;">View Shop ↗</a>
+        <a href="/admin/logout" style="color:var(--admin-c1);">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-container">
+    <%- body %>
+  </main>
+</body>
+</html>

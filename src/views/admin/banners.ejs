@@ -1,0 +1,86 @@
+<div style="margin-bottom:24px;">
+  <h1 style="font-size:2rem; margin:0;">Festival & Announcement Banners</h1>
+  <p style="color:var(--admin-muted); margin:4px 0 0;">Create and schedule promotional banners for Onam, Vishu, Christmas, or new season arrivals.</p>
+</div>
+
+<div class="two2">
+  <!-- Create Banner Form -->
+  <div class="admin-card">
+    <h2 style="font-size:1.3rem; margin-bottom:16px;">Schedule New Banner</h2>
+    
+    <form method="POST" action="/admin/banners/create">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div style="margin-bottom:14px;">
+        <label for="text_en">Banner Text (English) *</label>
+        <textarea id="text_en" name="text_en" rows="2" required placeholder="e.g. Onam Special: Explore our festival cotton nighty collection."></textarea>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label for="text_ml">Banner Text (Malayalam)</label>
+        <textarea id="text_ml" name="text_ml" rows="2" placeholder="ഉദാ: ഓണം സ്പെഷ്യൽ നൈറ്റി കളക്ഷൻ ഇപ്പോൾ ലഭ്യമാണ്."></textarea>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label for="link">Target Link</label>
+        <input id="link" name="link" value="/shop" placeholder="/shop or /product/slug">
+      </div>
+
+      <div class="form" style="margin-bottom:16px;">
+        <div class="h">
+          <label for="startsAt">Starts At</label>
+          <input id="startsAt" name="startsAt" type="datetime-local">
+        </div>
+        <div class="h">
+          <label for="endsAt">Ends At (Optional)</label>
+          <input id="endsAt" name="endsAt" type="datetime-local">
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <label class="chk" style="padding:0;">
+          <input type="checkbox" name="active" value="true" checked>
+          <span>Active immediately</span>
+        </label>
+      </div>
+
+      <button type="submit" class="btn" style="width:100%;">Create & Schedule Banner</button>
+    </form>
+  </div>
+
+  <!-- Banners List -->
+  <div class="admin-card">
+    <h2 style="font-size:1.3rem; margin-bottom:16px;">Current Banners</h2>
+
+    <% if (banners.length === 0) { %>
+      <p style="color:var(--admin-muted); padding:20px 0;">No banners created yet. The default announcement bar will be displayed.</p>
+    <% } else { %>
+      <div style="display:grid; gap:16px;">
+        <% banners.forEach(function(b) { %>
+          <div style="border:1px solid var(--admin-border); border-radius:12px; padding:16px; background:#fff;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <strong><%= b.text.en %></strong>
+              <span class="tag-badge <%= b.active ? 'status-delivered' : 'status-failed' %>">
+                <%= b.active ? 'Active' : 'Inactive' %>
+              </span>
+            </div>
+
+            <% if (b.text.ml) { %>
+              <div style="font-size:0.85rem; color:var(--admin-muted); margin-bottom:8px;"><%= b.text.ml %></div>
+            <% } %>
+
+            <div style="font-size:0.8rem; color:var(--admin-muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <span>Link: <code><%= b.link %></code></span>
+              <span>Starts: <%= new Date(b.startsAt).toLocaleDateString('en-IN') %></span>
+            </div>
+
+            <form method="POST" action="/admin/banners/delete/<%= b._id %>" onsubmit="return confirm('Delete this banner?');" style="margin-top:12px; text-align:right;">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button type="submit" class="btn small" style="background:#b91c1c; border-color:#b91c1c; padding:3px 10px; font-size:0.75rem;">Delete</button>
+            </form>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</div>

@@ -1,0 +1,146 @@
+<div style="margin-bottom:24px;">
+  <a href="/admin/products" class="tlink" style="margin-left:0; font-size:0.8rem;">← Back to Products</a>
+  <h1 style="font-size:2rem; margin:8px 0 0;"><%= product ? 'Edit Nighty: ' + product.name.en : 'Add New Nighty Design' %></h1>
+</div>
+
+<form method="POST" action="<%= product ? '/admin/products/edit/' + product._id : '/admin/products/add' %>" enctype="multipart/form-data" class="admin-card">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <div class="form">
+    <!-- English Name -->
+    <div class="h">
+      <label for="name_en">Product Name (English) *</label>
+      <input id="name_en" name="name_en" required value="<%= product ? product.name.en : '' %>" placeholder="e.g. Rose Garden Nighty">
+    </div>
+
+    <!-- Malayalam Name -->
+    <div class="h">
+      <label for="name_ml">Product Name (Malayalam)</label>
+      <input id="name_ml" name="name_ml" value="<%= product ? product.name.ml : '' %>" placeholder="ഉദാ: റോസ് ഗാർഡൻ നൈറ്റി">
+    </div>
+
+    <!-- Style -->
+    <div class="h">
+      <label for="style">Fabric / Style *</label>
+      <input id="style" name="style" required list="style-suggestions" value="<%= product ? product.style : 'Cotton' %>" placeholder="Cotton, Satin, Printed, Plain...">
+      <datalist id="style-suggestions">
+        <option value="Cotton">
+        <option value="Satin">
+        <option value="Printed">
+        <option value="Plain">
+        <option value="Rayon">
+      </datalist>
+    </div>
+
+    <!-- Price -->
+    <div class="h">
+      <label for="price">Price (₹ INR) *</label>
+      <input id="price" name="price" type="number" step="1" min="0" required value="<%= product ? product.price : '' %>" placeholder="e.g. 599">
+    </div>
+
+    <!-- English Description -->
+    <div class="f">
+      <label for="description_en">Description (English) *</label>
+      <textarea id="description_en" name="description_en" rows="3" required placeholder="Detailed fabric composition, sleeve length, fit, comfort..."><%= product ? product.description.en : '' %></textarea>
+    </div>
+
+    <!-- Malayalam Description -->
+    <div class="f">
+      <label for="description_ml">Description (Malayalam)</label>
+      <textarea id="description_ml" name="description_ml" rows="3" placeholder="വിശദാംശങ്ങൾ മലയാളത്തിൽ..."><%= product ? product.description.ml : '' %></textarea>
+    </div>
+
+    <!-- YouTube Video URL -->
+    <div class="f">
+      <label for="videoUrl">YouTube Showcase Video URL</label>
+      <input id="videoUrl" name="videoUrl" value="<%= product ? product.videoUrl : '' %>" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/...">
+      <small style="color:var(--admin-muted); font-size:0.8rem;">Will be embedded on the product page so customers can inspect the fabric in motion.</small>
+    </div>
+
+    <!-- Tag & Featured -->
+    <div class="h">
+      <label for="tag">Badge Tag</label>
+      <select id="tag" name="tag">
+        <option value="None" <%= product && product.tag === 'None' ? 'selected' : '' %>>None</option>
+        <option value="New" <%= product && product.tag === 'New' ? 'selected' : '' %>>New</option>
+        <option value="Bestseller" <%= product && product.tag === 'Bestseller' ? 'selected' : '' %>>Bestseller</option>
+      </select>
+    </div>
+
+    <div class="h" style="display:flex; flex-direction:column; justify-content:center; gap:8px;">
+      <label class="chk" style="padding:0;">
+        <input type="checkbox" name="featured" value="true" <%= product && product.featured ? 'checked' : '' %>>
+        <span>Show as Featured Design on Home</span>
+      </label>
+      <label class="chk" style="padding:0;">
+        <input type="checkbox" name="active" value="true" <%= !product || product.active ? 'checked' : '' %>>
+        <span>Active (Visible on public store)</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Per-Size Stock Table -->
+  <div style="margin:32px 0 24px;">
+    <h3 style="font-size:1.2rem; margin-bottom:12px;">Per-Size Inventory (Units in Stock)</h3>
+    <div class="tablewrap" style="background:var(--admin-card);">
+      <table>
+        <thead>
+          <tr>
+            <% sizes.forEach(function(s) { %>
+              <th style="text-align:center;"><%= s %></th>
+            <% }); %>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <% sizes.forEach(function(s) { 
+              let currentStock = 0;
+              if (product && product.sizes) {
+                const found = product.sizes.find(sz => sz.size === s);
+                if (found) currentStock = found.stock;
+              }
+            %>
+              <td style="padding:8px 12px; text-align:center;">
+                <input 
+                  type="number" 
+                  name="stock_<%= s %>" 
+                  min="0" 
+                  value="<%= currentStock %>" 
+                  style="width:90px; text-align:center; padding:8px;"
+                >
+              </td>
+            <% }); %>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Images Upload & Management -->
+  <div style="margin:28px 0;">
+    <h3 style="font-size:1.2rem; margin-bottom:8px;">Product Images</h3>
+    <p style="color:var(--admin-muted); font-size:0.85rem; margin-bottom:16px;">
+      Upload photos or swatch renders. Supported: JPG, PNG, WebP, SVG.
+    </p>
+
+    <% if (product && product.images && product.images.length > 0) { %>
+      <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px;">
+        <% product.images.forEach(function(imgUrl, idx) { %>
+          <div style="position:relative; width:90px; text-align:center; border:1px solid var(--admin-border); border-radius:8px; padding:4px; background:#fff;">
+            <img src="<%= imgUrl %>" alt="Product image <%= idx + 1 %>" style="width:100%; height:110px; object-fit:cover; border-radius:6px;">
+            <label style="font-size:0.7rem; margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px;">
+              <input type="checkbox" name="existing_images" value="<%= imgUrl %>" checked> Keep
+            </label>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <input type="file" name="images" multiple accept="image/*" style="padding:10px;">
+  </div>
+
+  <div style="margin-top:32px; display:flex; gap:16px;">
+    <button type="submit" class="btn"><%= product ? 'Save Changes' : 'Create Nighty' %></button>
+    <a href="/admin/products" class="btn ghost">Cancel</a>
+  </div>
+</form>

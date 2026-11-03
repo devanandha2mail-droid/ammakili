@@ -1,0 +1,83 @@
+<div class="wrap pg">
+  <div class="cols">
+    <!-- Size Guide & Bust Calculator -->
+    <div>
+      <hr class="rule" style="margin-left:0;">
+      <h2><%= t('sizes.title') %></h2>
+      <p class="lead" style="margin-left:0;"><%= t('sizes.lead') %></p>
+
+      <!-- Interactive Bust Finder -->
+      <div class="finder" style="margin-top:24px;">
+        <label for="bust"><%= t('sizes.calculatorTitle') %></label>
+        <input 
+          id="bust" 
+          type="number" 
+          inputmode="decimal" 
+          min="30" 
+          max="56" 
+          step="0.5" 
+          placeholder="<%= t('sizes.calculatorPlaceholder') %>"
+        >
+        <p id="fres" aria-live="polite" data-default="<%= t('sizes.calculatorHelp') %>" style="margin:10px 0 0; color:var(--muted); font-size:0.95rem;">
+          <%= t('sizes.calculatorHelp') %>
+        </p>
+      </div>
+
+      <!-- Size Chart Table -->
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th><%= t('sizes.tableHeadSize') %></th>
+              <th><%= t('sizes.tableHeadBust') %></th>
+              <th><%= t('sizes.tableHeadLength') %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>M</strong></td><td>36</td><td>48</td></tr>
+            <tr><td><strong>L</strong></td><td>38</td><td>48</td></tr>
+            <tr><td><strong>XL</strong></td><td>40</td><td>49</td></tr>
+            <tr><td><strong>XXL</strong></td><td>42</td><td>49</td></tr>
+            <tr><td><strong>3XL</strong></td><td>44</td><td>50</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note"><%= t('sizes.note') %></p>
+    </div>
+
+    <!-- How to Order Steps -->
+    <div>
+      <hr class="rule" style="margin-left:0;">
+      <h2><%= t('sizes.howToOrderTitle') %></h2>
+      <ol class="steps">
+        <li>
+          <div>
+            <b><%= t('sizes.step1Title') %></b>
+            <span><%= t('sizes.step1Desc') %></span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <b><%= t('sizes.step2Title') %></b>
+            <span><%= t('sizes.step2Desc') %></span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <b><%= t('sizes.step3Title') %></b>
+            <span><%= t('sizes.step3Desc') %></span>
+          </div>
+        </li>
+        <li>
+          <div>
+            <b><%= t('sizes.step4Title') %></b>
+            <span><%= t('sizes.step4Desc') %></span>
+          </div>
+        </li>
+      </ol>
+      <div style="margin-top:32px;">
+        <a class="btn" href="/shop"><%= t('home.exploreCollection') %></a>
+      </div>
+    </div>
+  </div>
+</div>

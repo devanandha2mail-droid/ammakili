@@ -1,0 +1,98 @@
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:14px;">
+  <div>
+    <h1 style="font-size:2rem; margin:0;">Products</h1>
+    <p style="color:var(--admin-muted); margin:4px 0 0;">Manage your nighty designs, images, pricing, and stock.</p>
+  </div>
+  <div>
+    <a href="/admin/products/add" class="btn small">+ Add New Nighty</a>
+  </div>
+</div>
+
+<!-- Filters -->
+<form method="GET" action="/admin/products" class="admin-card" style="padding:18px 24px; margin-bottom:24px;">
+  <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
+    <input name="q" value="<%= q %>" placeholder="Search by English or Malayalam name / slug..." style="flex:2 1 240px; padding:8px 12px; font-size:0.9rem;">
+    <select name="style" onchange="this.form.submit()" style="flex:1 1 140px; padding:8px 12px; font-size:0.9rem;">
+      <option value="">All Styles</option>
+      <% styles.forEach(function(s) { %>
+        <option value="<%= s %>" <%= selectedStyle === s ? 'selected' : '' %>><%= s %></option>
+      <% }); %>
+    </select>
+    <select name="status" onchange="this.form.submit()" style="flex:1 1 140px; padding:8px 12px; font-size:0.9rem;">
+      <option value="">All Statuses</option>
+      <option value="active" <%= selectedStatus === 'active' ? 'selected' : '' %>>Active only</option>
+      <option value="inactive" <%= selectedStatus === 'inactive' ? 'selected' : '' %>>Inactive only</option>
+    </select>
+    <button type="submit" class="btn small" style="padding:8px 18px;">Search</button>
+    <% if (q || selectedStyle || selectedStatus) { %>
+      <a href="/admin/products" class="btn small ghost" style="padding:8px 16px;">Reset</a>
+    <% } %>
+  </div>
+</form>
+
+<!-- Products Table -->
+<div class="admin-card">
+  <% if (products.length === 0) { %>
+    <p style="color:var(--admin-muted); padding:20px 0; text-align:center;">No nighties match your query.</p>
+  <% } else { %>
+    <div style="overflow-x:auto;">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Photo</th>
+            <th>Name</th>
+            <th>Style</th>
+            <th>Price</th>
+            <th>Stock Breakdown</th>
+            <th>Featured</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% products.forEach(function(p) { %>
+            <tr>
+              <td style="width:60px;">
+                <img src="<%= p.images && p.images[0] ? p.images[0] : '/img/logo.svg' %>" alt="<%= p.name.en %>" style="width:48px; height:60px; object-fit:cover; border-radius:6px; border:1px solid var(--admin-border);">
+              </td>
+              <td>
+                <strong><%= p.name.en %></strong>
+                <% if (p.name.ml) { %>
+                  <div style="font-size:0.82rem; color:var(--admin-muted);"><%= p.name.ml %></div>
+                <% } %>
+                <div style="font-size:0.75rem; color:var(--admin-muted);"><%= p.slug %></div>
+              </td>
+              <td><%= p.style %></td>
+              <td><strong>₹<%= p.price.toLocaleString('en-IN') %></strong></td>
+              <td>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <% p.sizes.forEach(function(s) { %>
+                    <span style="font-size:0.75rem; padding:2px 6px; border-radius:4px; <%= s.stock === 0 ? 'background:#fee2e2; color:#991b1b;' : (s.stock <= 3 ? 'background:#fef3c7; color:#92400e;' : 'background:#e0e7ff; color:#3730a3;') %>">
+                      <%= s.size %>: <%= s.stock %>
+                    </span>
+                  <% }); %>
+                </div>
+              </td>
+              <td><%= p.featured ? '⭐ Yes' : 'No' %></td>
+              <td>
+                <span class="tag-badge <%= p.active ? 'status-delivered' : 'status-failed' %>">
+                  <%= p.active ? 'Active' : 'Hidden' %>
+                </span>
+              </td>
+              <td>
+                <div style="display:flex; gap:8px;">
+                  <a href="/admin/products/edit/<%= p._id %>" class="btn small ghost" style="padding:4px 10px; font-size:0.75rem;">Edit</a>
+                  <a href="/product/<%= p.slug %>" target="_blank" rel="noopener" class="btn small ghost" style="padding:4px 10px; font-size:0.75rem;">View</a>
+                  <form method="POST" action="/admin/products/delete/<%= p._id %>" onsubmit="return confirm('Delete this product permanently?');" style="display:inline;">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn small" style="background:#b91c1c; border-color:#b91c1c; padding:4px 10px; font-size:0.75rem;">Del</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>

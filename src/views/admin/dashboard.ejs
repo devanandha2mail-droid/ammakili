@@ -1,0 +1,119 @@
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+  <div>
+    <h1 style="font-size:2.2rem; margin:0;">Dashboard</h1>
+    <p style="color:var(--admin-muted); margin:4px 0 0;">Overview of current nighty sales, fulfillment status, and inventory alerts.</p>
+  </div>
+  <div>
+    <a href="/admin/products/add" class="btn small">+ Add Nighty</a>
+  </div>
+</div>
+
+<!-- Key Performance Metrics -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <h3>Today's Orders</h3>
+    <div class="num"><%= stats.todayOrdersCount %></div>
+  </div>
+
+  <div class="stat-card">
+    <h3>Revenue (This Week)</h3>
+    <div class="num">₹<%= stats.revenueWeek.toLocaleString('en-IN') %></div>
+  </div>
+
+  <div class="stat-card">
+    <h3>Revenue (This Month)</h3>
+    <div class="num">₹<%= stats.revenueMonth.toLocaleString('en-IN') %></div>
+  </div>
+
+  <div class="stat-card">
+    <h3>Orders To Pack</h3>
+    <div class="num" style="color:var(--admin-c2);"><%= stats.ordersToPackCount %></div>
+  </div>
+
+  <div class="stat-card">
+    <h3>Low Stock Items</h3>
+    <div class="num" style="color:#b91c1c;"><%= stats.lowStockCount %></div>
+  </div>
+</div>
+
+<!-- Low Stock Alerts -->
+<% if (lowStockProducts.length > 0) { %>
+  <div class="admin-card" style="border-left:4px solid #b91c1c;">
+    <h2 style="font-size:1.4rem; margin-bottom:12px; color:#b91c1c;">⚠️ Low Stock Inventory Warnings (Threshold: <%= settings.lowStockThreshold || 3 %>)</h2>
+    <div style="overflow-x:auto;">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Style</th>
+            <th>Sizes At Or Below Threshold</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% lowStockProducts.forEach(function(p) { %>
+            <tr>
+              <td><strong><%= p.name.en %></strong></td>
+              <td><%= p.style %></td>
+              <td>
+                <% p.sizes.filter(s => s.stock <= (settings.lowStockThreshold || 3)).forEach(function(s) { %>
+                  <span style="display:inline-block; margin-right:8px; padding:2px 8px; border-radius:4px; background:#fee2e2; color:#991b1b; font-size:0.8rem;">
+                    <%= s.size %>: <strong><%= s.stock %> left</strong>
+                  </span>
+                <% }); %>
+              </td>
+              <td>
+                <a href="/admin/products/edit/<%= p._id %>" class="btn small ghost" style="padding:4px 12px; font-size:0.75rem;">Restock</a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% } %>
+
+<!-- Recent Orders Table -->
+<div class="admin-card">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <h2 style="font-size:1.4rem; margin:0;">Recent Orders</h2>
+    <a href="/admin/orders" class="tlink" style="margin-left:0; font-size:0.8rem;">View All Orders →</a>
+  </div>
+
+  <% if (recentOrders.length === 0) { %>
+    <p style="color:var(--admin-muted); padding:20px 0;">No orders recorded yet.</p>
+  <% } else { %>
+    <div style="overflow-x:auto;">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentOrders.forEach(function(o) { %>
+            <tr>
+              <td><strong><a href="/admin/orders/<%= o._id %>" style="color:var(--admin-c1);"><%= o.orderId %></a></strong></td>
+              <td><%= new Date(o.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) %></td>
+              <td><%= o.customer.name %> (<%= o.customer.phone %>)</td>
+              <td><%= o.items.reduce((s, i) => s + i.quantity, 0) %> nighties</td>
+              <td><strong>₹<%= o.total.toLocaleString('en-IN') %></strong></td>
+              <td>
+                <span class="tag-badge status-<%= o.status %>"><%= o.status.replace('_', ' ') %></span>
+              </td>
+              <td>
+                <a href="/admin/orders/<%= o._id %>" class="btn small ghost" style="padding:4px 12px; font-size:0.75rem;">Inspect</a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>

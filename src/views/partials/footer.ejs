@@ -1,0 +1,48 @@
+<footer>
+  <div class="wrap">
+    <div class="fc">
+      <div>
+        <a class="brand" href="/" style="margin-bottom:12px; display:inline-block;">
+          <img src="/img/logo.svg" alt="Nest by Ammakkili" width="180" height="42">
+        </a>
+        <p><%= t('footer.desc') %></p>
+        <p style="font-size:0.88rem; opacity:0.85; margin-top:8px;">
+          <span>💬 WhatsApp support only • No phone calls</span>
+        </p>
+        <div style="margin-top:14px;">
+          <a href="https://www.youtube.com/@nestammakkili" target="_blank" rel="noopener" class="btn small ghost" style="color:#fff; border-color:rgba(255,255,255,0.4);">
+            ▶ Watch on YouTube
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <h4><%= t('footer.shopHeading') %></h4>
+        <ul>
+          <li><a href="/shop"><%= t('nav.shop') %></a></li>
+          <li><a href="/sizes"><%= t('nav.sizes') %></a></li>
+          <li><a href="/how-to-order"><%= t('nav.howToOrder') %></a></li>
+          <li><a href="/wishlist"><%= t('nav.wishlist') %></a></li>
+          <li><a href="/cart"><%= t('nav.cart') %></a></li>
+          <li><a href="/track"><%= t('nav.track') %></a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4><%= t('footer.helpHeading') %></h4>
+        <ul>
+          <li><a href="/faq"><%= t('faq.title') %></a></li>
+          <li><a href="/policies"><%= t('policies.title') %></a></li>
+          <li><a href="/about"><%= t('nav.about') %></a></li>
+          <li><a href="/contact"><%= t('nav.contact') %></a></li>
+          <li><a href="/admin/login" style="opacity:0.6; font-size:0.75rem;">Admin Access</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="copy">
+      <span>© 2026 Nest by Ammakkili. <%= t('footer.allRights') %></span>
+      <span>Flat ₹<%= (settings && settings.shippingCharge) || 60 %> shipping • Prepaid orders only • No returns or exchanges</span>
+    </div>
+  </div>
+</footer>

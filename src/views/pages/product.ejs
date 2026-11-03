@@ -1,0 +1,257 @@
+<div class="wrap pg">
+  <div class="crumb" style="font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:28px;">
+    <a href="/"><%= t('nav.home') %></a> / <a href="/shop"><%= t('nav.shop') %></a> / <span><%= product.getName(lang) %></span>
+  </div>
+
+  <div class="pdp">
+    <!-- Gallery Column -->
+    <div>
+      <div class="arch" id="main-arch" style="aspect-ratio:4/5;">
+        <% if (product.images && product.images.length > 0) { %>
+          <img id="main-image" src="<%= product.images[0] %>" alt="<%= product.getName(lang) %>" width="600" height="750">
+        <% } else { %>
+          <svg viewBox="0 0 60 100" aria-hidden="true"><path d="M22 4h16l3 14 6 6-5 8 9 60H9l9-60-5-8 6-6z"/></svg>
+        <% } %>
+        <small><%= t('product.photo') %></small>
+      </div>
+
+      <% if (product.images && product.images.length > 1) { %>
+        <div class="thumbs" id="thumbs">
+          <% product.images.forEach(function(img, idx) { %>
+            <button 
+              type="button" 
+              class="<%= idx === 0 ? 'active' : '' %>"
+              data-img-src="<%= img %>" 
+              aria-label="View photo <%= idx + 1 %>"
+              aria-pressed="<%= idx === 0 ? 'true' : 'false' %>"
+            >
+              <img src="<%= img %>" alt="<%= product.getName(lang) %> photo <%= idx + 1 %>" loading="lazy">
+            </button>
+          <% }); %>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Product Info & Actions Column -->
+    <div>
+      <h1><%= product.getName(lang) %></h1>
+      <div class="price" style="font-size:1.5rem; margin-bottom:16px;">₹<%= product.price.toLocaleString('en-IN') %></div>
+      <p style="color:var(--muted); line-height:1.7;"><%= product.getDescription(lang) %></p>
+
+      <!-- Size Selection -->
+      <div class="opt" style="margin:26px 0;">
+        <label><%= t('product.size') %></label>
+        <div class="sizes" id="size-selector">
+          <% product.sizes.forEach(function(s) { %>
+            <button 
+              type="button" 
+              data-size="<%= s.size %>" 
+              data-stock="<%= s.stock %>"
+              <%= s.stock <= 0 ? 'disabled' : '' %>
+              title="<%= s.stock <= 0 ? t('product.soldOut') : (s.stock <= 3 ? t('product.onlyLeft', { n: s.stock, size: s.size }) : t('product.inStock', { n: s.stock })) %>"
+            >
+              <%= s.size %>
+            </button>
+          <% }); %>
+        </div>
+        <p class="err" id="size-warning" style="margin-top:8px;"></p>
+        <div style="margin-top:8px;">
+          <a href="/sizes" class="tlink" style="margin-left:0; font-size:0.8rem;"><%= t('product.sizeGuide') %></a>
+        </div>
+      </div>
+
+      <!-- Quantity Selector -->
+      <div class="opt" style="margin:22px 0;">
+        <label><%= t('product.quantity') %></label>
+        <div class="qty">
+          <button type="button" id="qty-minus" aria-label="Decrease quantity">−</button>
+          <span id="qty-val">1</span>
+          <button type="button" id="qty-plus" aria-label="Increase quantity">+</button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="acts">
+        <button type="button" class="btn" id="add-to-cart-btn"><%= t('product.addToCart') %></button>
+        <a href="/cart" class="btn ghost"><%= t('product.viewCart') %></a>
+        <button type="button" class="hbtn" data-wish-id="<%= product._id %>" data-wish-name="<%= product.getName(lang) %>" aria-label="Save to wishlist">♡</button>
+      </div>
+
+      <!-- Fact checklist -->
+      <ul class="facts">
+        <li><%= t('product.facts.style', { style: product.style }) %></li>
+        <li><%= t('product.facts.sizesRange') %></li>
+        <li><%= t('product.facts.prepaidOnly') %></li>
+        <li><%= t('product.facts.noReturns') %></li>
+      </ul>
+
+      <!-- YouTube Embed if available -->
+      <% if (product.videoUrl) { %>
+        <div style="margin-top:28px;">
+          <label><%= t('product.watchVideo') %></label>
+          <div style="position:relative; aspect-ratio:16/9; border-radius:18px; overflow:hidden; border:1px solid var(--gb);">
+            <% 
+              // Extract YouTube video id if standard watch link
+              let embedUrl = product.videoUrl;
+              if (embedUrl.includes('youtube.com/watch?v=')) {
+                embedUrl = embedUrl.replace('watch?v=', 'embed/');
+              } else if (embedUrl.includes('youtu.be/')) {
+                embedUrl = embedUrl.replace('youtu.be/', 'www.youtube.com/embed/');
+              }
+            %>
+            <% if (embedUrl.includes('youtube.com/embed/')) { %>
+              <iframe 
+                src="<%= embedUrl %>" 
+                title="<%= product.getName(lang) %> Video"
+                style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen
+              ></iframe>
+            <% } else { %>
+              <div style="display:grid; place-items:center; height:100%; background:var(--glass);">
+                <a href="<%= product.videoUrl %>" target="_blank" rel="noopener" class="btn small">
+                  ▶ <%= t('product.watchVideo') %>
+                </a>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Related Products -->
+  <% if (related && related.length > 0) { %>
+    <div class="head" style="margin-top:96px;">
+      <hr class="rule">
+      <h2><%= t('product.relatedTitle') %></h2>
+    </div>
+    <div class="grid">
+      <% related.forEach(function(p) { %>
+        <div class="item">
+          <div class="pw">
+            <a class="ph" href="/product/<%= p.slug %>" aria-label="<%= p.getName(lang) %>">
+              <% if (p.images && p.images.length > 0) { %>
+                <img src="<%= p.images[0] %>" alt="<%= p.getName(lang) %>" loading="lazy" width="400" height="500">
+              <% } else { %>
+                <svg viewBox="0 0 60 100" aria-hidden="true"><path d="M22 4h16l3 14 6 6-5 8 9 60H9l9-60-5-8 6-6z"/></svg>
+              <% } %>
+            </a>
+            <button type="button" class="hbtn cardh" data-wish-id="<%= p._id %>" data-wish-name="<%= p.getName(lang) %>" aria-label="Save to wishlist">♡</button>
+          </div>
+          <div class="meta">
+            <h3><a href="/product/<%= p.slug %>"><%= p.getName(lang) %></a></h3>
+            <div class="price">₹<%= p.price.toLocaleString('en-IN') %></div>
+            <small><%= p.style %></small>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>
+
+<!-- Embedded JSON-LD schema for Google Rich Results -->
+<script type="application/ld+json">
+<%- JSON.stringify(jsonLd) %>
+</script>
+
+<script>
+(function() {
+  var selectedSize = '';
+  var currentStock = 0;
+  var qty = 1;
+
+  // Thumbnail switching
+  var thumbs = document.getElementById('thumbs');
+  var mainImage = document.getElementById('main-image');
+  if (thumbs && mainImage) {
+    thumbs.querySelectorAll('button').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var src = btn.getAttribute('data-img-src');
+        mainImage.src = src;
+        thumbs.querySelectorAll('button').forEach(function(b) {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+      });
+    });
+  }
+
+  // Size Picker
+  var sizeButtons = document.querySelectorAll('#size-selector button');
+  var warningEl = document.getElementById('size-warning');
+  sizeButtons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (btn.disabled) return;
+      sizeButtons.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      selectedSize = btn.getAttribute('data-size');
+      currentStock = parseInt(btn.getAttribute('data-stock'), 10) || 0;
+      
+      if (currentStock <= 3) {
+        warningEl.textContent = 'Only ' + currentStock + ' left in size ' + selectedSize + '!';
+      } else {
+        warningEl.textContent = '';
+      }
+    });
+  });
+
+  // Quantity controls
+  var minusBtn = document.getElementById('qty-minus');
+  var plusBtn = document.getElementById('qty-plus');
+  var qtyDisplay = document.getElementById('qty-val');
+  if (minusBtn && plusBtn && qtyDisplay) {
+    minusBtn.addEventListener('click', function() {
+      if (qty > 1) {
+        qty--;
+        qtyDisplay.textContent = qty;
+      }
+    });
+    plusBtn.addEventListener('click', function() {
+      var maxAvailable = currentStock > 0 ? Math.min(10, currentStock) : 10;
+      if (qty < maxAvailable) {
+        qty++;
+        qtyDisplay.textContent = qty;
+      } else if (currentStock > 0) {
+        window.showToast('Maximum available quantity reached (' + currentStock + ')');
+      }
+    });
+  }
+
+  // Add to cart
+  var addBtn = document.getElementById('add-to-cart-btn');
+  if (addBtn) {
+    addBtn.addEventListener('click', function() {
+      if (!selectedSize) {
+        warningEl.textContent = "<%= t('product.selectSizeFirst') %>";
+        return;
+      }
+
+      var cart = window.getCart();
+      var existing = cart.find(function(it) {
+        return it.id === "<%= product._id %>" && it.size === selectedSize;
+      });
+
+      if (existing) {
+        existing.quantity = Math.min(currentStock || 10, existing.quantity + qty);
+      } else {
+        cart.push({
+          id: "<%= product._id %>",
+          slug: "<%= product.slug %>",
+          name: "<%= product.getName(lang) %>",
+          size: selectedSize,
+          price: <%= product.price %>,
+          quantity: qty,
+          image: "<%= product.images && product.images[0] ? product.images[0] : '/img/logo.svg' %>"
+        });
+      }
+
+      window.saveCart(cart);
+      window.showToast("<%= t('product.addToCart') %> ✓");
+    });
+  }
+})();
+</script>

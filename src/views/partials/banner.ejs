@@ -1,0 +1,16 @@
+<% if (banner && banner.active) { %>
+  <div class="announcement-bar">
+    <div class="wrap" style="display:flex; justify-content:center; align-items:center; gap:8px;">
+      <span><%= banner.getText(lang) %></span>
+      <% if (banner.link) { %>
+        <a href="<%= banner.link %>"><%= lang === 'ml' ? 'ഇപ്പോൾ കാണൂ →' : 'View collection →' %></a>
+      <% } %>
+    </div>
+  </div>
+<% } else if (settings && settings.announcementText) { %>
+  <div class="announcement-bar">
+    <div class="wrap">
+      <span><%= lang === 'ml' && settings.announcementText.ml ? settings.announcementText.ml : settings.announcementText.en %></span>
+    </div>
+  </div>
+<% } %>

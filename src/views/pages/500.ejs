@@ -1,0 +1,11 @@
+<div class="wrap pg narrow" style="text-align:center; padding:72px 20px;">
+  <div style="font-family:var(--serif); font-size:4rem; color:var(--c1); line-height:1;">Notice</div>
+  <h2 style="margin:16px 0;">An unexpected interruption occurred</h2>
+  <p class="lead" style="margin-bottom:28px;">
+    We experienced a temporary server error. Please try again or reach out to us via WhatsApp if you need immediate assistance with an order.
+  </p>
+  <% if (error) { %>
+    <pre style="text-align:left; background:rgba(0,0,0,0.05); padding:14px; border-radius:10px; overflow-x:auto; font-size:0.8rem;"><%= error.stack %></pre>
+  <% } %>
+  <a href="/" class="btn" style="margin-top:20px;">Return Home</a>
+</div>

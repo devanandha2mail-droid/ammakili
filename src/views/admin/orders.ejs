@@ -1,0 +1,82 @@
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:14px;">
+  <div>
+    <h1 style="font-size:2rem; margin:0;">Customer Orders</h1>
+    <p style="color:var(--admin-muted); margin:4px 0 0;">Review, fulfill, and update prepaid orders.</p>
+  </div>
+  <div style="display:flex; gap:12px;">
+    <a href="/admin/orders/export/csv" class="btn small ghost">📥 Export CSV</a>
+  </div>
+</div>
+
+<!-- Search & Status Tabs -->
+<div class="admin-card" style="padding:18px 24px; margin-bottom:24px;">
+  <form method="GET" action="/admin/orders" style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
+    <input name="q" value="<%= q %>" placeholder="Search by Order ID (NEST-...), Customer Name, or Phone..." style="flex:2 1 260px; padding:8px 12px; font-size:0.9rem;">
+    
+    <select name="status" onchange="this.form.submit()" style="flex:1 1 150px; padding:8px 12px; font-size:0.9rem;">
+      <option value="all" <%= currentStatus === 'all' ? 'selected' : '' %>>All Statuses</option>
+      <option value="pending_payment" <%= currentStatus === 'pending_payment' ? 'selected' : '' %>>Pending Payment</option>
+      <option value="paid" <%= currentStatus === 'paid' ? 'selected' : '' %>>Paid (Ready to Pack)</option>
+      <option value="packed" <%= currentStatus === 'packed' ? 'selected' : '' %>>Packed</option>
+      <option value="shipped" <%= currentStatus === 'shipped' ? 'selected' : '' %>>Shipped</option>
+      <option value="delivered" <%= currentStatus === 'delivered' ? 'selected' : '' %>>Delivered</option>
+      <option value="cancelled" <%= currentStatus === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+      <option value="failed" <%= currentStatus === 'failed' ? 'selected' : '' %>>Failed</option>
+    </select>
+
+    <button type="submit" class="btn small" style="padding:8px 18px;">Filter</button>
+    <% if (q || currentStatus !== 'all') { %>
+      <a href="/admin/orders" class="btn small ghost" style="padding:8px 16px;">Reset</a>
+    <% } %>
+  </form>
+</div>
+
+<!-- Orders Table -->
+<div class="admin-card">
+  <% if (orders.length === 0) { %>
+    <p style="color:var(--admin-muted); padding:28px 0; text-align:center;">No customer orders found.</p>
+  <% } else { %>
+    <div style="overflow-x:auto;">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Date & Time</th>
+            <th>Customer</th>
+            <th>Delivery City</th>
+            <th>Items</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach(function(o) { %>
+            <tr>
+              <td>
+                <strong><a href="/admin/orders/<%= o._id %>" style="color:var(--admin-c1);"><%= o.orderId %></a></strong>
+              </td>
+              <td><%= new Date(o.createdAt).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) %></td>
+              <td>
+                <div><strong><%= o.customer.name %></strong></div>
+                <div style="font-size:0.8rem; color:var(--admin-muted);"><%= o.customer.phone %></div>
+              </td>
+              <td><%= o.customer.city %>, <%= o.customer.pin %></td>
+              <td><%= o.items.reduce((s, i) => s + i.quantity, 0) %> pcs</td>
+              <td><strong>₹<%= o.total.toLocaleString('en-IN') %></strong></td>
+              <td>
+                <span class="tag-badge status-<%= o.status %>"><%= o.status.replace('_', ' ') %></span>
+              </td>
+              <td>
+                <div style="display:flex; gap:8px;">
+                  <a href="/admin/orders/<%= o._id %>" class="btn small ghost" style="padding:4px 10px; font-size:0.75rem;">View</a>
+                  <a href="/admin/orders/<%= o._id %>/packing-slip" target="_blank" rel="noopener" class="btn small ghost" style="padding:4px 10px; font-size:0.75rem;">Slip</a>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</div>

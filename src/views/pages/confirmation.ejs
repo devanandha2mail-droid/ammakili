@@ -1,0 +1,46 @@
+<div class="wrap pg narrow">
+  <hr class="rule" style="margin-left:0;">
+  <h2><%= t('confirmation.thankYou', { name: order.customer.name.split(' ')[0] }) %></h2>
+  <p class="lead" style="max-width:none;">
+    <%= t('confirmation.receivedMsg', { orderId: order.orderId }) %>
+  </p>
+
+  <div class="sum" style="position:static; margin-top:28px;">
+    <h3><%= t('confirmation.orderSummary') %></h3>
+    
+    <div style="margin-bottom:14px;">
+      <% order.items.forEach(function(i) { %>
+        <div class="r">
+          <span><%= i.name %> (Size: <%= i.size %>) × <%= i.quantity %></span>
+          <span>₹<%= (i.price * i.quantity).toLocaleString('en-IN') %></span>
+        </div>
+      <% }); %>
+    </div>
+
+    <div class="r">
+      <span><%= t('confirmation.shippingCharge') %></span>
+      <span>₹<%= order.shipping.toLocaleString('en-IN') %></span>
+    </div>
+    
+    <div class="r t">
+      <span><%= t('cart.total') %></span>
+      <span>₹<%= order.total.toLocaleString('en-IN') %></span>
+    </div>
+
+    <div style="margin-top:14px; font-size:0.88rem; color:var(--muted); border-top:1px solid var(--line); padding-top:10px;">
+      <div><strong>Status:</strong> <%= order.status.toUpperCase() %></div>
+      <div><strong>Delivery Address:</strong> <%= order.customer.name %>, <%= order.customer.address %>, <%= order.customer.city %> - <%= order.customer.pin %></div>
+      <div><strong>Phone:</strong> <%= order.customer.phone %></div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; margin-top:28px;">
+    <a class="btn" href="<%= whatsappUrl %>" target="_blank" rel="noopener">
+      💬 <%= t('confirmation.sendWhatsApp') %>
+    </a>
+
+    <a class="btn ghost" href="/track?orderId=<%= order.orderId %>&phone=<%= order.customer.phone %>">
+      📦 <%= t('confirmation.trackOrder') %>
+    </a>
+  </div>
+</div>

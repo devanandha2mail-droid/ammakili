@@ -1,0 +1,119 @@
+<div class="wrap pg">
+  <div class="head">
+    <hr class="rule">
+    <h2><%= t('cart.title') %></h2>
+  </div>
+
+  <div id="cart-container">
+    <div style="text-align:center; padding:40px 0; color:var(--muted);">
+      <p><%= t('cart.empty') %></p>
+      <a href="/shop" class="btn" style="margin-top:16px;"><%= t('cart.continueShopping') %></a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var container = document.getElementById('cart-container');
+
+  function renderCartView() {
+    var cart = window.getCart();
+    if (!cart || !cart.length) {
+      container.innerHTML = '<div style="text-align:center; padding:48px 0; color:var(--muted);">' +
+        '<p style="font-size:1.1rem; margin-bottom:18px;"><%= t('cart.empty') %></p>' +
+        '<a href="/shop" class="btn"><%= t('cart.continueShopping') %></a>' +
+        '</div>';
+      return;
+    }
+
+    // Call server validation to get latest accurate prices and check live stock
+    fetch('/cart/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: cart })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var html = '<div class="two2"><div>';
+
+      data.items.forEach(function(item, idx) {
+        html += '<div class="ln">' +
+          '<a class="th" href="/product/' + item.slug + '"><img src="' + item.image + '" alt="' + item.name + '"></a>' +
+          '<div>' +
+            '<b>' + item.name + '</b>' +
+            '<small><%= t('cart.size') %>: ' + item.size + ' · ₹' + item.price.toLocaleString('en-IN') + '</small>' +
+            (item.isAvailable ? '' : '<span style="color:var(--c1); font-size:0.8rem; display:block;">⚠️ Currently low/out of stock (Max: ' + item.stock + ')</span>') +
+            '<div class="qty" style="margin-top:8px;">' +
+              '<button type="button" class="cart-qty-minus" data-idx="' + idx + '" aria-label="Decrease quantity">−</button>' +
+              '<span>' + item.quantity + '</span>' +
+              '<button type="button" class="cart-qty-plus" data-idx="' + idx + '" aria-label="Increase quantity">+</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="end">' +
+            '<span class="price">₹' + item.lineTotal.toLocaleString('en-IN') + '</span>' +
+            '<button type="button" class="cart-remove-btn" data-idx="' + idx + '"><%= t('cart.remove') %></button>' +
+          '</div>' +
+        '</div>';
+      });
+
+      html += '</div>';
+
+      // Summary
+      html += '<div class="sum">' +
+        '<h3><%= t('cart.summaryTitle') %></h3>' +
+        '<div class="r"><span><%= t('cart.subtotal') %></span><span>₹' + data.subtotal.toLocaleString('en-IN') + '</span></div>' +
+        '<div class="r"><span><%= t('cart.shipping') %></span><span>₹' + data.shipping.toLocaleString('en-IN') + '</span></div>' +
+        '<div class="r t"><span><%= t('cart.total') %></span><span>₹' + data.total.toLocaleString('en-IN') + '</span></div>' +
+        (data.valid
+          ? '<a href="/checkout" class="btn" style="margin-top:20px; width:100%;"><%= t('cart.checkout') %></a>'
+          : '<button disabled class="btn" style="margin-top:20px; width:100%; opacity:0.5;">Please adjust out-of-stock items</button>') +
+        '<small style="display:block; margin-top:14px; color:var(--muted); font-size:0.82rem; text-align:center;">' +
+          '<%= t('cart.rulesReminder') %>' +
+        '</small>' +
+      '</div></div>';
+
+      container.innerHTML = html;
+      bindEvents(cart);
+    })
+    .catch(function(err) {
+      console.error('Cart fetch failed:', err);
+    });
+  }
+
+  function bindEvents(cart) {
+    container.querySelectorAll('.cart-remove-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        cart.splice(idx, 1);
+        window.saveCart(cart);
+        renderCartView();
+        window.showToast('Item removed');
+      });
+    });
+
+    container.querySelectorAll('.cart-qty-minus').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        if (cart[idx].quantity > 1) {
+          cart[idx].quantity--;
+          window.saveCart(cart);
+          renderCartView();
+        }
+      });
+    });
+
+    container.querySelectorAll('.cart-qty-plus').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        if (cart[idx].quantity < 10) {
+          cart[idx].quantity++;
+          window.saveCart(cart);
+          renderCartView();
+        }
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', renderCartView);
+})();
+</script>

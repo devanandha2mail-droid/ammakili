@@ -1,0 +1,59 @@
+<div style="margin-bottom:24px;">
+  <h1 style="font-size:2rem; margin:0;">Store Settings</h1>
+  <p style="color:var(--admin-muted); margin:4px 0 0;">Configure global fulfillment charges, WhatsApp contact, inventory thresholds, and announcement text.</p>
+</div>
+
+<% if (saved) { %>
+  <div style="background:#d1fae5; color:#065f46; padding:12px 18px; border-radius:10px; margin-bottom:20px; font-weight:400;">
+    ✓ Store settings have been saved and applied storewide!
+  </div>
+<% } %>
+
+<form method="POST" action="/admin/settings" class="admin-card" style="max-width:800px;">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <div class="form">
+    <!-- Flat Shipping Charge -->
+    <div class="h">
+      <label for="shippingCharge">Flat Shipping Charge (₹ INR) *</label>
+      <input id="shippingCharge" name="shippingCharge" type="number" min="0" step="1" required value="<%= settings.shippingCharge %>">
+      <small style="color:var(--admin-muted); font-size:0.8rem;">Applied to all checkout orders automatically (Default: ₹60).</small>
+    </div>
+
+    <!-- WhatsApp Support Number -->
+    <div class="h">
+      <label for="whatsappNumber">WhatsApp Support Number *</label>
+      <input id="whatsappNumber" name="whatsappNumber" required value="<%= settings.whatsappNumber %>" placeholder="e.g. 919876543210">
+      <small style="color:var(--admin-muted); font-size:0.8rem;">With country code, no + or spaces (e.g. 919876543210).</small>
+    </div>
+
+    <!-- Low Stock Alert Threshold -->
+    <div class="h">
+      <label for="lowStockThreshold">Low-Stock Alert Threshold *</label>
+      <input id="lowStockThreshold" name="lowStockThreshold" type="number" min="1" required value="<%= settings.lowStockThreshold || 3 %>">
+      <small style="color:var(--admin-muted); font-size:0.8rem;">Units remaining to trigger dashboard low-stock warning.</small>
+    </div>
+
+    <!-- YouTube Channel Link -->
+    <div class="h">
+      <label for="youtube">YouTube Channel Link</label>
+      <input id="youtube" name="youtube" value="<%= settings.social?.youtube || 'https://www.youtube.com/@nestammakkili' %>">
+    </div>
+
+    <!-- Announcement Bar English -->
+    <div class="f">
+      <label for="announcement_en">Announcement Bar (English)</label>
+      <textarea id="announcement_en" name="announcement_en" rows="2"><%= settings.announcementText?.en || '' %></textarea>
+    </div>
+
+    <!-- Announcement Bar Malayalam -->
+    <div class="f">
+      <label for="announcement_ml">Announcement Bar (Malayalam)</label>
+      <textarea id="announcement_ml" name="announcement_ml" rows="2"><%= settings.announcementText?.ml || '' %></textarea>
+    </div>
+  </div>
+
+  <div style="margin-top:28px;">
+    <button type="submit" class="btn">Save Settings</button>
+  </div>
+</form>

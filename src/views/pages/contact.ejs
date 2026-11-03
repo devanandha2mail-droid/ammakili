@@ -1,0 +1,45 @@
+<div class="wrap pg narrow">
+  <hr class="rule" style="margin-left:0;">
+  <h2><%= t('contact.title') %></h2>
+  <p class="lead" style="max-width:none;"><%= t('contact.lead') %></p>
+
+  <div class="form" style="margin-top:28px;">
+    <div class="h">
+      <label for="c-name"><%= t('contact.yourName') %></label>
+      <input id="c-name" placeholder="Your name">
+    </div>
+    <div class="f">
+      <label for="c-msg"><%= t('contact.yourMessage') %></label>
+      <textarea id="c-msg" rows="4" placeholder="How can we assist you? (e.g. size questions, order inquiry)"></textarea>
+    </div>
+  </div>
+
+  <p style="margin-top:24px;">
+    <button class="btn" id="cbtn" type="button">
+      💬 <%= t('contact.sendBtn') %>
+    </button>
+  </p>
+
+  <div style="margin-top:32px; padding:18px 24px; border-radius:18px; background:var(--glass2); border:1px solid var(--gb);">
+    <p style="margin:0; font-size:0.9rem; color:var(--muted);">
+      <strong>Support Hours:</strong> Monday – Saturday (9:30 AM – 7:30 PM IST)<br>
+      <strong>Note:</strong> We strictly operate as a message-based boutique. We do not answer telephone voice calls.<br>
+      YouTube Channel: <a href="https://www.youtube.com/@nestammakkili" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:underline;">@nestammakkili</a>
+    </p>
+  </div>
+</div>
+
+<script>
+(function() {
+  var waNumber = "<%= settings.whatsappNumber || '919876543210' %>";
+  var btn = document.getElementById('cbtn');
+  if (btn) {
+    btn.addEventListener('click', function() {
+      var name = document.getElementById('c-name').value.trim();
+      var msg = document.getElementById('c-msg').value.trim();
+      var text = "Hello Nest by Ammakkili,\nMy name is " + (name || "a customer") + ".\n\n" + (msg || "I would like to inquire about your nighty collection.");
+      window.open("https://wa.me/" + waNumber + "?text=" + encodeURIComponent(text), "_blank", "noopener");
+    });
+  }
+})();
+</script>
