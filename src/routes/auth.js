@@ -12,6 +12,9 @@ const authLimiter = rateLimit({
 
 router.get('/login', customerAuthController.getLogin);
 router.post('/logout', customerAuthController.postLogout);
+router.get('/logout', customerAuthController.postLogout);
+router.get('/auth/logout', customerAuthController.postLogout);
+router.get('/orders', (req, res) => res.redirect('/account#orders'));
 
 router.get('/auth/google', authLimiter, customerAuthController.startGoogleAuth);
 router.get('/auth/google/callback', authLimiter, customerAuthController.handleGoogleCallback);

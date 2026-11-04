@@ -132,165 +132,7 @@
     });
   }
 
-  // 6. Header Shrink on Scroll (> 40px)
-  var header = d.getElementById('siteHeader');
-  if (header) {
-    var checkScroll = function () {
-      if (window.scrollY > 40) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
-      }
-    };
-    window.addEventListener('scroll', checkScroll, { passive: true });
-    checkScroll();
-  }
-
-  // 7. Account Dropdown
-  var accBtn = d.getElementById('accBtn');
-  var accDropdown = d.getElementById('accDropdown');
-  if (accBtn && accDropdown) {
-    accBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      var isOpen = !accDropdown.hidden;
-      if (isOpen) {
-        accDropdown.hidden = true;
-        accBtn.setAttribute('aria-expanded', 'false');
-      } else {
-        accDropdown.hidden = false;
-        accBtn.setAttribute('aria-expanded', 'true');
-      }
-    });
-
-    d.addEventListener('click', function (e) {
-      if (!accDropdown.hidden && !accDropdown.contains(e.target) && e.target !== accBtn && !accBtn.contains(e.target)) {
-        accDropdown.hidden = true;
-        accBtn.setAttribute('aria-expanded', 'false');
-      }
-    });
-
-    d.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !accDropdown.hidden) {
-        accDropdown.hidden = true;
-        accBtn.setAttribute('aria-expanded', 'false');
-        accBtn.focus();
-      }
-    });
-  }
-
-  // 8. Mobile Drawer (< 980px) & Focus Trap
-  var burgerBtn = d.getElementById('burgerBtn');
-  var drawerClose = d.getElementById('drawerClose');
-  var mobileDrawer = d.getElementById('mobileDrawer');
-  var drawerOverlay = d.getElementById('drawerOverlay');
-
-  function openDrawer() {
-    if (!mobileDrawer || !drawerOverlay) return;
-    mobileDrawer.hidden = false;
-    drawerOverlay.hidden = false;
-    if (burgerBtn) burgerBtn.setAttribute('aria-expanded', 'true');
-    d.body.style.overflow = 'hidden';
-    var firstFocusable = mobileDrawer.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-    if (firstFocusable) firstFocusable.focus();
-  }
-
-  function closeDrawer() {
-    if (!mobileDrawer || !drawerOverlay) return;
-    mobileDrawer.hidden = true;
-    drawerOverlay.hidden = true;
-    if (burgerBtn) {
-      burgerBtn.setAttribute('aria-expanded', 'false');
-      burgerBtn.focus();
-    }
-    d.body.style.overflow = '';
-  }
-
-  if (burgerBtn) burgerBtn.addEventListener('click', openDrawer);
-  if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
-  if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
-
-  d.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && mobileDrawer && !mobileDrawer.hidden) {
-      closeDrawer();
-    }
-  });
-
-  if (mobileDrawer) {
-    mobileDrawer.addEventListener('keydown', function (e) {
-      if (e.key !== 'Tab') return;
-      var focusables = mobileDrawer.querySelectorAll('button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-      if (focusables.length === 0) return;
-      var first = focusables[0];
-      var last = focusables[focusables.length - 1];
-      if (e.shiftKey && d.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && d.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    });
-  }
-
-  // 9. Synchronized Theme Toggles (Light / Dark)
-  function applyTheme(theme) {
-    r.setAttribute('data-theme', theme);
-    try {
-      localStorage.setItem('nest_theme', theme);
-    } catch (e) {}
-
-    var isDark = theme === 'dark';
-    var icon = isDark ? '☼' : '☾';
-    var text = isDark ? 'Light theme' : 'Dark theme';
-
-    var ddIcon = d.getElementById('ddThemeIcon');
-    var ddText = d.getElementById('ddThemeText');
-    if (ddIcon) ddIcon.textContent = icon;
-    if (ddText) ddText.textContent = text;
-
-    var drawerIcon = d.getElementById('drawerThemeIcon');
-    var drawerText = d.getElementById('drawerThemeText');
-    if (drawerIcon) drawerIcon.textContent = icon;
-    if (drawerText) drawerText.textContent = text;
-
-    var footerBtn = d.getElementById('footerThemeToggle');
-    if (footerBtn) {
-      var fi = footerBtn.querySelector('.theme-icon');
-      var ft = footerBtn.querySelector('.theme-text');
-      if (fi) fi.textContent = icon;
-      if (ft) ft.textContent = text;
-    }
-
-    var oldThemeBtn = d.getElementById('theme-toggle');
-    if (oldThemeBtn) {
-      oldThemeBtn.textContent = icon;
-      oldThemeBtn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
-    }
-  }
-
-  function handleThemeToggle() {
-    var current = r.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    var next = current === 'dark' ? 'light' : 'dark';
-    applyTheme(next);
-  }
-
-  // Bind all theme toggles
-  ['ddThemeToggle', 'drawerThemeToggle', 'footerThemeToggle', 'theme-toggle'].forEach(function (id) {
-    var el = d.getElementById(id);
-    if (el) {
-      el.addEventListener('click', handleThemeToggle);
-    }
-  });
-
-  // Restore saved theme on startup
-  try {
-    var savedTheme = localStorage.getItem('nest_theme');
-    if (savedTheme) {
-      applyTheme(savedTheme);
-    }
-  } catch (e) {}
-
-  // 10. Wishlist Storage Sync & Count Badges
+  // 6. Wishlist Storage Sync & Count Badges
   function getWishlist() {
     try {
       return JSON.parse(localStorage.getItem('nest_wish') || '[]');
@@ -308,12 +150,9 @@
 
   function updateWishlistBadges() {
     var wish = getWishlist();
-    var count = wish.length;
-    var countElements = d.querySelectorAll('.wish-count, #wc, [data-badge="wish"]');
-    countElements.forEach(function (el) {
-      el.textContent = count;
-      el.setAttribute('data-zero', count === 0 ? 'true' : 'false');
-    });
+    if (window.NestHeader && typeof window.NestHeader.setWishlist === 'function') {
+      window.NestHeader.setWishlist(wish.length);
+    }
 
     // Update heart icons on page
     d.querySelectorAll('[data-wish-id]').forEach(function (btn) {
@@ -352,7 +191,7 @@
     }
   });
 
-  // 11. Cart Storage Helper & Count Badges
+  // 7. Cart Storage Helper & Count Badges
   function getCart() {
     try {
       return JSON.parse(localStorage.getItem('nest_cart') || '[]');
@@ -375,11 +214,9 @@
     var count = cart.reduce(function (total, item) {
       return total + (item.quantity || 1);
     }, 0);
-    var countElements = d.querySelectorAll('.cart-count, #cc, [data-badge="cart"]');
-    countElements.forEach(function (el) {
-      el.textContent = count;
-      el.setAttribute('data-zero', count === 0 ? 'true' : 'false');
-    });
+    if (window.NestHeader && typeof window.NestHeader.setCart === 'function') {
+      window.NestHeader.setCart(count);
+    }
   }
 
   window.updateCartBadges = updateCartBadges;
@@ -389,6 +226,10 @@
     updateWishlistBadges();
     updateCartBadges();
   });
+  if (d.readyState !== 'loading') {
+    updateWishlistBadges();
+    updateCartBadges();
+  }
 
 })();
 

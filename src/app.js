@@ -173,7 +173,7 @@ app.use('/admin/login', (req, res, next) => {
 });
 
 // Language Switch Route
-app.get('/set-lang/:lang', (req, res) => {
+const handleLangSwitch = (req, res) => {
   const targetLang = req.params.lang === 'ml' ? 'ml' : 'en';
   res.cookie('nest_lang', targetLang, { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: false });
   const referrer = req.get('Referrer');
@@ -181,7 +181,9 @@ app.get('/set-lang/:lang', (req, res) => {
     return res.redirect(referrer);
   }
   res.redirect('/');
-});
+};
+app.get('/set-lang/:lang', handleLangSwitch);
+app.get('/lang/:lang', handleLangSwitch);
 
 // Import and mount routers
 const storefrontRouter = require('./routes/storefront');
