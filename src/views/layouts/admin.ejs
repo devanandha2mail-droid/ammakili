@@ -3,56 +3,39 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= title %> – Nest by Ammakkili Admin</title>
+  <title><%= typeof title !== 'undefined' ? title : 'Admin' %> – Nest by Ammakkili Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
-  <link rel="stylesheet" href="/css/glass.css">
-  <link rel="stylesheet" href="/css/admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" href="/img/brand/logo-full-128.png">
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+  <link rel="stylesheet" href="/css/admin-dark.css">
 </head>
-<body class="admin-body">
-  <header class="admin-header">
-    <div class="admin-bar">
-      <div style="display:flex; align-items:center; gap:16px;">
-        <a href="/admin" style="display:flex; align-items:center; gap:12px; text-decoration:none;">
-          <div style="background:rgba(255, 255, 255, 0.95); border-radius:50%; padding:4px; box-shadow:0 3px 10px rgba(137, 34, 69, 0.15); display:grid; place-items:center;">
-            <picture>
-              <source srcset="/img/brand/logo-full-512.webp" type="image/webp">
-              <img 
-                src="/img/brand/logo-full-128.png" 
-                srcset="/img/brand/logo-full-128.png 128w, /img/brand/logo-full-256.png 256w" 
-                sizes="56px" 
-                width="56" 
-                height="56" 
-                alt="Nest by Ammakkili logo"
-                style="display:block;"
-              >
-            </picture>
-          </div>
-          <div>
-            <div style="font-family:var(--serif); font-size:1.35rem; font-style:italic; color:var(--admin-c1); line-height:1;">Nest by Ammakkili</div>
-            <span style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.12em; background:var(--admin-c1); color:#fff; padding:2px 6px; border-radius:4px; display:inline-block; margin-top:2px;">Admin Panel</span>
-          </div>
-        </a>
+<body class="admin">
+  <header>
+    <a href="/admin" style="display:flex; align-items:center; gap:14px; text-decoration:none;">
+      <img src="/img/brand/logo-full-128.png" srcset="/img/brand/logo-full-128.png 1x, /img/brand/logo-full-256.png 2x" width="48" height="48" alt="Nest logo">
+      <div>
+        <div style="font-family:var(--a-serif); font-size:1.35rem; font-style:italic; color:var(--a-ink); line-height:1;">Nest by Ammakkili</div>
+        <span class="a-tag" style="margin-top:2px;">Admin Panel</span>
       </div>
+    </a>
 
-      <nav class="admin-nav">
-        <a href="/admin" class="<%= path === '/admin' ? 'active' : '' %>">Dashboard</a>
-        <a href="/admin/products" class="<%= path.startsWith('/admin/products') ? 'active' : '' %>">Products</a>
-        <a href="/admin/orders" class="<%= path.startsWith('/admin/orders') ? 'active' : '' %>">Orders</a>
-        <a href="/admin/customers" class="<%= path.startsWith('/admin/customers') ? 'active' : '' %>">Customers</a>
-        <a href="/admin/banners" class="<%= path.startsWith('/admin/banners') ? 'active' : '' %>">Banners</a>
-        <a href="/admin/settings" class="<%= path.startsWith('/admin/settings') ? 'active' : '' %>">Settings</a>
-        <a href="/" target="_blank" rel="noopener" style="opacity:0.7;">View Shop ↗</a>
-        <a href="/admin/logout" style="color:var(--admin-c1);">Logout</a>
-      </nav>
-    </div>
+    <nav aria-label="Admin Navigation">
+      <a href="/admin" <%= (typeof path !== 'undefined' && path === '/admin') ? 'aria-current="page"' : '' %>>Dashboard</a>
+      <a href="/admin/products" <%= (typeof path !== 'undefined' && path.startsWith('/admin/products')) ? 'aria-current="page"' : '' %>>Products</a>
+      <a href="/admin/orders" <%= (typeof path !== 'undefined' && path.startsWith('/admin/orders')) ? 'aria-current="page"' : '' %>>Orders</a>
+      <a href="/admin/customers" <%= (typeof path !== 'undefined' && path.startsWith('/admin/customers')) ? 'aria-current="page"' : '' %>>Customers</a>
+      <a href="/admin/banners" <%= (typeof path !== 'undefined' && path.startsWith('/admin/banners')) ? 'aria-current="page"' : '' %>>Banners</a>
+      <a href="/admin/settings" <%= (typeof path !== 'undefined' && path.startsWith('/admin/settings')) ? 'aria-current="page"' : '' %>>Settings</a>
+      <a href="/admin/diagnostics" <%= (typeof path !== 'undefined' && path.startsWith('/admin/diagnostics')) ? 'aria-current="page"' : '' %>>Diagnostics</a>
+      <a href="/" target="_blank" rel="noopener" style="opacity:0.75;">View Shop ↗</a>
+      <a href="/admin/logout" style="color:var(--a-bad);">Logout</a>
+    </nav>
   </header>
 
-  <main class="admin-container">
+  <main class="a-wrap">
     <%- body %>
   </main>
 </body>
 </html>
-

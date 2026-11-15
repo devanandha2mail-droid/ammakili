@@ -13,23 +13,31 @@
   </div>
 </div>
 
-<script>
+<script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
 (function() {
   var grid = document.getElementById('wishlist-grid');
-  var wish = [];
-  try {
-    wish = JSON.parse(localStorage.getItem('nest_wish') || '[]');
-  } catch(e) { wish = []; }
 
-  if (!wish.length) return;
+  function renderWishlistView() {
+    var wishItems = window.WishlistStore ? window.WishlistStore.getItems() : [];
+    if (!wishItems.length) {
+      grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding:48px 0; color:var(--muted);">' +
+        '<p><%= t('wishlist.empty') %></p>' +
+        '<a href="/shop" class="btn" style="margin-top:16px;"><%= t('nav.shop') %></a>' +
+        '</div>';
+      return;
+    }
 
-  fetch('/api/wishlist-items?ids=' + encodeURIComponent(wish.join(',')))
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (!data.products || !data.products.length) return;
+    window.WishlistStore.validate(function(err, products) {
+      if (err || !products || !products.length) {
+        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align:center; padding:48px 0; color:var(--muted);">' +
+          '<p><%= t('wishlist.empty') %></p>' +
+          '<a href="/shop" class="btn" style="margin-top:16px;"><%= t('nav.shop') %></a>' +
+          '</div>';
+        return;
+      }
 
       var html = '';
-      data.products.forEach(function(p) {
+      products.forEach(function(p) {
         html += '<div class="item">' +
           '<div class="pw">' +
             '<a class="ph" href="/product/' + p.slug + '" aria-label="' + p.name + '">' +
@@ -39,18 +47,27 @@
             '<button type="button" class="hbtn cardh" data-wish-id="' + p.id + '" data-wish-name="' + p.name + '" aria-label="Remove from wishlist">♥</button>' +
           '</div>' +
           '<div class="meta">' +
+            '<small style="font-variant: all-small-caps; letter-spacing: 0.12em;">' + p.style + '</small>' +
             '<h3><a href="/product/' + p.slug + '">' + p.name + '</a></h3>' +
             '<div class="price">₹' + p.price.toLocaleString('en-IN') + '</div>' +
-            '<small>' + p.style + '</small>' +
           '</div>' +
         '</div>';
       });
 
       grid.innerHTML = html;
-    })
-    .catch(function(err) {
-      console.error('Wishlist error:', err);
     });
+  }
+
+  function initWishlist() {
+    window.addEventListener('wishlist:updated', renderWishlistView);
+    renderWishlistView();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWishlist);
+  } else {
+    initWishlist();
+  }
 })();
 </script>
 

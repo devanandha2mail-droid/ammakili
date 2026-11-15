@@ -73,9 +73,43 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending_payment', 'paid', 'packed', 'shipped', 'delivered', 'cancelled', 'failed'],
+    enum: ['pending_payment', 'paid', 'packed', 'shipped', 'delivered', 'cancelled', 'failed', 'refund_pending', 'refunded', 'refund_needed'],
     default: 'pending_payment',
     index: true
+  },
+  reservedUntil: {
+    type: Date,
+    index: true
+  },
+  stockReturned: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  checkoutSessionKey: {
+    type: String,
+    index: true,
+    default: ''
+  },
+  cartHash: {
+    type: String,
+    index: true,
+    default: ''
+  },
+  activeCartReservation: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  paidAt: {
+    type: Date
+  },
+  refund: {
+    id: { type: String, default: '' },
+    amount: { type: Number, default: 0 },
+    status: { type: String, default: '' },
+    initiatedAt: { type: Date },
+    failureReason: { type: String, default: '' }
   },
   payment: {
     razorpayOrderId: { type: String, default: '', index: true },
@@ -88,6 +122,11 @@ const orderSchema = new mongoose.Schema({
     courier: { type: String, default: '' },
     trackingId: { type: String, default: '' }
   },
+  adminAlerts: [{
+    type: { type: String },
+    message: { type: String },
+    createdAt: { type: Date, default: Date.now }
+  }],
   adminNotes: {
     type: String,
     default: ''

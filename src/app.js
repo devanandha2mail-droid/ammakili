@@ -1,12 +1,15 @@
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
+const { validateEnvironment } = require('./utils/envGuard');
+validateEnvironment();
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
 const { MongoStore } = require('connect-mongo');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 
 const i18nMiddleware = require('./middleware/i18n');
 const { csrfTokenMiddleware, doubleCsrfProtection } = require('./middleware/csrf');
@@ -17,8 +20,17 @@ const Banner = require('./models/Banner');
 
 const app = express();
 
-// 1. Trust proxy if behind reverse proxy
-app.set('trust proxy', 1);
+// 1. Trust proxy configured via TRUST_PROXY_HOPS env (default 1 hop)
+const trustProxyHops = process.env.TRUST_PROXY_HOPS !== undefined ? parseInt(process.env.TRUST_PROXY_HOPS, 10) : 1;
+app.set('trust proxy', isNaN(trustProxyHops) ? 1 : trustProxyHops);
+
+// 1b. Per-request ID tracking
+app.use((req, res, next) => {
+  const reqId = req.headers['x-request-id'] || `req_${crypto.randomUUID().slice(0, 8)}`;
+  req.id = reqId;
+  res.setHeader('x-request-id', reqId);
+  next();
+});
 
 // 2. Compression for high performance
 app.use(compression());
@@ -29,7 +41,13 @@ app.use(express.static(path.join(__dirname, '../public'), {
   etag: true
 }));
 
-// 4. Helmet Security Headers with Razorpay, Google Fonts & YouTube CSP
+// 4. Per-request CSP Nonce Generation for strict script execution
+app.use((req, res, next) => {
+  res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
+  next();
+});
+
+// 5. Helmet Security Headers (strict scriptSrc without 'unsafe-inline' and without api.razorpay.com)
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -37,9 +55,8 @@ app.use(
         defaultSrc: ["'self'"],
         scriptSrc: [
           "'self'",
-          "'unsafe-inline'", // Needed for inline scripts in templates
-          'https://checkout.razorpay.com',
-          'https://api.razorpay.com'
+          (req, res) => `'nonce-${res.locals.cspNonce}'`,
+          'https://checkout.razorpay.com'
         ],
         frameSrc: [
           "'self'",
@@ -64,15 +81,18 @@ app.use(
           'https://res.cloudinary.com',
           'https://checkout.razorpay.com',
           'https://img.youtube.com',
-          'https://lh3.googleusercontent.com',
-          'https://images.unsplash.com'
+          'https://lh3.googleusercontent.com'
         ],
         connectSrc: [
           "'self'",
           'https://api.razorpay.com',
           'https://checkout.razorpay.com',
           'https://lumberjack.razorpay.com'
-        ]
+        ],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"]
       }
     },
     crossOriginEmbedderPolicy: false
@@ -127,7 +147,9 @@ app.use(async (req, res, next) => {
   try {
     res.locals.path = req.path;
     res.locals.currentUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-    res.locals.settings = await Settings.getSettings();
+    const globalSettings = await Settings.getSettings();
+    res.locals.settings = globalSettings;
+    res.locals.whatsappNumber = globalSettings.whatsappNumber || '919876543210';
 
     // Find current active festival or seasonal banner
     const now = new Date();
@@ -147,38 +169,95 @@ app.use(async (req, res, next) => {
   }
 });
 
-// 10. CSRF Protection
-// Exclude Razorpay webhook and checkout JSON API from standard HTML form CSRF check if needed,
-// but attach CSRF token to all templates.
+// 10. Rate Limiters
+// IP-based checkout limiter: raised to 60 requests per 15 minutes.
+// Many Indian mobile customers share cellular carrier CGNAT IPs (e.g., Jio, Airtel, Vi).
+// Raising the IP limit to 60 per 15 minutes avoids falsely blocking multiple legitimate buyers sharing a cell tower IP.
+const checkoutIpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60, // 60 checkout requests per 15 minutes per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test' && process.env.ENABLE_RATE_LIMITS !== 'true',
+  handler: (req, res) => {
+    res.status(429).json({
+      error: {
+        code: 'RATE_LIMITED',
+        message: 'Too many checkout requests from this network, please try again in 15 minutes.'
+      },
+      requestId: req.id
+    });
+  }
+});
+
+// Per-session or per-cart limiter: 10 requests per 15 minutes.
+// While network IP is shared among multiple mobile subscribers, session ID is unique per device/browser.
+// Limiting to 10 creates per 15m stops automated bot abuse and cart flooding without affecting other users.
+const checkoutSessionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    if (req.user?._id) return `user_${req.user._id}`;
+    const guestCookie = req.signedCookies ? (req.signedCookies['nest_guest'] || req.signedCookies['__Host-nest_guest']) : null;
+    if (guestCookie) return `guest_${guestCookie}`;
+    if (req.cookies && req.cookies['connect.sid']) return `sess_${req.sessionID}`;
+    const cartToken = req.headers['x-cart-token'] || req.headers['x-guest-id'];
+    if (cartToken) return `cart_${cartToken}`;
+    return ipKeyGenerator(req.ip, 64);
+  },
+  skip: () => process.env.NODE_ENV === 'test' && process.env.ENABLE_RATE_LIMITS !== 'true',
+  handler: (req, res) => {
+    res.status(429).json({
+      error: {
+        code: 'RATE_LIMITED',
+        message: 'Too many checkout attempts for this session. Please try again in 15 minutes.'
+      },
+      requestId: req.id
+    });
+  }
+});
+
+app.use('/checkout', checkoutIpLimiter);
+app.use('/checkout/create', checkoutSessionLimiter);
+
+// 11. CSRF Protection
+// Exclude Razorpay webhooks and test login from CSRF check,
+// but protect all other state-changing routes.
 app.use(csrfTokenMiddleware);
 
-// 11. Rate limiters
-const checkoutLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 30, // max 30 checkout attempts per 15 minutes per IP
-  message: { error: 'Too many checkout requests from this IP, please try again in 15 minutes.' }
-});
-
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10, // max 10 failed logins per 15m
-  message: 'Too many login attempts. Please try again later.'
-});
-
-app.use('/admin/login', (req, res, next) => {
-  if (req.method === 'POST') {
-    return loginLimiter(req, res, next);
+app.use((req, res, next) => {
+  if (
+    req.path.startsWith('/webhooks') ||
+    req.path.startsWith('/__test') ||
+    req.path === '/track' ||
+    req.path === '/track-order' ||
+    req.path === '/admin/login' ||
+    req.path === '/account/wishlist/sync' ||
+    req.path === '/account/delete' ||
+    req.path === '/cart/validate'
+  ) {
+    return next();
   }
-  next();
+  return doubleCsrfProtection(req, res, next);
 });
 
 // Language Switch Route
 const handleLangSwitch = (req, res) => {
   const targetLang = req.params.lang === 'ml' ? 'ml' : 'en';
   res.cookie('nest_lang', targetLang, { maxAge: 365 * 24 * 60 * 60 * 1000, httpOnly: false });
-  const referrer = req.get('Referrer');
-  if (referrer && referrer.startsWith(req.protocol + '://' + req.get('host'))) {
-    return res.redirect(referrer);
+  const rawTarget = req.query.returnTo || req.get('Referrer') || req.get('referer');
+  if (rawTarget) {
+    try {
+      if (rawTarget.startsWith('/') && !rawTarget.startsWith('//')) {
+        return res.redirect(rawTarget);
+      }
+      const parsed = new URL(rawTarget, 'http://localhost');
+      if (parsed.hostname === req.hostname || parsed.host === req.get('host')) {
+        return res.redirect(parsed.pathname + parsed.search);
+      }
+    } catch (e) {}
   }
   res.redirect('/');
 };
@@ -200,9 +279,76 @@ app.use('/', authRouter); // /login, /logout, /auth/google
 app.use('/account', accountRouter); // /account
 app.use('/', storefrontRouter);
 app.use('/cart', cartRouter);
-app.use('/checkout', checkoutLimiter, checkoutRouter);
+app.use('/checkout', checkoutRouter);
 app.use('/webhooks', webhookRouter);
 app.use('/admin', adminRouter);
+
+// Test-only Login Route: strictly available only when NODE_ENV=test AND ALLOW_TEST_LOGIN=true
+if (process.env.NODE_ENV === 'test' && process.env.ALLOW_TEST_LOGIN === 'true') {
+  const Customer = require('./models/Customer');
+  const { safeReturnUrl } = require('./middleware/customerAuth');
+  app.post('/__test/login', async (req, res, next) => {
+    try {
+      const email = (req.body.email || req.query.email || 'customer.test@example.com').toLowerCase().trim();
+      const name = req.body.name || req.query.name || 'Priya Lakshmi';
+      const phone = req.body.phone || req.query.phone || '9846012345';
+      const addresses = req.body.addresses || [{
+        label: 'Home',
+        name: name,
+        phone: phone,
+        address: 'Ammakkili Villa, Palace Road',
+        city: 'Thrissur',
+        state: 'Kerala',
+        pin: '680001',
+        isDefault: true
+      }];
+
+      let customer = await Customer.findOne({ email });
+      if (!customer) {
+        customer = await Customer.create({
+          googleId: 'test_google_id_' + Date.now(),
+          email,
+          emailVerified: true,
+          name,
+          phone,
+          addresses,
+          lastLoginAt: new Date()
+        });
+      } else if (req.body.addresses) {
+        customer.addresses = addresses;
+        await customer.save();
+      }
+
+      req.login(customer, (err) => {
+        if (err) return next(err);
+        if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+          return res.json({ success: true, customer: { id: customer._id, email: customer.email, name: customer.name } });
+        }
+        const rawReturnTo = req.body.returnTo || req.query.returnTo || '/account';
+        const returnTo = safeReturnUrl(rawReturnTo);
+        res.redirect(returnTo);
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+}
+
+// Test-only Signature Route: strictly 404 unless NODE_ENV=test AND ALLOW_TEST_HARNESS=true
+if (process.env.NODE_ENV === 'test' && process.env.ALLOW_TEST_HARNESS === 'true') {
+  app.post('/__test/compute-signature', (req, res) => {
+    const { razorpay_order_id, razorpay_payment_id } = req.body || {};
+    if (!razorpay_order_id || !razorpay_payment_id) {
+      return res.status(400).json({ error: 'Missing parameters for test signature computation' });
+    }
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const signature = crypto
+      .createHmac('sha256', secret)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+    res.json({ signature });
+  });
+}
 
 // 404 Handler
 app.use((req, res, next) => {
@@ -214,7 +360,28 @@ app.use((req, res, next) => {
 
 // 500 Global Error Handler
 app.use((err, req, res, next) => {
-  console.error('[Unhandled Error]:', err);
+  if (err.code === 'EBADCSRFTOKEN') {
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json')) || req.path.startsWith('/checkout') || req.path.startsWith('/cart')) {
+      return res.status(403).json({
+        error: {
+          code: 'SESSION_EXPIRED',
+          message: 'Your session has expired. Please reload the page to refresh your token.'
+        },
+        requestId: req.id
+      });
+    }
+    return res.status(403).send('Forbidden: Invalid or missing CSRF token');
+  }
+  console.error(`[Request ${req.id}] [Unhandled Error]:`, err);
+  if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json')) || req.path.startsWith('/checkout') || req.path.startsWith('/cart')) {
+    return res.status(err.status || 500).json({
+      error: {
+        code: 'PAYMENT_SERVICE_UNAVAILABLE',
+        message: 'Payment service is temporarily unavailable. Please try again in a few moments.'
+      },
+      requestId: req.id
+    });
+  }
   res.status(err.status || 500).render('pages/500', {
     title: 'Server Error',
     metaDesc: 'An unexpected error occurred.',

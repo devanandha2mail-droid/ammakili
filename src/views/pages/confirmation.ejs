@@ -54,3 +54,25 @@
   </div>
 </div>
 
+<script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
+  function clearCart() {
+    try {
+      localStorage.removeItem('nest_cart');
+      localStorage.removeItem('cart');
+    } catch (e) {}
+    if (window.CartStore && typeof window.CartStore.clear === 'function') {
+      window.CartStore.clear();
+    }
+    var badge = document.getElementById('cartBadge');
+    if (badge) {
+      badge.textContent = '0';
+      badge.setAttribute('data-zero', 'true');
+    }
+  }
+  clearCart();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', clearCart);
+  }
+  window.addEventListener('load', clearCart);
+</script>
+

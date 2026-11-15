@@ -65,7 +65,7 @@
 </head>
 <body>
   <div class="no-print">
-    <button class="btn-print" onclick="window.print()">🖨️ Print Packing Slip</button>
+    <button class="btn-print" id="print-slip-btn">🖨️ Print Packing Slip</button>
   </div>
 
   <div class="header">
@@ -144,6 +144,12 @@
     <strong>Notice:</strong> As per shop policy, sizes cannot be exchanged or returned. Each nighty has been individually inspected for flawless stitching and comfort before packing.<br>
     Thank you for shopping with Nest by Ammakkili!
   </div>
+
+  <script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
+    document.getElementById('print-slip-btn')?.addEventListener('click', function() {
+      window.print();
+    });
+  </script>
 </body>
 </html>
 

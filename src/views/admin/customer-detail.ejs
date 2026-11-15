@@ -1,47 +1,55 @@
 <div style="margin-bottom:24px;">
-  <a href="/admin/customers" class="tlink" style="margin-left:0; font-size:0.8rem;">← Back to Customers</a>
+  <a href="/admin/customers" class="a-back">← Back to Customers</a>
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:8px;">
     <div style="display:flex; align-items:center; gap:16px;">
       <% if (customer.avatarUrl) { %>
-        <img src="<%= customer.avatarUrl %>" alt="" style="width:54px; height:54px; border-radius:50%; object-fit:cover;">
+        <img src="<%= customer.avatarUrl %>" alt="" style="width:54px; height:54px; border-radius:50%; object-fit:cover; border:1px solid var(--a-line);">
       <% } %>
       <div>
-        <h1 style="font-size:2rem; margin:0;"><%= customer.name %></h1>
-        <p style="color:var(--admin-muted); margin:2px 0 0;"><%= customer.email %> • Joined <%= new Date(customer.createdAt).toLocaleDateString('en-IN') %></p>
+        <h1 style="font-size:2rem; margin:0; font-family:var(--a-serif); color:var(--a-ink);"><%= customer.name %></h1>
+        <p style="color:var(--a-muted); margin:4px 0 0;"><%= customer.email %> • Joined <%= new Date(customer.createdAt).toLocaleDateString('en-IN') %></p>
       </div>
     </div>
   </div>
 </div>
 
-<div class="two2">
+<div class="a-grid-2" style="align-items:start;">
   <!-- Orders by this Customer -->
   <div>
-    <div class="admin-card">
-      <h2 style="font-size:1.3rem; margin-bottom:16px;">Customer Order History (<%= orders.length %>)</h2>
+    <div class="a-card">
+      <h2 style="font-size:1.3rem; margin-bottom:16px; font-family:var(--a-serif); color:var(--a-ink);">Customer Order History (<%= orders.length %>)</h2>
 
       <% if (orders.length === 0) { %>
-        <p style="color:var(--admin-muted); padding:20px 0;">No orders associated with this customer.</p>
+        <p style="color:var(--a-muted); padding:20px 0;">No orders associated with this customer.</p>
       <% } else { %>
         <div style="display:grid; gap:16px;">
           <% orders.forEach(function(o) { %>
-            <div style="border:1px solid var(--admin-border); border-radius:14px; padding:18px; background:#fff;">
+            <div style="border:1px solid var(--a-line2); border-radius:16px; padding:18px; background:var(--a-s2);">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <strong><a href="/admin/orders/<%= o._id %>" style="color:var(--admin-c1); font-size:1.1rem;"><%= o.orderId %></a></strong>
-                <span class="tag-badge status-<%= o.status %>"><%= o.status.replace('_', ' ') %></span>
+                <strong><a href="/admin/orders/<%= o._id %>" style="color:var(--a-accent); font-size:1.1rem;"><%= o.orderId %></a></strong>
+                <% 
+                  let pillClass = 'a-pill';
+                  if (o.status === 'paid' || o.status === 'delivered') pillClass += ' a-pill--ok';
+                  else if (o.status === 'packed') pillClass += ' a-pill--info';
+                  else if (o.status === 'shipped') pillClass += ' a-pill--vio';
+                  else if (o.status === 'pending_payment') pillClass += ' a-pill--warn';
+                  else if (o.status === 'cancelled' || o.status === 'failed') pillClass += ' a-pill--bad';
+                %>
+                <span class="<%= pillClass %>"><%= o.status.replace('_', ' ') %></span>
               </div>
 
-              <div style="font-size:0.88rem; color:var(--admin-muted); margin-bottom:8px;">
-                Placed: <%= new Date(o.createdAt).toLocaleDateString('en-IN') %> • Total: <strong>₹<%= o.total.toLocaleString('en-IN') %></strong>
+              <div style="font-size:0.88rem; color:var(--a-muted); margin-bottom:8px;">
+                Placed: <%= new Date(o.createdAt).toLocaleDateString('en-IN') %> • Total: <strong style="color:var(--a-ink);">₹<%= o.total.toLocaleString('en-IN') %></strong>
               </div>
 
-              <ul style="margin:8px 0; padding-left:18px; font-size:0.85rem; color:var(--admin-muted);">
+              <ul style="margin:8px 0; padding-left:18px; font-size:0.85rem; color:var(--a-muted);">
                 <% o.items.forEach(function(i) { %>
-                  <li><%= i.name %> (Size: <%= i.size %>) × <%= i.quantity %></li>
+                  <li><span style="color:var(--a-ink);"><%= i.name %></span> (Size: <%= i.size %>) × <%= i.quantity %></li>
                 <% }); %>
               </ul>
 
               <div style="margin-top:12px; text-align:right;">
-                <a href="/admin/orders/<%= o._id %>" class="btn small ghost" style="padding:4px 10px; font-size:0.75rem;">Manage Order</a>
+                <a href="/admin/orders/<%= o._id %>" class="a-btn a-btn--ghost a-btn--sm">Manage Order</a>
               </div>
             </div>
           <% }); %>
@@ -51,25 +59,25 @@
   </div>
 
   <!-- Saved Addresses -->
-  <div>
-    <div class="admin-card">
-      <h2 style="font-size:1.3rem; margin-bottom:16px;">Saved Delivery Addresses (<%= customer.addresses.length %>)</h2>
+  <div style="display:flex; flex-direction:column; gap:24px;">
+    <div class="a-card">
+      <h2 style="font-size:1.3rem; margin-bottom:16px; font-family:var(--a-serif); color:var(--a-ink);">Saved Delivery Addresses (<%= customer.addresses.length %>)</h2>
 
       <% if (customer.addresses.length === 0) { %>
-        <p style="color:var(--admin-muted); padding:16px 0;">Customer has not saved any addresses yet.</p>
+        <p style="color:var(--a-muted); padding:16px 0;">Customer has not saved any addresses yet.</p>
       <% } else { %>
         <div style="display:grid; gap:14px;">
           <% customer.addresses.forEach(function(addr) { %>
-            <div style="border:1px solid var(--admin-border); border-radius:12px; padding:14px; background:#fff;">
-              <div style="display:flex; justify-content:space-between;">
-                <strong><%= addr.label %></strong>
+            <div style="border:1px solid var(--a-line2); border-radius:14px; padding:14px; background:var(--a-s2);">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="color:var(--a-ink);"><%= addr.label %></strong>
                 <% if (addr.isDefault) { %>
-                  <span style="font-size:0.72rem; background:var(--admin-c1); color:#fff; padding:2px 6px; border-radius:4px;">Default</span>
+                  <span class="a-tag">Default</span>
                 <% } %>
               </div>
-              <p style="margin:6px 0 0; font-size:0.88rem; line-height:1.4; color:var(--admin-muted);">
-                <%= addr.name %> (<%= addr.phone %>)<br>
-                <%= addr.address %>, <%= addr.city %> - <%= addr.pin %>
+              <p style="margin:8px 0 0; font-size:0.88rem; line-height:1.5; color:var(--a-muted);">
+                <span style="color:var(--a-ink);"><%= addr.name %> (<%= addr.phone %>)</span><br>
+                <%= addr.address %>, <%= addr.city %> - <strong style="color:var(--a-ink);"><%= addr.pin %></strong>
               </p>
             </div>
           <% }); %>
@@ -78,9 +86,9 @@
     </div>
 
     <!-- Security & Privacy Notes -->
-    <div class="admin-card" style="border-left:4px solid #059669;">
-      <h3 style="font-size:1rem; margin-bottom:8px; color:#059669;">Google OAuth Security</h3>
-      <p style="font-size:0.82rem; color:var(--admin-muted); line-height:1.5; margin:0;">
+    <div class="a-alert a-alert--ok">
+      <h3 style="font-size:1rem; margin-bottom:6px; color:var(--a-ok); font-family:var(--a-sans);">Google OAuth Security</h3>
+      <p style="font-size:0.84rem; color:var(--a-muted); line-height:1.5; margin:0;">
         Identity verified by Google OAuth 2.0. No passwords or tokens are stored on this server. Customer can request account deletion at any time from their portal.
       </p>
     </div>

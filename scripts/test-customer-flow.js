@@ -19,7 +19,8 @@ async function testCustomerFlow() {
     throw new Error('Google test login failed!');
   }
 
-  const sessionCookie = cookieHeader.split(';')[0];
+  const sidMatch = cookieHeader.match(/connect\.sid=([^;]+)/);
+  const sessionCookie = sidMatch ? `connect.sid=${sidMatch[1]}` : cookieHeader.split(';')[0];
   console.log('[Customer Test] Customer session cookie established.');
 
   // 2. Test Accessing /account
@@ -164,7 +165,9 @@ async function testCustomerFlow() {
     }),
     redirect: 'manual'
   });
-  const adminCookie = adminLoginRes.headers.get('set-cookie').split(';')[0];
+  const adminRawCookie = adminLoginRes.headers.get('set-cookie') || '';
+  const adminSidMatch = adminRawCookie.match(/connect\.sid=([^;]+)/);
+  const adminCookie = adminSidMatch ? `connect.sid=${adminSidMatch[1]}` : adminRawCookie.split(';')[0];
   const adminCustRes = await fetch('http://localhost:3000/admin/customers', {
     headers: { 'Cookie': adminCookie }
   });

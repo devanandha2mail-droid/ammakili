@@ -1,0 +1,19 @@
+# Example only: add the stylist next to your web app. Do NOT publish its port.
+services:
+  stylist:
+    build: ./services/stylist
+    environment:
+      STYLIST_KEY: ${STYLIST_KEY}      # long random string, also set in the web app's .env
+      STYLIST_THREADS: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 1500M                # measured: about 0.9 GB in use with both models loaded
+    restart: unless-stopped
+    expose: ["8001"]                   # reachable by other containers only
+  web:
+    build: .
+    environment:
+      STYLIST_URL: http://stylist:8001
+      STYLIST_KEY: ${STYLIST_KEY}
+    depends_on: [stylist]

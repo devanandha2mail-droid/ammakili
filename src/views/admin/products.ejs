@@ -1,42 +1,48 @@
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:14px;">
   <div>
-    <h1 style="font-size:2rem; margin:0;">Products</h1>
-    <p style="color:var(--admin-muted); margin:4px 0 0;">Manage your nighty designs, images, pricing, and stock.</p>
+    <h1>Products</h1>
+    <p style="margin:4px 0 0;">Manage your nighty designs, images, pricing, and stock.</p>
   </div>
-  <div>
-    <a href="/admin/products/add" class="btn small">+ Add New Nighty</a>
+  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <% if (typeof hasSampleProducts !== 'undefined' && hasSampleProducts) { %>
+      <form method="POST" action="/admin/products/delete-samples" onsubmit="return confirm('Delete all sample products? Real products will not be affected.');" style="display:inline;">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit" class="a-btn a-btn--danger a-btn--sm">Delete all sample products</button>
+      </form>
+    <% } %>
+    <a href="/admin/products/add" class="a-btn">+ Add New Nighty</a>
   </div>
 </div>
 
 <!-- Filters -->
-<form method="GET" action="/admin/products" class="admin-card" style="padding:18px 24px; margin-bottom:24px;">
+<form method="GET" action="/admin/products" class="a-card" style="padding:18px 24px; margin-bottom:24px;">
   <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
-    <input name="q" value="<%= q %>" placeholder="Search by English or Malayalam name / slug..." style="flex:2 1 240px; padding:8px 12px; font-size:0.9rem;">
-    <select name="style" onchange="this.form.submit()" style="flex:1 1 140px; padding:8px 12px; font-size:0.9rem;">
+    <input name="q" value="<%= q %>" placeholder="Search by English or Malayalam name / slug..." style="flex:2 1 240px; font-size:0.9rem;">
+    <select name="style" onchange="this.form.submit()" style="flex:1 1 140px; font-size:0.9rem;">
       <option value="">All Styles</option>
       <% styles.forEach(function(s) { %>
         <option value="<%= s %>" <%= selectedStyle === s ? 'selected' : '' %>><%= s %></option>
       <% }); %>
     </select>
-    <select name="status" onchange="this.form.submit()" style="flex:1 1 140px; padding:8px 12px; font-size:0.9rem;">
+    <select name="status" onchange="this.form.submit()" style="flex:1 1 140px; font-size:0.9rem;">
       <option value="">All Statuses</option>
       <option value="active" <%= selectedStatus === 'active' ? 'selected' : '' %>>Active only</option>
       <option value="inactive" <%= selectedStatus === 'inactive' ? 'selected' : '' %>>Inactive only</option>
     </select>
-    <button type="submit" class="btn small" style="padding:8px 18px;">Search</button>
+    <button type="submit" class="a-btn a-btn--sm">Search</button>
     <% if (q || selectedStyle || selectedStatus) { %>
-      <a href="/admin/products" class="btn small ghost" style="padding:8px 16px;">Reset</a>
+      <a href="/admin/products" class="a-btn a-btn--ghost a-btn--sm">Reset</a>
     <% } %>
   </div>
 </form>
 
 <!-- Products Table -->
-<div class="admin-card">
+<div class="a-card">
   <% if (products.length === 0) { %>
-    <p style="color:var(--admin-muted); padding:20px 0; text-align:center;">No nighties match your query.</p>
+    <p style="padding:20px 0; text-align:center;">No nighties match your query.</p>
   <% } else { %>
-    <div style="overflow-x:auto;">
-      <table class="admin-table">
+    <div class="a-table-wrap">
+      <table>
         <thead>
           <tr>
             <th>Photo</th>
@@ -53,21 +59,32 @@
           <% products.forEach(function(p) { %>
             <tr>
               <td style="width:60px;">
-                <img src="<%= p.images && p.images[0] ? p.images[0] : '/img/logo.svg' %>" alt="<%= p.name.en %>" style="width:48px; height:60px; object-fit:cover; border-radius:6px; border:1px solid var(--admin-border);">
+                <img src="<%= typeof p.getMainImage === 'function' ? p.getMainImage() : (p.images && p.images[0] ? (p.images[0].url || p.images[0]) : '/img/logo.svg') %>" alt="<%= p.name.en %>" style="width:48px; height:60px; object-fit:cover; border-radius:8px; border:1px solid var(--a-line);">
               </td>
               <td>
-                <strong><%= p.name.en %></strong>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                  <strong><%= p.name.en %></strong>
+                  <% if (p.isSample) { %>
+                    <span class="a-sample">Sample</span>
+                  <% } %>
+                </div>
                 <% if (p.name.ml) { %>
-                  <div style="font-size:0.82rem; color:var(--admin-muted);"><%= p.name.ml %></div>
+                  <div style="font-size:0.82rem; color:var(--a-muted);"><%= p.name.ml %></div>
                 <% } %>
-                <div style="font-size:0.75rem; color:var(--admin-muted);"><%= p.slug %></div>
+                <div style="font-size:0.75rem; color:var(--a-dim);"><%= p.slug %></div>
               </td>
               <td><%= p.style %></td>
               <td><strong>₹<%= p.price.toLocaleString('en-IN') %></strong></td>
               <td>
                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
                   <% p.sizes.forEach(function(s) { %>
-                    <span style="font-size:0.75rem; padding:2px 6px; border-radius:4px; <%= s.stock === 0 ? 'background:#fee2e2; color:#991b1b;' : (s.stock <= 3 ? 'background:#fef3c7; color:#92400e;' : 'background:#e0e7ff; color:#3730a3;') %>">
+                    <% 
+                      let pill = 'a-pill';
+                      if (s.stock === 0) pill += ' a-pill--bad';
+                      else if (s.stock <= 3) pill += ' a-pill--warn';
+                      else pill += ' a-pill--info';
+                    %>
+                    <span class="<%= pill %>" style="padding:2px 8px; font-size:0.72rem;">
                       <%= s.size %>: <%= s.stock %>
                     </span>
                   <% }); %>
@@ -75,17 +92,17 @@
               </td>
               <td><%= p.featured ? '⭐ Yes' : 'No' %></td>
               <td>
-                <span class="tag-badge <%= p.active ? 'status-delivered' : 'status-failed' %>">
+                <span class="a-pill <%= p.active ? 'a-pill--ok' : 'a-pill--bad' %>">
                   <%= p.active ? 'Active' : 'Hidden' %>
                 </span>
               </td>
               <td>
-                <div style="display:flex; gap:8px;">
-                  <a href="/admin/products/edit/<%= p._id %>" class="btn small ghost" style="padding:4px 10px; font-size:0.75rem;">Edit</a>
-                  <a href="/product/<%= p.slug %>" target="_blank" rel="noopener" class="btn small ghost" style="padding:4px 10px; font-size:0.75rem;">View</a>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <a href="/admin/products/edit/<%= p._id %>" class="a-btn a-btn--ghost a-btn--sm">Edit</a>
+                  <a href="/product/<%= p.slug %>" target="_blank" rel="noopener" class="a-btn a-btn--ghost a-btn--sm">View</a>
                   <form method="POST" action="/admin/products/delete/<%= p._id %>" onsubmit="return confirm('Delete this product permanently?');" style="display:inline;">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <button type="submit" class="btn small" style="background:#b91c1c; border-color:#b91c1c; padding:4px 10px; font-size:0.75rem;">Del</button>
+                    <button type="submit" class="a-btn a-btn--danger a-btn--sm">Del</button>
                   </form>
                 </div>
               </td>
@@ -96,4 +113,3 @@
     </div>
   <% } %>
 </div>
-

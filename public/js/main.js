@@ -132,104 +132,37 @@
     });
   }
 
-  // 6. Wishlist Storage Sync & Count Badges
-  function getWishlist() {
-    try {
-      return JSON.parse(localStorage.getItem('nest_wish') || '[]');
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function saveWishlist(items) {
-    try {
-      localStorage.setItem('nest_wish', JSON.stringify(items));
-    } catch (e) {}
-    updateWishlistBadges();
-  }
-
-  function updateWishlistBadges() {
-    var wish = getWishlist();
-    if (window.NestHeader && typeof window.NestHeader.setWishlist === 'function') {
-      window.NestHeader.setWishlist(wish.length);
-    }
-
-    // Update heart icons on page
-    d.querySelectorAll('[data-wish-id]').forEach(function (btn) {
-      var id = btn.getAttribute('data-wish-id');
-      var isWished = wish.indexOf(id) > -1;
-      btn.textContent = isWished ? '♥' : '♡';
-      btn.setAttribute('aria-pressed', isWished ? 'true' : 'false');
-      btn.title = isWished ? 'Remove from wishlist' : 'Save to wishlist';
-    });
-  }
-
-  window.toggleWishlist = function (productId, productName) {
-    var wish = getWishlist();
-    var idx = wish.indexOf(productId);
-    var added = false;
-    if (idx > -1) {
-      wish.splice(idx, 1);
-    } else {
-      wish.push(productId);
-      added = true;
-    }
-    saveWishlist(wish);
-    window.showToast(added ? 'Saved to wishlist' : 'Removed from wishlist');
-    if (d.body.classList.contains('page-wishlist')) {
-      location.reload();
-    }
-  };
-
+  // 6. Wishlist Button Click Delegation
   d.addEventListener('click', function (e) {
     var wishBtn = e.target.closest && e.target.closest('[data-wish-id]');
     if (wishBtn) {
       e.preventDefault();
       var id = wishBtn.getAttribute('data-wish-id');
       var name = wishBtn.getAttribute('data-wish-name') || 'Design';
-      window.toggleWishlist(id, name);
+      if (window.WishlistStore) {
+        window.WishlistStore.toggle(id, name);
+      }
     }
   });
 
-  // 7. Cart Storage Helper & Count Badges
-  function getCart() {
-    try {
-      return JSON.parse(localStorage.getItem('nest_cart') || '[]');
-    } catch (e) {
-      return [];
-    }
-  }
-
-  window.getCart = getCart;
-
-  window.saveCart = function (cart) {
-    try {
-      localStorage.setItem('nest_cart', JSON.stringify(cart));
-    } catch (e) {}
-    updateCartBadges();
+  // 7. Cart & Wishlist Compatibility Delegates
+  window.getWishlist = function () {
+    return window.WishlistStore ? window.WishlistStore.getItems() : [];
   };
 
-  function updateCartBadges() {
-    var cart = getCart();
-    var count = cart.reduce(function (total, item) {
-      return total + (item.quantity || 1);
-    }, 0);
-    if (window.NestHeader && typeof window.NestHeader.setCart === 'function') {
-      window.NestHeader.setCart(count);
+  window.getCart = function () {
+    return window.CartStore ? window.CartStore.getItems() : [];
+  };
+
+  window.saveCart = function (items) {
+    return window.CartStore ? window.CartStore.saveItems(items) : [];
+  };
+
+  window.updateCartBadges = function () {
+    if (window.CartStore) {
+      window.CartStore.init();
     }
-  }
-
-  window.updateCartBadges = updateCartBadges;
-
-  // Initialize badges on page load
-  d.addEventListener('DOMContentLoaded', function () {
-    updateWishlistBadges();
-    updateCartBadges();
-  });
-  if (d.readyState !== 'loading') {
-    updateWishlistBadges();
-    updateCartBadges();
-  }
+  };
 
 })();
 

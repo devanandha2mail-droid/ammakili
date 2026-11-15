@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  stylist:
+    build: ./services/stylist
+    environment:
+      STYLIST_KEY: ${STYLIST_KEY}
+      STYLIST_THREADS: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 1500M
+    restart: unless-stopped
+    expose:
+      - "8001"
+
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: "3000"
+      NODE_ENV: production
+      STYLIST_URL: http://stylist:8001
+      STYLIST_KEY: ${STYLIST_KEY}
+    restart: unless-stopped
+    depends_on:
+      - stylist
+

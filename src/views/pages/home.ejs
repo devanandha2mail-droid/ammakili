@@ -1,34 +1,129 @@
+<%
+  const heroProducts = (typeof featuredProducts !== 'undefined' && featuredProducts && featuredProducts.length > 0)
+    ? featuredProducts
+    : (featuredProduct ? [featuredProduct] : []);
+%>
+
+<!-- Hero Section -->
 <div class="wrap hero">
-  <div>
+  <div class="hero-content">
     <h1><%- t('home.heroTitle') %></h1>
     <p><%= t('home.heroDesc') %></p>
-    <a class="btn" href="/shop"><%= t('home.exploreCollection') %></a>
-    <a class="tlink" href="/sizes"><%= t('home.findYourSize') %></a>
+    <div class="hero-actions">
+      <a class="btn" href="/shop"><%= t('home.exploreCollection') %></a>
+      <a class="tlink" href="/sizes"><%= t('home.findYourSize') %></a>
+    </div>
   </div>
-  <div class="arch hero-product-arch">
-    <% if (featuredProduct && featuredProduct.images && featuredProduct.images.length > 0) { %>
-      <img src="<%= featuredProduct.images[0] %>" alt="<%= featuredProduct.getName(lang) %>" width="400" height="500">
-      <div class="hero-caption-bar">
-        <div class="hero-caption-info">
-          <strong><%= featuredProduct.getName(lang) %></strong>
-          <span class="price">₹<%= featuredProduct.price.toLocaleString('en-IN') %></span>
+
+  <div class="hero-media">
+    <% if (heroProducts.length > 0) { %>
+      <div 
+        class="hero-slider" 
+        id="heroSlider" 
+        data-count="<%= heroProducts.length %>"
+        aria-roledescription="carousel" 
+        aria-label="Featured Nighties"
+      >
+        <div class="hero-slides">
+          <% heroProducts.forEach(function(fp, idx) { 
+            const fpName = fp.getName(lang);
+            const fpImg = typeof fp.getMainImage === 'function' ? fp.getMainImage() : ((fp.images && fp.images.length > 0) ? (fp.images[0].url || fp.images[0]) : '/img/placeholders/rose-garden-1.svg');
+          %>
+            <div 
+              class="hero-slide <%= idx === 0 ? 'is-active' : '' %>" 
+              data-index="<%= idx %>"
+              role="group"
+              aria-roledescription="slide"
+              aria-label="<%= idx + 1 %> of <%= heroProducts.length %>"
+              aria-hidden="<%= idx === 0 ? 'false' : 'true' %>"
+            >
+              <div class="arch hero-arch-frame">
+                <img 
+                  src="<%= fpImg %>" 
+                  alt="<%= fpName %>" 
+                  width="400" 
+                  height="500" 
+                  <% if (idx === 0) { %>fetchpriority="high"<% } else { %>loading="lazy"<% } %>
+                  decoding="async"
+                >
+                <div class="hero-caption-bar">
+                  <div class="hero-caption-info">
+                    <strong><%= fpName %></strong>
+                    <span class="price">₹<%= fp.price.toLocaleString('en-IN') %></span>
+                  </div>
+                  <a href="/product/<%= fp.slug %>" class="btn small"><%= lang === 'ml' ? 'വാങ്ങുക' : 'Shop now' %></a>
+                </div>
+              </div>
+            </div>
+          <% }); %>
         </div>
-        <a href="/product/<%= featuredProduct.slug %>" class="btn small"><%= lang === 'ml' ? 'വാങ്ങുക' : 'Shop now' %></a>
+
+        <% if (heroProducts.length > 1) { %>
+          <div class="hero-slider-ctrls">
+            <div class="hero-dots" role="tablist" aria-label="Choose featured product">
+              <% heroProducts.forEach(function(fp, idx) { %>
+                <button 
+                  type="button" 
+                  class="hero-dot <%= idx === 0 ? 'is-active' : '' %>" 
+                  data-target="<%= idx %>"
+                  role="tab"
+                  aria-selected="<%= idx === 0 ? 'true' : 'false' %>"
+                  aria-label="Slide <%= idx + 1 %>: <%= fp.getName(lang) %>"
+                ></button>
+              <% }); %>
+            </div>
+            <button 
+              type="button" 
+              class="hero-pause-btn" 
+              id="heroPauseBtn"
+              aria-label="Pause slideshow" 
+              aria-pressed="false"
+              title="Pause slideshow"
+            >
+              <span class="hero-pause-icon" aria-hidden="true">⏸</span>
+            </button>
+          </div>
+        <% } %>
       </div>
     <% } else { %>
-      <div class="hero-fallback-pattern">
-        <span><%= lang === 'ml' ? 'പുതിയ ശേഖരം' : 'New arrivals' %></span>
-        <a href="/shop" class="btn small ghost"><%= lang === 'ml' ? 'കാണുക' : 'Explore' %></a>
+      <div class="hero-fallback-wrap">
+        <div class="arch hero-arch-frame hero-arch-fallback">
+          <div class="hero-fallback-pattern">
+            <span class="hero-fallback-badge"><%= lang === 'ml' ? 'പുതിയ ശേഖരം' : 'New arrivals' %></span>
+            <span class="hero-fallback-title">Nest Collection</span>
+            <a href="/shop" class="btn small ghost"><%= lang === 'ml' ? 'കാണുക' : 'Explore collection' %></a>
+          </div>
+        </div>
       </div>
     <% } %>
   </div>
 </div>
 
+<!-- One-line Trust Strip with 3 icons -->
 <div class="trust-strip">
   <div class="wrap trust-grid">
-    <div class="trust-item"><span class="check" aria-hidden="true">✓</span> <span><%= lang === 'ml' ? 'പ്രീപെയ്ഡ് ഓർഡറുകൾ മാത്രം' : 'Prepaid orders only' %></span></div>
-    <div class="trust-item"><span class="check" aria-hidden="true">✓</span> <span><%= lang === 'ml' ? 'കൃത്യമായ സൈസ് ഗൈഡ്' : 'Clear size guide' %></span></div>
-    <div class="trust-item"><span class="check" aria-hidden="true">✓</span> <span><%= lang === 'ml' ? 'വാട്സാപ്പിൽ സപ്പോർട്ട്' : 'Support on WhatsApp' %></span></div>
+    <div class="trust-item">
+      <svg class="trust-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <span><%= lang === 'ml' ? 'പ്രീപെയ്ഡും സുരക്ഷിതവും' : 'Prepaid and secure' %></span>
+    </div>
+    <div class="trust-item">
+      <svg class="trust-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21.3 8.7 8.7 21.3a3 3 0 0 1-4.2-4.2L17.1 4.5a3 3 0 0 1 4.2 4.2z"></path>
+        <line x1="7.5" y1="10.5" x2="10.5" y2="7.5"></line>
+        <line x1="10.5" y1="13.5" x2="13.5" y2="10.5"></line>
+        <line x1="13.5" y1="16.5" x2="16.5" y2="13.5"></line>
+      </svg>
+      <span><%= lang === 'ml' ? 'വ്യക്തമായ സൈസ് ഗൈഡ്' : 'Clear size guide' %></span>
+    </div>
+    <div class="trust-item">
+      <svg class="trust-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+      </svg>
+      <span><%= lang === 'ml' ? 'വാട്സാപ്പ് സപ്പോർട്ട്' : 'WhatsApp support' %></span>
+    </div>
   </div>
 </div>
 
@@ -39,35 +134,16 @@
 </div>
 
 <div class="wrap">
-  <!-- New Arrivals Section -->
-  <section>
+  <!-- New Arrivals Section: Desktop Grid, Phone Horizontal Scroll-Snap Row -->
+  <section class="arrivals-section">
     <div class="head">
       <hr class="rule">
       <h2><%= t('home.newArrivals') %></h2>
       <p class="lead"><%= t('home.newArrivalsLead') %></p>
     </div>
-    <div class="grid">
+    <div class="arrivals-scroll">
       <% products.forEach(function(p) { %>
-        <div class="item">
-          <div class="pw">
-            <a class="ph" href="/product/<%= p.slug %>" aria-label="<%= p.getName(lang) %>">
-              <% if (p.images && p.images.length > 0) { %>
-                <img src="<%= p.images[0] %>" alt="<%= p.getName(lang) %>" loading="lazy" width="400" height="500">
-              <% } else { %>
-                <svg viewBox="0 0 60 100" aria-hidden="true"><path d="M22 4h16l3 14 6 6-5 8 9 60H9l9-60-5-8 6-6z"/></svg>
-              <% } %>
-              <% if (p.tag && p.tag !== 'None') { %>
-                <span class="badge <%= p.tag === 'Bestseller' ? 'bestseller' : '' %>"><%= p.tag %></span>
-              <% } %>
-            </a>
-            <button type="button" class="hbtn cardh" data-wish-id="<%= p._id %>" data-wish-name="<%= p.getName(lang) %>" aria-label="Save <%= p.getName(lang) %> to wishlist">♡</button>
-          </div>
-          <div class="meta">
-            <h3><a href="/product/<%= p.slug %>"><%= p.getName(lang) %></a></h3>
-            <div class="price">₹<%= p.price.toLocaleString('en-IN') %></div>
-            <small><%= p.style %></small>
-          </div>
-        </div>
+        <%- include('../partials/product-card', { p: p, lang: lang }) %>
       <% }); %>
     </div>
   </section>
@@ -128,3 +204,4 @@
   <a class="btn" href="https://www.youtube.com/@nestammakkili" target="_blank" rel="noopener"><%= t('home.ytBtn') %></a>
 </div>
 
+<script src="/js/hero.js" defer></script>

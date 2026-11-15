@@ -1,6 +1,18 @@
 <%
   let annText = '';
-  if (typeof settings !== 'undefined' && settings && settings.announcementText) {
+  let annLink = (typeof settings !== 'undefined' && settings && settings.announcementLink) || '/shop';
+
+  if (typeof banner !== 'undefined' && banner && banner.text) {
+    if (typeof banner.text === 'string') {
+      annText = banner.text.trim();
+    } else if (typeof banner.text === 'object') {
+      annText = (typeof lang !== 'undefined' && lang === 'ml' ? (banner.text.ml || banner.text.en) : (banner.text.en || banner.text.ml)) || '';
+      if (typeof annText === 'string') annText = annText.trim();
+    }
+    if (banner.link) annLink = banner.link;
+  }
+
+  if (!annText && typeof settings !== 'undefined' && settings && settings.announcementText) {
     if (typeof settings.announcementText === 'string') {
       annText = settings.announcementText.trim();
     } else if (typeof settings.announcementText === 'object') {
@@ -8,7 +20,6 @@
       if (typeof annText === 'string') annText = annText.trim();
     }
   }
-  let annLink = (typeof settings !== 'undefined' && settings && settings.announcementLink) || '/shop';
 %>
 <% if (annText) { %>
 <div class="announce" id="announce">
@@ -37,10 +48,11 @@
     </nav>
 
     <div class="tools">
+      <% const currentReturnPath = typeof path !== 'undefined' ? path : '/'; %>
       <% if (typeof lang !== 'undefined' && lang === 'ml') { %>
-        <a class="tool lang" href="/lang/en" lang="en" hreflang="en">EN</a>
+        <a class="tool lang" href="/lang/en?returnTo=<%= encodeURIComponent(currentReturnPath) %>" lang="en" hreflang="en">EN</a>
       <% } else { %>
-        <a class="tool lang" href="/lang/ml" lang="ml" hreflang="ml">മലയാളം</a>
+        <a class="tool lang" href="/lang/ml?returnTo=<%= encodeURIComponent(currentReturnPath) %>" lang="ml" hreflang="ml">മലയാളം</a>
       <% } %>
 
       <div class="acct" id="acct">
@@ -112,9 +124,9 @@
     <div class="drawer-foot">
       <div class="drawer-row">
         <% if (typeof lang !== 'undefined' && lang === 'ml') { %>
-          <a class="pill" href="/lang/en" lang="en" hreflang="en">EN</a>
+          <a class="pill" href="/lang/en?returnTo=<%= encodeURIComponent(currentReturnPath) %>" lang="en" hreflang="en">EN</a>
         <% } else { %>
-          <a class="pill" href="/lang/ml" lang="ml" hreflang="ml">മലയാളം</a>
+          <a class="pill" href="/lang/ml?returnTo=<%= encodeURIComponent(currentReturnPath) %>" lang="ml" hreflang="ml">മലയാളം</a>
         <% } %>
         <button class="pill" type="button" data-theme-toggle>Theme: <span data-theme-label>Light</span></button>
       </div>

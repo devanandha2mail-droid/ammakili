@@ -1,11 +1,17 @@
 const bcrypt = require('bcryptjs');
 const slugify = require('slugify');
+const fs = require('fs');
+const path = require('path');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const Admin = require('../models/Admin');
 const Customer = require('../models/Customer');
 const Settings = require('../models/Settings');
 const Banner = require('../models/Banner');
+const PhotoJob = require('../models/PhotoJob');
+const photoStylist = require('../services/photoStylist');
+const photoJobWorker = require('../services/photoJobWorker');
+const stylistUpload = require('../services/stylistUpload');
 const { processUploadedFiles } = require('../services/upload');
 
 // Admin Login GET
@@ -22,7 +28,7 @@ exports.postLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.render('admin/login', {
+      return res.status(400).render('admin/login', {
         layout: false,
         title: 'Admin Login',
         error: 'Please enter both email and password.'
@@ -31,7 +37,7 @@ exports.postLogin = async (req, res) => {
 
     const admin = await Admin.findOne({ email: email.trim().toLowerCase() });
     if (!admin) {
-      return res.render('admin/login', {
+      return res.status(401).render('admin/login', {
         layout: false,
         title: 'Admin Login',
         error: 'Invalid email or password.'
@@ -40,7 +46,7 @@ exports.postLogin = async (req, res) => {
 
     const isMatch = await admin.comparePassword(password);
     if (!isMatch) {
-      return res.render('admin/login', {
+      return res.status(401).render('admin/login', {
         layout: false,
         title: 'Admin Login',
         error: 'Invalid email or password.'
@@ -86,7 +92,8 @@ exports.getDashboard = async (req, res, next) => {
       monthOrders,
       ordersToPackCount,
       lowStockProducts,
-      recentOrders
+      recentOrders,
+      sampleProductsCount
     ] = await Promise.all([
       // Today orders
       Order.countDocuments({ createdAt: { $gte: startOfToday } }),
@@ -108,11 +115,16 @@ exports.getDashboard = async (req, res, next) => {
         'sizes.stock': { $lte: lowStockThreshold }
       }),
       // Recent 8 orders
-      Order.find().sort({ createdAt: -1 }).limit(8)
+      Order.find().sort({ createdAt: -1 }).limit(8),
+      // Sample products count
+      Product.countDocuments({ isSample: true })
     ]);
 
     const revenueWeek = weekOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     const revenueMonth = monthOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+    const stylistStats = await photoJobWorker.getStylistStats();
+    const failedStylistJobs = await PhotoJob.find({ status: 'failed' }).sort({ finishedAt: -1 }).limit(10);
 
     res.render('admin/dashboard', {
       layout: 'layouts/admin',
@@ -126,7 +138,10 @@ exports.getDashboard = async (req, res, next) => {
       },
       lowStockProducts,
       recentOrders,
-      settings
+      sampleProductsCount,
+      settings,
+      stylistStats,
+      failedStylistJobs
     });
   } catch (err) {
     next(err);
@@ -153,12 +168,14 @@ exports.getProducts = async (req, res, next) => {
 
     const products = await Product.find(filter).sort({ createdAt: -1 });
     const styles = await Product.distinct('style');
+    const hasSampleProducts = await Product.exists({ isSample: true });
 
     res.render('admin/products', {
       layout: 'layouts/admin',
       title: 'Manage Products',
       products,
       styles,
+      hasSampleProducts: Boolean(hasSampleProducts),
       q: q || '',
       selectedStyle: style || '',
       selectedStatus: status || ''
@@ -169,12 +186,17 @@ exports.getProducts = async (req, res, next) => {
 };
 
 // Add Product GET
-exports.getAddProduct = (req, res) => {
+exports.getAddProduct = async (req, res) => {
+  const isStylistAvailable = await photoStylist.isAvailable();
+  const draftId = 'draft-' + Date.now() + '-' + Math.round(Math.random() * 1e9);
   res.render('admin/product-form', {
     layout: 'layouts/admin',
     title: 'Add New Nighty',
     product: null,
-    sizes: ['M', 'L', 'XL', 'XXL', '3XL']
+    sizes: ['M', 'L', 'XL', 'XXL', '3XL'],
+    isStylistAvailable,
+    draftId,
+    existingJobs: []
   });
 };
 
@@ -189,9 +211,17 @@ exports.postAddProduct = async (req, res, next) => {
       style,
       price,
       videoUrl,
+      fabric_en,
+      fabric_ml,
+      care_en,
+      care_ml,
+      fit_en,
+      fit_ml,
       tag,
       featured,
-      active
+      active,
+      draftId,
+      styled_images_json
     } = req.body;
 
     const uploadedUrls = await processUploadedFiles(req.files);
@@ -202,6 +232,30 @@ exports.postAddProduct = async (req, res, next) => {
       stock: Math.max(0, parseInt(req.body[`stock_${s}`], 10) || 0)
     }));
 
+    // Process images (styled json or uploaded files)
+    let finalImages = [];
+    if (styled_images_json) {
+      try {
+        const parsed = JSON.parse(styled_images_json);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          finalImages = parsed.map(item => ({
+            url: item.url,
+            kind: item.kind || 'extra',
+            sourceId: item.sourceId || '',
+            meta: item.meta || {}
+          }));
+        }
+      } catch (err) {
+        console.warn('Could not parse styled_images_json:', err.message);
+      }
+    }
+
+    if (!finalImages.length) {
+      finalImages = uploadedUrls.length
+        ? uploadedUrls.map(url => ({ url, kind: 'extra' }))
+        : [{ url: '/img/placeholders/rose-garden-1.svg', kind: 'extra' }];
+    }
+
     // Generate unique slug
     let baseSlug = slugify(name_en, { lower: true, strict: true }) || 'nighty';
     let slug = baseSlug;
@@ -210,19 +264,32 @@ exports.postAddProduct = async (req, res, next) => {
       slug = `${baseSlug}-${counter++}`;
     }
 
-    await Product.create({
+    const hasRealPhotos = finalImages.some(img =>
+      img.url && !img.url.includes('/placeholders/') && !img.url.includes('/logo.svg')
+    );
+
+    const newProduct = await Product.create({
       slug,
       name: { en: name_en.trim(), ml: (name_ml || '').trim() },
       description: { en: description_en.trim(), ml: (description_ml || '').trim() },
       style: style || 'Cotton',
       price: parseFloat(price) || 0,
-      images: uploadedUrls.length ? uploadedUrls : ['/img/placeholders/rose-garden-1.svg'],
+      images: finalImages,
       videoUrl: (videoUrl || '').trim(),
+      fabric: { en: (fabric_en || '').trim(), ml: (fabric_ml || '').trim() },
+      care: { en: (care_en || '').trim(), ml: (care_ml || '').trim() },
+      fit: { en: (fit_en || '').trim(), ml: (fit_ml || '').trim() },
       sizes,
       tag: tag || 'None',
       featured: Boolean(featured),
-      active: active !== 'false'
+      active: active !== 'false',
+      isSample: !hasRealPhotos
     });
+
+    // Link any draft jobs to this created product
+    if (draftId) {
+      await PhotoJob.updateMany({ draftId }, { $set: { productId: newProduct._id } });
+    }
 
     res.redirect('/admin/products');
   } catch (err) {
@@ -236,11 +303,17 @@ exports.getEditProduct = async (req, res, next) => {
     const product = await Product.findById(req.params.id);
     if (!product) return res.redirect('/admin/products');
 
+    const isStylistAvailable = await photoStylist.isAvailable();
+    const existingJobs = await PhotoJob.find({ productId: product._id }).sort({ createdAt: -1 });
+
     res.render('admin/product-form', {
       layout: 'layouts/admin',
       title: `Edit ${product.name.en}`,
       product,
-      sizes: ['M', 'L', 'XL', 'XXL', '3XL']
+      sizes: ['M', 'L', 'XL', 'XXL', '3XL'],
+      isStylistAvailable,
+      draftId: 'edit-' + product._id,
+      existingJobs
     });
   } catch (err) {
     next(err);
@@ -261,20 +334,57 @@ exports.postEditProduct = async (req, res, next) => {
       style,
       price,
       videoUrl,
+      fabric_en,
+      fabric_ml,
+      care_en,
+      care_ml,
+      fit_en,
+      fit_ml,
       tag,
       featured,
       active,
-      existing_images
+      existing_images,
+      styled_images_json
     } = req.body;
 
     const newUploadedUrls = await processUploadedFiles(req.files);
 
-    // Retained images
-    let retained = [];
-    if (existing_images) {
-      retained = Array.isArray(existing_images) ? existing_images : [existing_images];
+    let finalImages = [];
+    if (styled_images_json) {
+      try {
+        const parsed = JSON.parse(styled_images_json);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          finalImages = parsed.map(item => ({
+            url: item.url,
+            kind: item.kind || 'extra',
+            sourceId: item.sourceId || '',
+            meta: item.meta || {}
+          }));
+        }
+      } catch (err) {
+        console.warn('Could not parse styled_images_json:', err.message);
+      }
     }
-    const finalImages = [...retained, ...newUploadedUrls];
+
+    if (!finalImages.length) {
+      // Retained images
+      let retained = [];
+      if (existing_images) {
+        retained = Array.isArray(existing_images) ? existing_images : [existing_images];
+      }
+      finalImages = [...retained, ...newUploadedUrls].map(item => {
+        if (typeof item === 'string') return { url: item, kind: 'extra' };
+        return item;
+      });
+    }
+
+    // When the admin uploads real photos to a sample product, set isSample to false
+    const hasRealPhotos = finalImages.some(img =>
+      img.url && !img.url.includes('/placeholders/') && !img.url.includes('/logo.svg')
+    );
+    if (hasRealPhotos && product.isSample) {
+      product.isSample = false;
+    }
 
     // Build sizes array
     const sizes = ['M', 'L', 'XL', 'XXL', '3XL'].map(s => ({
@@ -290,6 +400,9 @@ exports.postEditProduct = async (req, res, next) => {
     product.price = parseFloat(price) || 0;
     product.images = finalImages.length ? finalImages : product.images;
     product.videoUrl = (videoUrl || '').trim();
+    product.fabric = { en: (fabric_en || '').trim(), ml: (fabric_ml || '').trim() };
+    product.care = { en: (care_en || '').trim(), ml: (care_ml || '').trim() };
+    product.fit = { en: (fit_en || '').trim(), ml: (fit_ml || '').trim() };
     product.sizes = sizes;
     product.tag = tag || 'None';
     product.featured = Boolean(featured);
@@ -302,10 +415,43 @@ exports.postEditProduct = async (req, res, next) => {
   }
 };
 
+// Delete all sample products
+exports.deleteSampleProducts = async (req, res, next) => {
+  try {
+    await Product.deleteMany({ isSample: true });
+    res.redirect('/admin/products');
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Toggle or Delete Product
 exports.deleteProduct = async (req, res, next) => {
   try {
-    await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findById(req.params.id);
+    if (product) {
+      // 1. Delete associated PhotoJobs and their files on disk
+      const jobs = await PhotoJob.find({ productId: product._id });
+      for (const job of jobs) {
+        photoJobWorker.deleteJobFiles(job);
+        await job.deleteOne();
+      }
+
+      // 2. Delete any custom uploaded image files in product.images
+      if (product.images && product.images.length) {
+        for (const img of product.images) {
+          const imgUrl = typeof img === 'string' ? img : img.url;
+          if (imgUrl && imgUrl.startsWith('/uploads/')) {
+            try {
+              const fullPath = path.join(__dirname, '../../public', imgUrl);
+              if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+            } catch {}
+          }
+        }
+      }
+
+      await Product.findByIdAndDelete(req.params.id);
+    }
     res.redirect('/admin/products');
   } catch (err) {
     next(err);
@@ -320,7 +466,11 @@ exports.getOrders = async (req, res, next) => {
     const { status, q } = req.query;
     const filter = {};
 
-    if (status && status !== 'all') {
+    if (status === 'refunds') {
+      filter.status = { $in: ['refund_needed', 'refund_pending', 'refunded'] };
+    } else if (status === 'refund_needed') {
+      filter.status = 'refund_needed';
+    } else if (status && status !== 'all') {
       filter.status = status;
     }
     if (q) {
@@ -383,7 +533,13 @@ exports.postUpdateOrderStatus = async (req, res, next) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.redirect('/admin/orders');
 
-    if (status) order.status = status;
+    if (status) {
+      order.status = status;
+      if (status === 'cancelled' || status === 'failed') {
+        const { returnStockForOrder } = require('./checkoutController');
+        await returnStockForOrder(order);
+      }
+    }
     if (courier !== undefined) order.tracking.courier = courier.trim();
     if (trackingId !== undefined) order.tracking.trackingId = trackingId.trim();
     if (adminNotes !== undefined) order.adminNotes = adminNotes.trim();
@@ -393,6 +549,65 @@ exports.postUpdateOrderStatus = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+};
+
+// Retry failed refund for order in refund_needed
+exports.postRetryRefund = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.redirect('/admin/orders');
+
+    const paymentId = order.payment?.razorpayPaymentId;
+    if (!paymentId) {
+      return res.redirect(`/admin/orders/${order._id}?error=no_payment_id`);
+    }
+
+    const { refundRazorpayPayment } = require('../services/razorpay');
+    const { returnStockForOrder } = require('./checkoutController');
+
+    // Ensure stock returned if not returned
+    await returnStockForOrder(order);
+
+    const refundRes = await refundRazorpayPayment({
+      paymentId,
+      amountInPaise: Math.round(order.total * 100),
+      notes: {
+        orderId: order.orderId,
+        reason: 'Manual refund retry from Admin Portal'
+      }
+    });
+
+    order.status = 'refunded';
+    order.refund = {
+      id: refundRes.id,
+      amount: refundRes.amount ? refundRes.amount / 100 : order.total,
+      status: 'processed',
+      initiatedAt: new Date()
+    };
+    order.payment.status = 'refunded';
+    order.adminNotes = (order.adminNotes ? order.adminNotes + '\n' : '') + `Refund manually retried and processed. Refund ID: ${refundRes.id}`;
+    await order.save();
+
+    res.redirect(`/admin/orders/${order._id}?success=refund_retried`);
+  } catch (err) {
+    console.error('[Admin Retry Refund Error]:', err);
+    res.redirect(`/admin/orders/${req.params.id}?error=${encodeURIComponent(err.message)}`);
+  }
+};
+
+// System Diagnostics & Client IP Verification
+exports.getDiagnostics = (req, res) => {
+  const { ipKeyGenerator } = require('express-rate-limit');
+  const rateLimitKey = ipKeyGenerator(req.ip, 64);
+  res.render('admin/diagnostics', {
+    layout: 'layouts/admin',
+    title: 'System Diagnostics & Client IP',
+    clientIp: req.ip,
+    forwardedFor: req.headers['x-forwarded-for'] || 'None',
+    rateLimitKey,
+    trustProxySetting: req.app.get('trust proxy'),
+    trustProxyHopsEnv: process.env.TRUST_PROXY_HOPS !== undefined ? process.env.TRUST_PROXY_HOPS : '1 (default)'
+  });
 };
 
 // Printable Packing Slip
@@ -608,6 +823,119 @@ exports.postSettings = async (req, res, next) => {
     res.redirect('/admin/settings?saved=1');
   } catch (err) {
     next(err);
+  }
+};
+
+// ==================== PHOTO STYLIST API (Admin Only) ====================
+
+// Upload Photos to Stylist
+exports.postStylistUpload = async (req, res) => {
+  try {
+    if (!req.files || !req.files.length) {
+      return res.status(400).json({ error: 'No photos uploaded.' });
+    }
+    const { productId, draftId, mode, hanger, background } = req.body;
+    const jobs = [];
+
+    for (const file of req.files) {
+      try {
+        const result = await stylistUpload.processStylistUpload(file, {
+          productId: productId || null,
+          draftId: draftId || null,
+          mode: mode || 'auto',
+          hanger: hanger || 'auto',
+          background: background || 'pink'
+        });
+        jobs.push({
+          jobId: result.job._id,
+          originalUrl: result.originalUrl,
+          status: result.job.status,
+          options: result.job.options,
+          warning: result.lowResWarning,
+          width: result.width,
+          height: result.height
+        });
+      } catch (uploadErr) {
+        return res.status(422).json({ error: uploadErr.message });
+      }
+    }
+
+    res.json({ success: true, jobs });
+  } catch (err) {
+    console.error('[Stylist Upload] Error:', err);
+    res.status(500).json({ error: 'Failed to process photo upload.' });
+  }
+};
+
+// Check Job Status
+exports.getStylistJobStatus = async (req, res) => {
+  try {
+    const job = await PhotoJob.findById(req.params.id);
+    if (!job) return res.status(404).json({ error: 'Stylist job not found' });
+
+    res.json({
+      success: true,
+      job: {
+        id: job._id,
+        status: job.status,
+        originalUrl: job.originalUrl,
+        resultKey: job.resultKey,
+        detailKey: job.detailKey,
+        styled_ok: job.styled_ok ?? job.meta?.styled_ok,
+        mode_used: job.mode_used ?? job.meta?.mode_used,
+        variants: job.variants,
+        options: job.options,
+        meta: job.meta,
+        error: job.error
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch stylist job status' });
+  }
+};
+
+// Restyle Photo from Stored Original
+exports.postStylistRestyle = async (req, res) => {
+  try {
+    const { mode, hanger, background } = req.body;
+    const job = await photoJobWorker.retryJob(req.params.id, { mode, hanger, background });
+    res.json({ success: true, job });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to restyle photo' });
+  }
+};
+
+// Retry Failed Job
+exports.postStylistRetry = async (req, res) => {
+  try {
+    const job = await photoJobWorker.retryJob(req.params.id);
+    res.json({ success: true, job });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to retry photo job' });
+  }
+};
+
+// Delete Photo Job and disk files
+exports.postStylistDelete = async (req, res) => {
+  try {
+    const job = await PhotoJob.findById(req.params.id);
+    if (job) {
+      photoJobWorker.deleteJobFiles(job);
+      await job.deleteOne();
+    }
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete photo job' });
+  }
+};
+
+// Stylist Service & Queue Health / Stats
+exports.getStylistStatus = async (req, res) => {
+  try {
+    const stats = await photoJobWorker.getStylistStats();
+    res.json({ success: true, stats });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to get photo stylist status' });
   }
 };
 

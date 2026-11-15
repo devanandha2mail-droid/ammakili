@@ -1,30 +1,30 @@
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:14px;">
   <div>
-    <h1 style="font-size:2rem; margin:0;">Customer Directory</h1>
-    <p style="color:var(--admin-muted); margin:4px 0 0;">
+    <h1 style="font-size:2rem; margin:0; font-family:var(--a-serif); color:var(--a-ink);">Customer Directory</h1>
+    <p style="color:var(--a-muted); margin:4px 0 0;">
       Read-only view of customer accounts registered via Google OAuth. Login credentials cannot be modified as authentication is securely managed by Google.
     </p>
   </div>
 </div>
 
 <!-- Search Form -->
-<div class="admin-card" style="padding:18px 24px; margin-bottom:24px;">
+<div class="a-card" style="padding:18px 24px; margin-bottom:24px;">
   <form method="GET" action="/admin/customers" style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
-    <input name="q" value="<%= q %>" placeholder="Search by customer name, email address, or phone..." style="flex:2 1 280px; padding:8px 12px; font-size:0.9rem;">
-    <button type="submit" class="btn small" style="padding:8px 18px;">Search</button>
+    <input name="q" value="<%= q %>" placeholder="Search by customer name, email address, or phone..." style="flex:2 1 280px;">
+    <button type="submit" class="a-btn a-btn--sm">Search</button>
     <% if (q) { %>
-      <a href="/admin/customers" class="btn small ghost" style="padding:8px 16px;">Reset</a>
+      <a href="/admin/customers" class="a-btn a-btn--ghost a-btn--sm">Reset</a>
     <% } %>
   </form>
 </div>
 
 <!-- Customers Table -->
-<div class="admin-card">
+<div class="a-card">
   <% if (customers.length === 0) { %>
-    <p style="color:var(--admin-muted); padding:28px 0; text-align:center;">No registered customers found.</p>
+    <p style="color:var(--a-muted); padding:28px 0; text-align:center;">No registered customers found.</p>
   <% } else { %>
-    <div style="overflow-x:auto;">
-      <table class="admin-table">
+    <div class="a-table-wrap">
+      <table>
         <thead>
           <tr>
             <th>Customer</th>
@@ -42,27 +42,27 @@
               <td>
                 <div style="display:flex; align-items:center; gap:10px;">
                   <% if (c.avatarUrl) { %>
-                    <img src="<%= c.avatarUrl %>" alt="" style="width:34px; height:34px; border-radius:50%; object-fit:cover;">
+                    <img src="<%= c.avatarUrl %>" alt="" style="width:34px; height:34px; border-radius:50%; object-fit:cover; border:1px solid var(--a-line);">
                   <% } else { %>
-                    <div style="width:34px; height:34px; border-radius:50%; background:var(--admin-c1); color:#fff; display:grid; place-items:center; font-size:0.9rem;">
+                    <div style="width:34px; height:34px; border-radius:50%; background:var(--a-c1); color:#fff; display:grid; place-items:center; font-size:0.9rem; font-weight:600;">
                       <%= c.name.charAt(0) %>
                     </div>
                   <% } %>
-                  <strong><%= c.name %></strong>
+                  <strong style="color:var(--a-ink);"><%= c.name %></strong>
                 </div>
               </td>
               <td>
-                <div><%= c.email %></div>
-                <small style="color:#059669; font-size:0.75rem;">✓ Google Verified</small>
+                <div style="color:var(--a-ink);"><%= c.email %></div>
+                <small style="color:var(--a-ok); font-size:0.75rem;">✓ Google Verified</small>
               </td>
-              <td><%= c.phone || 'Not added' %></td>
+              <td style="color:var(--a-muted);"><%= c.phone || 'Not added' %></td>
               <td><%= c.addresses ? c.addresses.length : 0 %> saved</td>
               <td>
-                <strong><%= c.orderCount %> <%= c.orderCount === 1 ? 'order' : 'orders' %></strong>
+                <strong style="color:var(--a-ink);"><%= c.orderCount %> <%= c.orderCount === 1 ? 'order' : 'orders' %></strong>
               </td>
               <td><%= new Date(c.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) %></td>
               <td>
-                <a href="/admin/customers/<%= c._id %>" class="btn small ghost" style="padding:4px 12px; font-size:0.75rem;">View Orders</a>
+                <a href="/admin/customers/<%= c._id %>" class="a-btn a-btn--ghost a-btn--sm">View Orders</a>
               </td>
             </tr>
           <% }); %>

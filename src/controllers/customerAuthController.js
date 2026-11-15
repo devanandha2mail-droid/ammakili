@@ -83,7 +83,7 @@ exports.getGoogleTestLogin = async (req, res, next) => {
         email: testEmail,
         emailVerified: true,
         name: testName,
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
+        avatarUrl: '/img/brand/logo-full-256.png',
         phone: '9846012345',
         addresses: [{
           label: 'Home',

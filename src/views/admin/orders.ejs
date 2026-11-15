@@ -1,43 +1,45 @@
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:14px;">
   <div>
-    <h1 style="font-size:2rem; margin:0;">Customer Orders</h1>
-    <p style="color:var(--admin-muted); margin:4px 0 0;">Review, fulfill, and update prepaid orders.</p>
+    <h1 style="font-size:2rem; margin:0; font-family:var(--a-serif); color:var(--a-ink);">Customer Orders</h1>
+    <p style="color:var(--a-muted); margin:4px 0 0;">Review, fulfill, and update prepaid orders.</p>
   </div>
   <div style="display:flex; gap:12px;">
-    <a href="/admin/orders/export/csv" class="btn small ghost">📥 Export CSV</a>
+    <a href="/admin/orders/export/csv" class="a-btn a-btn--ghost a-btn--sm">📥 Export CSV</a>
   </div>
 </div>
 
 <!-- Search & Status Tabs -->
-<div class="admin-card" style="padding:18px 24px; margin-bottom:24px;">
+<div class="a-card" style="padding:18px 24px; margin-bottom:24px;">
   <form method="GET" action="/admin/orders" style="display:flex; gap:14px; flex-wrap:wrap; align-items:center;">
-    <input name="q" value="<%= q %>" placeholder="Search by Order ID (NEST-...), Customer Name, or Phone..." style="flex:2 1 260px; padding:8px 12px; font-size:0.9rem;">
+    <input name="q" value="<%= q %>" placeholder="Search by Order ID (NEST-...), Customer Name, or Phone..." style="flex:2 1 260px;">
     
-    <select name="status" onchange="this.form.submit()" style="flex:1 1 150px; padding:8px 12px; font-size:0.9rem;">
+    <select name="status" style="flex:1 1 180px;">
       <option value="all" <%= currentStatus === 'all' ? 'selected' : '' %>>All Statuses</option>
       <option value="pending_payment" <%= currentStatus === 'pending_payment' ? 'selected' : '' %>>Pending Payment</option>
       <option value="paid" <%= currentStatus === 'paid' ? 'selected' : '' %>>Paid (Ready to Pack)</option>
       <option value="packed" <%= currentStatus === 'packed' ? 'selected' : '' %>>Packed</option>
       <option value="shipped" <%= currentStatus === 'shipped' ? 'selected' : '' %>>Shipped</option>
       <option value="delivered" <%= currentStatus === 'delivered' ? 'selected' : '' %>>Delivered</option>
+      <option value="refunds" <%= currentStatus === 'refunds' ? 'selected' : '' %>>Refunds (All)</option>
+      <option value="refund_needed" <%= currentStatus === 'refund_needed' ? 'selected' : '' %>>⚠️ Refund Needed</option>
       <option value="cancelled" <%= currentStatus === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
       <option value="failed" <%= currentStatus === 'failed' ? 'selected' : '' %>>Failed</option>
     </select>
 
-    <button type="submit" class="btn small" style="padding:8px 18px;">Filter</button>
+    <button type="submit" class="a-btn a-btn--sm">Filter</button>
     <% if (q || currentStatus !== 'all') { %>
-      <a href="/admin/orders" class="btn small ghost" style="padding:8px 16px;">Reset</a>
+      <a href="/admin/orders" class="a-btn a-btn--ghost a-btn--sm">Reset</a>
     <% } %>
   </form>
 </div>
 
 <!-- Orders Table -->
-<div class="admin-card">
+<div class="a-card">
   <% if (orders.length === 0) { %>
-    <p style="color:var(--admin-muted); padding:28px 0; text-align:center;">No customer orders found.</p>
+    <p style="color:var(--a-muted); padding:28px 0; text-align:center;">No customer orders found.</p>
   <% } else { %>
-    <div style="overflow-x:auto;">
-      <table class="admin-table">
+    <div class="a-table-wrap">
+      <table>
         <thead>
           <tr>
             <th>Order ID</th>
@@ -54,23 +56,43 @@
           <% orders.forEach(function(o) { %>
             <tr>
               <td>
-                <strong><a href="/admin/orders/<%= o._id %>" style="color:var(--admin-c1);"><%= o.orderId %></a></strong>
+                <a href="/admin/orders/<%= o._id %>" style="color:var(--a-accent); font-weight:600;"><%= o.orderId %></a>
               </td>
               <td><%= new Date(o.createdAt).toLocaleString('en-IN', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }) %></td>
               <td>
                 <div><strong><%= o.customer.name %></strong></div>
-                <div style="font-size:0.8rem; color:var(--admin-muted);"><%= o.customer.phone %></div>
+                <div style="font-size:0.8rem; color:var(--a-muted);"><%= o.customer.phone %></div>
               </td>
               <td><%= o.customer.city %>, <%= o.customer.pin %></td>
               <td><%= o.items.reduce((s, i) => s + i.quantity, 0) %> pcs</td>
               <td><strong>₹<%= o.total.toLocaleString('en-IN') %></strong></td>
               <td>
-                <span class="tag-badge status-<%= o.status %>"><%= o.status.replace('_', ' ') %></span>
+                <% 
+                  let pillClass = 'a-pill';
+                  if (o.status === 'paid' || o.status === 'delivered') pillClass += ' a-pill--ok';
+                  else if (o.status === 'packed') pillClass += ' a-pill--info';
+                  else if (o.status === 'shipped') pillClass += ' a-pill--vio';
+                  else if (o.status === 'pending_payment') pillClass += ' a-pill--warn';
+                  else if (o.status === 'cancelled' || o.status === 'failed') pillClass += ' a-pill--bad';
+                  else if (o.status === 'refund_needed') pillClass += ' a-pill--bad';
+                  else if (o.status === 'refunded' || o.status === 'refund_pending') pillClass += ' a-pill--vio';
+                %>
+                <% if (o.status === 'refund_needed') { %>
+                  <span class="a-pill" style="background:#fee2e2; color:#991b1b; border:1px solid #f87171; font-weight:700;">⚠️ Refund needed</span>
+                <% } else { %>
+                  <span class="<%= pillClass %>"><%= o.status.replace(/_/g, ' ') %></span>
+                <% } %>
               </td>
               <td>
-                <div style="display:flex; gap:8px;">
-                  <a href="/admin/orders/<%= o._id %>" class="btn small ghost" style="padding:4px 10px; font-size:0.75rem;">View</a>
-                  <a href="/admin/orders/<%= o._id %>/packing-slip" target="_blank" rel="noopener" class="btn small ghost" style="padding:4px 10px; font-size:0.75rem;">Slip</a>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <a href="/admin/orders/<%= o._id %>" class="a-btn a-btn--ghost a-btn--sm">View</a>
+                  <% if (o.status === 'refund_needed') { %>
+                    <form method="POST" action="/admin/orders/<%= o._id %>/retry-refund" style="display:inline;">
+                      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+                      <button type="submit" class="a-btn a-btn--danger a-btn--sm" title="Retry Refund via Razorpay">🔁 Refund</button>
+                    </form>
+                  <% } %>
+                  <a href="/admin/orders/<%= o._id %>/packing-slip" target="_blank" rel="noopener" class="a-btn a-btn--ghost a-btn--sm">Slip</a>
                 </div>
               </td>
             </tr>

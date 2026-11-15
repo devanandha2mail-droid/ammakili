@@ -107,6 +107,36 @@ ADMIN_PASSWORD=AdminNest2026!
 WHATSAPP_NUMBER=919876543210
 ```
 
+### 3.1 Razorpay Payment Gateway Setup
+
+To enable prepaid checkout via Razorpay:
+
+1. **Obtain Test Credentials:**
+   - Log into your [Razorpay Dashboard](https://dashboard.razorpay.com/).
+   - Switch the toggle at the top navigation to **Test Mode**.
+   - Navigate to **Settings** → **API Keys** → **Generate Test Key**.
+   - Copy your `Key ID` (starts with `rzp_test_`) and `Key Secret`.
+   - (Optional for webhooks) Navigate to **Settings** → **Webhooks** and configure a webhook secret.
+
+2. **Configure in `.env`:**
+   ```env
+   RAZORPAY_KEY_ID=rzp_test_yourKeyIdHere
+   RAZORPAY_KEY_SECRET=yourKeySecretHere
+   RAZORPAY_WEBHOOK_SECRET=yourWebhookSecretHere
+   ```
+
+3. **Automatic Startup Validation:**
+   - During startup in non-production environments (`development`), the server runs a harmless, read-only API check (`orders.all({ count: 1 })`).
+   - If valid, the console displays:
+     ```
+     Razorpay keys OK (test mode)
+     ```
+   - If invalid, the console clearly displays:
+     ```
+     Razorpay keys INVALID: <reason>
+     ```
+   - API secrets are strictly protected and never printed in server logs or rendered in HTML.
+
 ### 4. Seed Database & Assets
 Generate placeholder SVG designs and seed the initial admin account, default settings, seasonal banner, and 6 demo nighties:
 ```bash
@@ -212,6 +242,127 @@ To allow customers to sign in with their Google accounts:
    pm2 save && pm2 startup
    ```
 4. Configure Nginx reverse proxy with SSL (Certbot) forwarding port `80/443` to `http://127.0.0.1:3000`.
+
+---
+
+## 📸 Photo Stylist Engine (AI Dress Photography Assistant)
+
+The Photo Stylist turns ordinary dress photographs taken on a bed, table, or hanger into a styled product photo (dress on a wooden hanger, soft pink arch background, gentle shadow, 1200x1500 WebP) while **always preserving the real original photo as the second gallery image**.
+
+### 1. Privacy & Architecture Rules
+- **No Photo Leaves Our Server:** Runs 100% locally on free, open-source ONNX models (`isnet-general-use` Apache-2.0 and `u2net_cloth_seg` MIT). No third-party or paid AI APIs are used.
+- **The Dress Is Never Altered:** The dress is never recoloured, redrawn, or synthesized. Only background cutout, presentation, hanger, and shadow are composed.
+- **Original Photo Always Kept:** Since Nest by Ammakkili has a strict no-return policy, shoppers must always be able to inspect the original, unaltered photograph.
+
+### 2. Host Requirements & Memory Limits
+- **RAM:** Minimum **2 GB RAM** on the host server (2 vCPUs recommended). On a 512 MB host, ONNX model loading will cause an Out-Of-Memory termination.
+- **Docker Memory Limit:** Configured with `memory: 1500M` in `docker-compose.yml`. In testing, peak memory is stable around ~940 MB with both models loaded.
+- **Internal Network Only:** The microservice runs on port `8001` and is declared with `expose: ["8001"]` (never `ports:`), ensuring it is strictly accessible only to the web container via `http://stylist:8001`.
+
+### 3. How to Run the Stylist Service
+
+#### With Docker Compose:
+```bash
+docker compose up -d
+```
+
+#### Running Locally for Development:
+```bash
+cd services/stylist
+python -m venv .venv
+# On Windows:
+.\.venv\Scripts\activate
+# On Linux/macOS:
+source .venv/bin/activate
+
+pip install -r requirements.txt
+STYLIST_KEY=your_shared_secret uvicorn stylist.app:app --host 127.0.0.1 --port 8001
+```
+
+Set in your root `.env`:
+```env
+STYLIST_URL=http://127.0.0.1:8001
+STYLIST_KEY=your_shared_secret
+```
+
+### 4. Tuning `STYLIST_WORN_THRESHOLD`
+When an ordinary photo shows a person wearing or holding the dress, the engine skips the hanger to avoid placing a floating hanger over a person's head, cleans the background, and alerts the admin.
+- Controlled via the environment variable `STYLIST_WORN_THRESHOLD` (default: `0.25`).
+- **If too sensitive** (hanging dresses falsely classified as worn): Increase to `0.30` or `0.35`.
+- **If not sensitive enough** (worn dresses receiving a hanger): Decrease to `0.20`.
+- Tune this value with 20+ real product photos from your actual workshop or studio.
+
+### 5. Adding Another Background Colour
+Background gradients are defined in `services/stylist/stylist/pipeline.py` in the `BACKGROUNDS` dictionary:
+```python
+BACKGROUNDS = {
+    "pink":  {"top": (253, 243, 245), "bottom": (246, 220, 228)},
+    "cream": {"top": (255, 248, 241), "bottom": (245, 230, 218)},
+    "white": {"top": (255, 255, 255), "bottom": (244, 238, 240)},
+    # To add a new colour (e.g. Sage Mint):
+    "sage":  {"top": (240, 248, 244), "bottom": (224, 238, 230)},
+}
+```
+Then add the new colour option to the background dropdown in `src/views/admin/product-form.ejs`:
+```html
+<option value="sage">Sage Mint</option>
+```
+
+---
+
+## 🚀 Going Live Checklist
+
+Before opening the storefront to real customers, complete each of the following steps in order:
+
+- [ ] **1. Switch to Live Keys:**  
+  In your production `.env`, update Razorpay keys to your live credentials:
+  ```env
+  RAZORPAY_KEY_ID=rzp_live_yourActualKeyId
+  RAZORPAY_KEY_SECRET=yourActualLiveKeySecret
+  ```
+- [ ] **2. Set Payments Mode:**  
+  Set `PAYMENTS_MODE=live` in `.env`. The startup guard (`src/utils/envGuard.js`) will verify that `RAZORPAY_KEY_ID` begins with `rzp_live_` and prevent booting if there is a mismatch.
+- [ ] **3. Razorpay Dashboard Automatic Capture Configuration:**  
+  In **Razorpay Dashboard → Settings → Configuration**, set **Payment Capture** to *Automatically capture payment immediately*. (Our backend also specifies `payment_capture: 1` during order creation and captures authorized payments at `/checkout/verify` as defense-in-depth).
+
+- [ ] **4. Configure Reverse Proxy Hops (`TRUST_PROXY_HOPS`):**  
+  Set `TRUST_PROXY_HOPS` in your production `.env` according to your deployment topology:
+  - `TRUST_PROXY_HOPS=1`: Standard deployment behind a single reverse proxy (Nginx, Caddy, Render, Railway, AWS ALB, Heroku).
+  - `TRUST_PROXY_HOPS=2`: Cloudflare or another CDN operating in front of your host reverse proxy.
+  - `TRUST_PROXY_HOPS=0`: Direct internet exposure without any reverse proxy.
+
+- [ ] **5. Restrict Inbound Traffic via Host Firewall:**  
+  Ensure your host firewall (e.g., AWS Security Group, Cloudflare Tunnel, or `ufw`) restricts inbound HTTP/HTTPS traffic to the reverse proxy / CDN IP ranges only. Drop direct internet traffic hitting the Node.js application port directly so attackers cannot bypass rate limiters or spoof `X-Forwarded-For`.
+
+- [ ] **6. Verify Client IP Diagnostics (`/admin/diagnostics`):**  
+  Log in to the Admin Panel and open `/admin/diagnostics`:
+  1. Open the page from your smartphone on cellular mobile data (4G/5G). Confirm the displayed Client IP matches your carrier's public IP.
+  2. Switch your smartphone to home Wi-Fi and reload the page. Confirm the displayed Client IP updates to your home ISP's public IP.
+  3. Ensure the displayed Rate-Limit Key changes between the two connections.
+
+- [ ] **7. Register the Webhook URL in Razorpay Dashboard:**  
+  - Navigate to **Razorpay Dashboard → Settings → Webhooks → Add New Webhook**.
+  - Set the Webhook URL to: `https://YOUR-DOMAIN/webhooks/razorpay`
+  - Choose a strong random secret and copy it into your production `.env` as `RAZORPAY_WEBHOOK_SECRET=your_webhook_secret_here`.
+
+- [ ] **8. Enable Required Webhook Events:**  
+  Check the following 4 events in the Razorpay Webhooks configuration:
+  - `payment.captured`
+  - `payment.failed`
+  - `order.paid`
+  - `refund.processed`
+
+- [ ] **9. Run One Real Small Live Payment:**  
+  Place a real order for a small amount (e.g., ₹1 or a live product) using a real UPI app or card payment. Verify that:
+  - The payment captures successfully.
+  - The order status transitions to `paid` and size inventory decrements by 1.
+  - The confirmation page renders with prefilled WhatsApp link and readable order ID.
+
+- [ ] **10. Refund the Test Payment & Verify Audit View:**  
+  Process a full refund either from the Razorpay Dashboard or via the automated refund flow.
+  - Check `/admin/orders?status=refunds` and `/admin/orders?status=refund_needed`.
+  - Confirm the order status transitions to `refunded` and displays the refund transaction reference.
+  - Test the "Retry Refund" button for any orders flagged as `refund_needed`.
 
 ---
 

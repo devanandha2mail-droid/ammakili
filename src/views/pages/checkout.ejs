@@ -1,118 +1,163 @@
 <div class="wrap pg">
   <div class="head">
     <hr class="rule">
-    <h2><%= t('checkout.title') %></h2>
+    <h2>
+      <%= t('checkout.title') %>
+    </h2>
   </div>
 
   <div class="two2">
     <!-- Delivery Details & Consent Form -->
     <form id="cform" novalidate>
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-        <div class="hd" style="font-family:var(--serif); font-size:1.5rem; margin:0;"><%= t('checkout.deliveryDetails') %></div>
+      <div
+        style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+        <div class="hd" style="font-family:var(--serif); font-size:1.5rem; margin:0;">
+          <%= t('checkout.deliveryDetails') %>
+        </div>
         <% if (!customer) { %>
           <a href="/login?returnTo=/checkout" class="tlink" style="margin-left:0; font-size:0.82rem;">
             Sign in with Google for saved addresses →
           </a>
-        <% } %>
+          <% } %>
       </div>
 
-      <% if (customer && savedAddresses && savedAddresses.length > 0) { %>
-        <div style="margin-bottom:18px; padding:16px; border-radius:14px; background:var(--glass2); border:1px solid var(--gb);">
-          <label for="address-selector" style="font-weight:500; color:var(--ink); margin-bottom:8px;">Choose from your saved addresses:</label>
+      <% if (customer && savedAddresses && savedAddresses.length> 0) { %>
+        <div
+          style="margin-bottom:18px; padding:16px; border-radius:14px; background:var(--glass2); border:1px solid var(--gb);">
+          <label for="address-selector" style="font-weight:500; color:var(--ink); margin-bottom:8px;">Choose from your
+            saved addresses:</label>
           <select id="address-selector">
             <option value="">-- Enter a new address below --</option>
             <% savedAddresses.forEach(function(addr, idx) { %>
-              <option 
-                value="<%= idx %>" 
-                <%= addr.isDefault ? 'selected' : '' %>
+              <option value="<%= idx %>" <%=addr.isDefault ? 'selected' : '' %>
                 data-name="<%= addr.name %>"
-                data-phone="<%= addr.phone %>"
-                data-address="<%= addr.address %>"
-                data-city="<%= addr.city %>"
-                data-pin="<%= addr.pin %>"
-              >
-                <%= addr.label %>: <%= addr.name %>, <%= addr.city %> (<%= addr.pin %>) <%= addr.isDefault ? '[Default]' : '' %>
+                  data-phone="<%= addr.phone %>"
+                    data-address="<%= addr.address %>"
+                      data-city="<%= addr.city %>"
+                        data-pin="<%= addr.pin %>"
+                          >
+                          <%= addr.label %>: <%= addr.name %>, <%= addr.city %> (<%= addr.pin %>) <%= addr.isDefault
+                                    ? '[Default]' : '' %>
               </option>
-            <% }); %>
+              <% }); %>
           </select>
         </div>
-      <% } %>
-      
-      <div class="form">
-        <div class="f">
-          <label for="f-name"><%= t('checkout.fullName') %> *</label>
-          <input id="f-name" name="name" required autocomplete="name" placeholder="e.g. Anjali Menon" value="<%= customer ? customer.name : '' %>">
-          <p class="err" id="e-name"></p>
-        </div>
+        <% } %>
 
-        <div class="h">
-          <label for="f-phone"><%= t('checkout.mobileNumber') %> *</label>
-          <input id="f-phone" name="phone" type="tel" inputmode="numeric" required maxlength="10" autocomplete="tel" placeholder="10-digit mobile number" value="<%= customer && customer.phone ? customer.phone : '' %>">
-          <small style="color:var(--muted); font-size:0.75rem;"><%= t('checkout.mobileHelp') %></small>
-          <p class="err" id="e-phone"></p>
-        </div>
+          <div class="form">
+            <div class="f">
+              <label for="f-name">
+                <%= t('checkout.fullName') %> *
+              </label>
+              <input id="f-name" name="name" required autocomplete="name" placeholder="e.g. Anjali Menon"
+                value="<%= customer ? customer.name : '' %>">
+              <p class="err" id="e-name"></p>
+            </div>
 
-        <div class="h">
-          <label for="f-email"><%= t('checkout.email') %></label>
-          <input id="f-email" name="email" type="email" autocomplete="email" placeholder="name@example.com" value="<%= customer ? customer.email : '' %>" <%= customer ? 'readonly style="opacity:0.85;"' : '' %>>
-        </div>
+            <div class="h">
+              <label for="f-phone">
+                <%= t('checkout.mobileNumber') %> *
+              </label>
+              <input id="f-phone" name="phone" type="tel" inputmode="numeric" required maxlength="10" autocomplete="tel"
+                placeholder="10-digit mobile number" value="<%= customer && customer.phone ? customer.phone : '' %>">
+              <small style="color:var(--muted); font-size:0.75rem;">
+                <%= t('checkout.mobileHelp') %>
+              </small>
+              <p class="err" id="e-phone"></p>
+            </div>
 
-        <div class="f">
-          <label for="f-addr"><%= t('checkout.address') %> *</label>
-          <textarea id="f-addr" name="address" rows="3" required autocomplete="street-address" placeholder="House name/flat number, road, landmark"></textarea>
-          <p class="err" id="e-addr"></p>
-        </div>
+            <div class="h">
+              <label for="f-email">
+                <%= t('checkout.email') %>
+              </label>
+              <input id="f-email" name="email" type="email" autocomplete="email" placeholder="name@example.com"
+                value="<%= customer ? customer.email : '' %>" <%=customer ? 'readonly style="opacity:0.85;"' : '' %>>
+            </div>
 
-        <div class="h">
-          <label for="f-city"><%= t('checkout.city') %> *</label>
-          <input id="f-city" name="city" required autocomplete="address-level2" placeholder="e.g. Thrissur">
-          <p class="err" id="e-city"></p>
-        </div>
+            <div class="f">
+              <label for="f-addr">
+                <%= t('checkout.address') %> *
+              </label>
+              <textarea id="f-addr" name="address" rows="3" required autocomplete="street-address"
+                placeholder="House name/flat number, road, landmark"></textarea>
+              <p class="err" id="e-addr"></p>
+            </div>
 
-        <div class="h">
-          <label for="f-pin"><%= t('checkout.pin') %> *</label>
-          <input id="f-pin" name="pin" type="text" inputmode="numeric" maxlength="6" required autocomplete="postal-code" placeholder="6-digit PIN code">
-          <p class="err" id="e-pin"></p>
-        </div>
-      </div>
+            <div class="h">
+              <label for="f-city">
+                <%= t('checkout.city') %> *
+              </label>
+              <input id="f-city" name="city" required autocomplete="address-level2" placeholder="e.g. Thrissur">
+              <p class="err" id="e-city"></p>
+            </div>
 
-      <% if (customer) { %>
-        <label class="chk" style="margin-top:14px;">
-          <input type="checkbox" id="f-save-addr" name="saveAddress" value="true">
-          <span>Save this delivery address to my account for future orders</span>
-        </label>
-      <% } %>
+            <div class="h">
+              <label for="f-pin">
+                <%= t('checkout.pin') %> *
+              </label>
+              <input id="f-pin" name="pin" type="text" inputmode="numeric" maxlength="6" required
+                autocomplete="postal-code" placeholder="6-digit PIN code">
+              <p class="err" id="e-pin"></p>
+            </div>
+          </div>
 
-      <div class="hd" style="font-family:var(--serif); font-size:1.5rem; margin:28px 0 10px;"><%= t('checkout.payment') %></div>
-      <div class="pay">
-        <label>
-          <input type="radio" name="pay_gateway" value="razorpay" checked>
-          <span><strong>Razorpay Secure Online Payment</strong> (UPI, Google Pay, PhonePe, Cards, Netbanking)</span>
-        </label>
-      </div>
-      <p class="note" style="margin-top:10px;"><%= t('checkout.prepaidNotice') %></p>
+          <% if (customer) { %>
+            <label class="chk" style="margin-top:14px;">
+              <input type="checkbox" id="f-save-addr" name="saveAddress" value="true">
+              <span>Save this delivery address to my account for future orders</span>
+            </label>
+            <% } %>
 
-      <!-- Mandatory Business Rule Checkbox -->
-      <label class="chk" style="margin-top:24px; padding:12px; border:1px solid var(--c2); border-radius:14px; background:var(--glass2);">
-        <input type="checkbox" id="f-ok" required>
-        <span style="font-weight:400; color:var(--ink);">
-          ⚠️ <strong><%= t('checkout.disclaimer') %></strong>
-        </span>
-      </label>
-      <p class="err" id="e-ok"></p>
+              <div class="hd" style="font-family:var(--serif); font-size:1.5rem; margin:28px 0 10px;">
+                <%= t('checkout.payment') %>
+              </div>
+              <div class="pay">
+                <label>
+                  <input type="radio" name="pay_gateway" value="razorpay" checked>
+                  <span><strong>Razorpay Secure Online Payment</strong> (UPI, Google Pay, PhonePe, Cards,
+                    Netbanking)</span>
+                </label>
+              </div>
+              <p class="note" style="margin-top:10px;">
+                <%= t('checkout.prepaidNotice') %>
+              </p>
 
-      <button class="btn" type="submit" id="submit-order-btn" style="margin-top:24px; width:100%; font-size:0.9rem;">
-        <span id="btn-text"><%= t('checkout.placeOrder', { total: '...' }) %></span>
-      </button>
+              <!-- Mandatory Business Rule Checkbox -->
+              <label class="chk"
+                style="margin-top:24px; padding:12px; border:1px solid var(--c2); border-radius:14px; background:var(--glass2);">
+                <input type="checkbox" id="f-ok" required>
+                <span style="font-weight:400; color:var(--ink);">
+                  ⚠️ <strong>
+                    <%= t('checkout.disclaimer') %>
+                  </strong>
+                </span>
+              </label>
+              <p class="err" id="e-ok"></p>
+
+              <button class="btn" type="submit" id="submit-order-btn"
+                style="margin-top:24px; width:100%; font-size:0.9rem;">
+                <span id="btn-text">
+                  <%= t('checkout.placeOrder', { total: '...' }) %>
+                </span>
+              </button>
+              <div id="checkout-order-error" style="display:none; margin-top:14px; padding:12px 14px; background:rgba(184,51,42,0.1); border:1px solid var(--crimson, #b8332a); border-radius:10px; color:var(--crimson, #b8332a); font-size:0.9rem; font-weight:500; text-align:center;" role="alert"></div>
     </form>
 
     <!-- Sticky Order Summary -->
     <div class="sum" id="checkout-summary">
-      <h3><%= t('cart.summaryTitle') %></h3>
+      <h3>
+        <%= t('cart.summaryTitle') %>
+      </h3>
       <div id="checkout-items-list" style="margin-bottom:14px;"></div>
-      <div class="r"><span><%= t('cart.subtotal') %></span><span id="sum-subtotal">₹0</span></div>
-      <div class="r"><span><%= t('cart.shipping') %></span><span id="sum-shipping">₹<%= shippingCharge %></span></div>
-      <div class="r t"><span><%= t('cart.total') %></span><span id="sum-total">₹0</span></div>
+      <div class="r"><span>
+          <%= t('cart.subtotal') %>
+        </span><span id="sum-subtotal">₹0</span></div>
+      <div class="r"><span>
+          <%= t('cart.shipping') %>
+        </span><span id="sum-shipping">₹<%= shippingCharge %></span></div>
+      <div class="r t"><span>
+          <%= t('cart.total') %>
+        </span><span id="sum-total">₹0</span></div>
       <small style="display:block; margin-top:12px; color:var(--muted); font-size:0.82rem; text-align:center;">
         <%= t('cart.rulesReminder') %>
       </small>
@@ -120,223 +165,475 @@
   </div>
 </div>
 
+<% if (process.env.NODE_ENV === 'test' && process.env.ALLOW_TEST_HARNESS === 'true') { %>
+<!-- Interactive Razorpay Test Modal for Developer/Test Mode -->
+<div id="razorpay-mock-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--bg, #fff); color:var(--ink, #222); border-radius:14px; max-width:440px; width:100%; padding:24px; box-shadow:0 12px 32px rgba(0,0,0,0.3); border:1px solid var(--gb, #e5e5e5); position:relative;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h3 style="margin:0; font-size:1.15rem; font-family:var(--serif, serif);">Razorpay Checkout (Test Mode)</h3>
+      <button type="button" id="mock-pay-close-btn" aria-label="Close" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted); line-height:1;">&times;</button>
+    </div>
+    <p style="font-size:0.85rem; color:var(--muted); margin-bottom:14px;">Simulate test payment with Razorpay UPI or test card credentials.</p>
+    <div style="margin-bottom:12px;">
+      <label for="mock-upi-input" style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px;">UPI ID</label>
+      <input type="text" id="mock-upi-input" value="success@razorpay" placeholder="success@razorpay or failure@razorpay" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--gb, #ccc); font-size:0.9rem; background:var(--bg); color:var(--ink);">
+      <small style="font-size:0.75rem; color:var(--muted); display:block; margin-top:4px;">Enter <code>success@razorpay</code> or <code>failure@razorpay</code></small>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label for="mock-card-input" style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px;">Test Card</label>
+      <input type="text" id="mock-card-input" value="4111 1111 1111 1111" readonly style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--gb, #ccc); font-size:0.9rem; background:var(--bg); color:var(--ink); opacity:0.85;">
+    </div>
+    <div id="mock-payment-status" style="display:none; font-size:0.85rem; margin-bottom:12px; font-weight:500;"></div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button type="button" id="mock-pay-success-btn" class="btn" style="width:100%; justify-content:center;">Pay ₹<span id="mock-pay-amount">0</span> (Test)</button>
+      <button type="button" id="mock-pay-fail-btn" class="btn btn-outline" style="width:100%; justify-content:center; border-color:var(--crimson); color:var(--crimson);">Simulate Failure</button>
+    </div>
+  </div>
+</div>
+<% } %>
+
 <!-- Razorpay Checkout SDK -->
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
 
-<script>
+<script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
 (function() {
-  var cart = window.getCart();
-  if (!cart || !cart.length) {
-    location.href = '/cart';
-    return;
-  }
-
-  var form = document.getElementById('cform');
-  var submitBtn = document.getElementById('submit-order-btn');
-  var btnText = document.getElementById('btn-text');
-  var validatedTotal = 0;
-
-  // Address picker auto-fill
-  var addrSelector = document.getElementById('address-selector');
-  function applySelectedAddress() {
-    if (!addrSelector) return;
-    var opt = addrSelector.options[addrSelector.selectedIndex];
-    if (opt && opt.value !== '') {
-      if (opt.dataset.name) document.getElementById('f-name').value = opt.dataset.name;
-      if (opt.dataset.phone) document.getElementById('f-phone').value = opt.dataset.phone;
-      if (opt.dataset.address) document.getElementById('f-addr').value = opt.dataset.address;
-      if (opt.dataset.city) document.getElementById('f-city').value = opt.dataset.city;
-      if (opt.dataset.pin) document.getElementById('f-pin').value = opt.dataset.pin;
+  function getCart() {
+    if (window.CartStore && typeof window.CartStore.getItems === 'function') {
+      return window.CartStore.getItems();
+    }
+    try {
+      var raw = localStorage.getItem('nest_cart');
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
     }
   }
-  if (addrSelector) {
-    addrSelector.addEventListener('change', applySelectedAddress);
-    // Apply default on initial render
-    applySelectedAddress();
-  }
 
-  // Fetch verified order summary from server
-  fetch('/cart/validate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ items: cart })
-  })
-  .then(function(res) { return res.json(); })
-  .then(function(data) {
-    if (!data.valid) {
-      alert('Some items in your cart are no longer available in the requested quantity. Please review your cart.');
+  function initCheckout() {
+    var rzpScriptTag = document.querySelector('script[src*="checkout.razorpay.com"]');
+    if (rzpScriptTag) {
+      rzpScriptTag.addEventListener('error', function() {
+        window.__rzpScriptLoadError = true;
+      });
+    }
+
+    var cart = getCart();
+    if (!cart || !cart.length) {
       location.href = '/cart';
       return;
     }
 
-    validatedTotal = data.total;
-    document.getElementById('sum-subtotal').textContent = '₹' + data.subtotal.toLocaleString('en-IN');
-    document.getElementById('sum-shipping').textContent = '₹' + data.shipping.toLocaleString('en-IN');
-    document.getElementById('sum-total').textContent = '₹' + data.total.toLocaleString('en-IN');
-    btnText.textContent = "Pay ₹" + data.total.toLocaleString('en-IN') + " securely";
+      var form = document.getElementById('cform');
+      var submitBtn = document.getElementById('submit-order-btn');
+      var btnText = document.getElementById('btn-text');
+      var validatedTotal = 0;
+      var currentOrderData = null;
 
-    var listHtml = '';
-    data.items.forEach(function(i) {
-      listHtml += '<div style="display:flex; justify-content:space-between; font-size:0.9rem; padding:4px 0;">' +
-        '<span>' + i.name + ' (' + i.size + ') × ' + i.quantity + '</span>' +
-        '<span>₹' + i.lineTotal.toLocaleString('en-IN') + '</span>' +
-        '</div>';
-    });
-    document.getElementById('checkout-items-list').innerHTML = listHtml;
-  });
+      var isSubmitting = false;
 
-  function validateInputs() {
-    var valid = true;
-    function setErr(id, msg) {
-      document.getElementById('e-' + id).textContent = msg;
-      if (msg) valid = false;
-    }
+      // Safe reference to mockModal in any environment (null if not rendered)
+      var mockModal = document.getElementById('razorpay-mock-modal');
 
-    var name = document.getElementById('f-name').value.trim();
-    var phone = document.getElementById('f-phone').value.trim().replace(/\D/g, '');
-    var addr = document.getElementById('f-addr').value.trim();
-    var city = document.getElementById('f-city').value.trim();
-    var pin = document.getElementById('f-pin').value.trim().replace(/\D/g, '');
-    var ok = document.getElementById('f-ok').checked;
+      function showCheckoutError(msg, reqId) {
+        var errBox = document.getElementById('checkout-order-error');
+        if (errBox) {
+          var safeMsg = String(msg || 'An error occurred. Please try again.').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          var html = '<div style="font-weight:600; margin-bottom:4px;">' + safeMsg + '</div>';
+          if (reqId) {
+            var safeReqId = String(reqId).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            html += '<small style="display:block; font-size:0.75rem; color:var(--muted, #666); margin-top:4px;">Support reference: <code>' + safeReqId + '</code></small>';
+          }
+          errBox.innerHTML = html;
+          errBox.style.display = 'block';
+          errBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
 
-    setErr('name', name.length < 2 ? "<%= t('checkout.errors.name') %>" : "");
-    setErr('phone', /^[6-9]\d{9}$/.test(phone) ? "" : "<%= t('checkout.errors.phone') %>");
-    setErr('addr', addr.length < 8 ? "<%= t('checkout.errors.addr') %>" : "");
-    setErr('city', city.length < 2 ? "<%= t('checkout.errors.city') %>" : "");
-    setErr('pin', /^\d{6}$/.test(pin) ? "" : "<%= t('checkout.errors.pin') %>");
-    setErr('ok', ok ? "" : "<%= t('checkout.errors.agree') %>");
-
-    return valid;
-  }
-
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    if (!validateInputs()) return;
-
-    submitBtn.disabled = true;
-    btnText.textContent = "<%= t('checkout.placingOrder') %>";
-
-    var customer = {
-      name: document.getElementById('f-name').value.trim(),
-      phone: document.getElementById('f-phone').value.trim().replace(/\D/g, ''),
-      email: document.getElementById('f-email').value.trim(),
-      address: document.getElementById('f-addr').value.trim(),
-      city: document.getElementById('f-city').value.trim(),
-      pin: document.getElementById('f-pin').value.trim().replace(/\D/g, '')
-    };
-
-    var saveAddressCheckbox = document.getElementById('f-save-addr');
-
-    // 1. Post to /checkout/create
-    fetch('/checkout/create', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-      },
-      body: JSON.stringify({
-        items: cart,
-        customer: customer,
-        agreeNoReturns: document.getElementById('f-ok').checked,
-        saveAddress: saveAddressCheckbox ? saveAddressCheckbox.checked : false
-      })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (data.error) {
-        alert(data.error);
+      function resetSubmitBtn() {
+        isSubmitting = false;
         submitBtn.disabled = false;
         btnText.textContent = "Pay ₹" + validatedTotal.toLocaleString('en-IN') + " securely";
-        return;
       }
 
-      // Check if developer mock mode or real Razorpay
-      if (data.isMock) {
-        // Automatically verify mock payment in test sandbox
-        verifyPaymentOnServer(data.orderId, data.razorpayOrderId, 'pay_mock_' + Date.now(), 'mock_test_signature');
-      } else {
-        // Launch official Razorpay Checkout modal
-        var options = {
-          key: data.keyId,
-          amount: data.amount,
-          currency: data.currency,
-          name: 'Nest by Ammakkili',
-          description: 'Order ' + data.orderId,
-          image: '/img/logo.svg',
-          order_id: data.razorpayOrderId,
-          prefill: {
-            name: data.customer.name,
-            email: data.customer.email,
-            contact: data.customer.phone
+      function cancelOrderOnServer(orderId, orderToken, reason) {
+        if (!orderId) return;
+        fetch('/checkout/cancel', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
           },
-          theme: {
-            color: '#892245'
-          },
-          handler: function(response) {
-            verifyPaymentOnServer(
-              data.orderId,
-              response.razorpay_order_id,
-              response.razorpay_payment_id,
-              response.razorpay_signature
-            );
-          },
-          modal: {
-            ondismiss: function() {
-              submitBtn.disabled = false;
-              btnText.textContent = "Pay ₹" + validatedTotal.toLocaleString('en-IN') + " securely";
-              window.showToast('Payment window closed. Order is pending.');
-            }
-          }
-        };
+          body: JSON.stringify({
+            orderId: orderId,
+            orderToken: orderToken,
+            reason: reason || 'Payment cancelled or popup dismissed'
+          })
+        }).catch(function(err) {
+          console.warn('Could not cancel order on server:', err);
+        });
+      }
 
-        var rzp = new Razorpay(options);
-        rzp.on('payment.failed', function(response) {
-          alert('Payment Failed: ' + response.error.description);
+      <% if (process.env.NODE_ENV === 'test' && process.env.ALLOW_TEST_HARNESS === 'true') { %>
+      var mockUpiInput = document.getElementById('mock-upi-input');
+      var mockPaySuccessBtn = document.getElementById('mock-pay-success-btn');
+      var mockPayFailBtn = document.getElementById('mock-pay-fail-btn');
+      var mockPayCloseBtn = document.getElementById('mock-pay-close-btn');
+      var mockPayAmount = document.getElementById('mock-pay-amount');
+
+      function handleFailure(reason) {
+        isSubmitting = false;
+        if (mockModal) mockModal.style.display = 'none';
+        var oId = currentOrderData ? currentOrderData.orderId : null;
+        var oTok = currentOrderData ? currentOrderData.orderToken : null;
+        if (oId) {
+          cancelOrderOnServer(oId, oTok, reason || 'Payment failed');
           submitBtn.disabled = false;
           btnText.textContent = "Try again";
-        });
-        rzp.open();
+          if (window.showToast) {
+            window.showToast('Payment failed: The payment was declined. You can try again.');
+          }
+          showCheckoutError('Payment failed: The payment was declined. You can try again.');
+        } else {
+          submitBtn.disabled = false;
+          btnText.textContent = "Try again";
+        }
       }
-    })
-    .catch(function(err) {
-      console.error(err);
-      alert('Could not initiate order. Please try again.');
-      submitBtn.disabled = false;
-      btnText.textContent = "Pay securely";
-    });
-  });
 
-  function verifyPaymentOnServer(orderId, rzpOrderId, paymentId, signature) {
-    btnText.textContent = "Verifying payment...";
-    fetch('/checkout/verify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-      },
-      body: JSON.stringify({
-        orderId: orderId,
-        razorpay_order_id: rzpOrderId,
-        razorpay_payment_id: paymentId,
-        razorpay_signature: signature
-      })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(verifyRes) {
-      if (verifyRes.success) {
-        // Clear browser cart
-        window.saveCart([]);
-        location.href = '/checkout/confirmation/' + orderId;
-      } else {
-        alert(verifyRes.error || 'Payment verification failed.');
-        submitBtn.disabled = false;
+      if (mockPayCloseBtn) {
+        mockPayCloseBtn.addEventListener('click', function() {
+          if (mockModal) mockModal.style.display = 'none';
+          resetSubmitBtn();
+          if (currentOrderData && currentOrderData.orderId && currentOrderData.orderToken) {
+            cancelOrderOnServer(currentOrderData.orderId, currentOrderData.orderToken, 'Modal closed');
+          }
+          if (window.showToast) {
+            window.showToast('Payment window closed. Stock hold released.');
+          }
+        });
       }
-    })
-    .catch(function(err) {
-      console.error('Verification error:', err);
-      alert('Payment received but verification network error. Please contact WhatsApp support.');
-    });
+
+      if (mockPayFailBtn) {
+        mockPayFailBtn.addEventListener('click', function() {
+          handleFailure('Simulate Failure button clicked');
+        });
+      }
+
+      if (mockPaySuccessBtn) {
+        mockPaySuccessBtn.addEventListener('click', function() {
+          var upiVal = (mockUpiInput ? mockUpiInput.value.trim() : '').toLowerCase();
+          if (upiVal.indexOf('fail') !== -1) {
+            handleFailure('UPI payment declined: ' + upiVal);
+          } else {
+            if (mockModal) mockModal.style.display = 'none';
+            if (currentOrderData) {
+              var payId = 'pay_mock_' + currentOrderData.razorpayOrderId + '_' + Date.now();
+              fetch('/__test/compute-signature', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: currentOrderData.razorpayOrderId,
+                  razorpay_payment_id: payId
+                })
+              })
+                .then(function(res) {
+                  if (!res.ok) throw new Error('Signature endpoint returned ' + res.status);
+                  return res.json();
+                })
+                .then(function(sigData) {
+                  if (!sigData || !sigData.signature) {
+                    throw new Error('Test signature not returned');
+                  }
+                  verifyPaymentOnServer(
+                    currentOrderData.orderId,
+                    currentOrderData.razorpayOrderId,
+                    payId,
+                    sigData.signature
+                  );
+                })
+                .catch(function(err) {
+                  alert('Error generating test signature: ' + err.message);
+                });
+            }
+          }
+        });
+      }
+      <% } %>
+
+      // Address picker auto-fill
+      var addrSelector = document.getElementById('address-selector');
+      function applySelectedAddress() {
+        if (!addrSelector) return;
+        var opt = addrSelector.options[addrSelector.selectedIndex];
+        if (opt && opt.value !== '') {
+          if (opt.dataset.name) document.getElementById('f-name').value = opt.dataset.name;
+          if (opt.dataset.phone) document.getElementById('f-phone').value = opt.dataset.phone;
+          if (opt.dataset.address) document.getElementById('f-addr').value = opt.dataset.address;
+          if (opt.dataset.city) document.getElementById('f-city').value = opt.dataset.city;
+          if (opt.dataset.pin) document.getElementById('f-pin').value = opt.dataset.pin;
+        }
+      }
+      if (addrSelector) {
+        addrSelector.addEventListener('change', applySelectedAddress);
+        // Apply default on initial render
+        applySelectedAddress();
+      }
+
+      // Fetch verified order summary from server via CartStore
+      function runCartValidation() {
+        if (!window.CartStore || typeof window.CartStore.validate !== 'function') {
+          setTimeout(runCartValidation, 30);
+          return;
+        }
+        window.CartStore.validate(function (err, data) {
+          if (err || !data || !data.valid || !data.items || !data.items.length) {
+            alert('Some items in your cart are no longer available in the requested quantity. Please review your cart.');
+            location.href = '/cart';
+            return;
+          }
+
+          validatedTotal = data.total;
+          document.getElementById('sum-subtotal').textContent = '₹' + data.subtotal.toLocaleString('en-IN');
+          document.getElementById('sum-shipping').textContent = '₹' + data.shipping.toLocaleString('en-IN');
+          document.getElementById('sum-total').textContent = '₹' + data.total.toLocaleString('en-IN');
+          btnText.textContent = "Pay ₹" + data.total.toLocaleString('en-IN') + " securely";
+
+          var listHtml = '';
+          data.items.forEach(function (i) {
+            listHtml += '<div style="display:flex; justify-content:space-between; font-size:0.9rem; padding:4px 0;">' +
+              '<span>' + i.name + ' (' + i.size + ') × ' + i.qty + '</span>' +
+              '<span>₹' + i.lineTotal.toLocaleString('en-IN') + '</span>' +
+              '</div>';
+          });
+          document.getElementById('checkout-items-list').innerHTML = listHtml;
+        });
+      }
+      runCartValidation();
+
+      function validateInputs() {
+        var valid = true;
+        function setErr(id, msg) {
+          document.getElementById('e-' + id).textContent = msg;
+          if (msg) valid = false;
+        }
+
+        var name = document.getElementById('f-name').value.trim();
+        var phone = document.getElementById('f-phone').value.trim().replace(/\D/g, '');
+        var addr = document.getElementById('f-addr').value.trim();
+        var city = document.getElementById('f-city').value.trim();
+        var pin = document.getElementById('f-pin').value.trim().replace(/\D/g, '');
+        var ok = document.getElementById('f-ok').checked;
+
+        setErr('name', name.length < 2 ? "<%= t('checkout.errors.name') %>" : "");
+        setErr('phone', /^[6-9]\d{9}$/.test(phone) ? "" : "<%= t('checkout.errors.phone') %>");
+        setErr('addr', addr.length < 8 ? "<%= t('checkout.errors.addr') %>" : "");
+        setErr('city', city.length < 2 ? "<%= t('checkout.errors.city') %>" : "");
+        setErr('pin', /^\d{6}$/.test(pin) ? "" : "<%= t('checkout.errors.pin') %>");
+        setErr('ok', ok ? "" : "<%= t('checkout.errors.agree') %>");
+
+        return valid;
+      }
+
+      function handleSubmit(e) {
+        if (e && e.preventDefault) e.preventDefault();
+        if (isSubmitting) return;
+        if (!validateInputs()) return;
+
+        var errBox = document.getElementById('checkout-order-error');
+        if (errBox) errBox.style.display = 'none';
+
+        isSubmitting = true;
+        submitBtn.disabled = true;
+        btnText.textContent = "<%= t('checkout.placingOrder') %>";
+
+        var customerData = {
+          name: document.getElementById('f-name').value.trim(),
+          phone: document.getElementById('f-phone').value.trim(),
+          email: document.getElementById('f-email') ? document.getElementById('f-email').value.trim() : '',
+          address: document.getElementById('f-addr').value.trim(),
+          city: document.getElementById('f-city').value.trim(),
+          pin: document.getElementById('f-pin').value.trim()
+        };
+        var saveAddressCheckbox = document.getElementById('f-save-addr');
+
+        // 1. Post to /checkout/create
+        fetch('/checkout/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+          },
+          body: JSON.stringify({
+            items: (cart && cart.length) ? cart : getCart(),
+            customer: customerData,
+            agreeNoReturns: document.getElementById('f-ok').checked,
+            saveAddress: saveAddressCheckbox ? saveAddressCheckbox.checked : false
+          })
+        })
+          .then(async function (res) {
+            var data = null;
+            try {
+              data = await res.json();
+            } catch (jsonErr) {
+              data = null;
+            }
+
+            if (!res.ok || (data && data.error)) {
+              resetSubmitBtn();
+              var errObj = data && data.error;
+              var errCode = (errObj && typeof errObj === 'object') ? errObj.code : '';
+              var errMsg = (errObj && typeof errObj === 'object') ? errObj.message : (typeof errObj === 'string' ? errObj : '');
+              var reqId = (data && data.requestId) || res.headers.get('x-request-id') || '';
+
+              // Specific messaging by status code & error code
+              if (res.status === 409 || errCode === 'SOLD_OUT' || (errMsg && errMsg.toLowerCase().includes('sold out'))) {
+                showCheckoutError(errMsg || 'An item in your cart is sold out. Please review your cart to continue.', reqId);
+              } else if (res.status === 429 || errCode === 'RATE_LIMITED' || (errMsg && errMsg.toLowerCase().includes('too many'))) {
+                showCheckoutError(errMsg || 'Too many attempts. Please wait a few minutes before trying again.', reqId);
+              } else if (res.status === 403 || errCode === 'SESSION_EXPIRED' || (errMsg && errMsg.toLowerCase().includes('csrf'))) {
+                showCheckoutError('Your session has expired. Please reload the page to refresh your token.', reqId);
+              } else if (res.status >= 500 || errCode === 'PAYMENT_SERVICE_UNAVAILABLE') {
+                showCheckoutError(errMsg || 'Payment service is temporarily unavailable. Please try again in a few moments.', reqId);
+              } else {
+                showCheckoutError(errMsg || 'Could not initiate order. Please try again.', reqId);
+              }
+              return;
+            }
+
+            if (!data) {
+              resetSubmitBtn();
+              showCheckoutError('Payment service returned an unexpected response. Please try again.', res.headers.get('x-request-id') || '');
+              return;
+            }
+
+            currentOrderData = data;
+
+            // If test harness modal is present, show it; otherwise launch official Razorpay Checkout modal
+            if (mockModal) {
+              if (mockPayAmount) {
+                mockPayAmount.textContent = ((data.amount || 0) / 100).toLocaleString('en-IN');
+              }
+              mockModal.style.display = 'flex';
+            } else {
+              if (typeof Razorpay === 'undefined' || window.__rzpScriptLoadError) {
+                resetSubmitBtn();
+                showCheckoutError('Payment window could not load. Please check your connection and try again.');
+                return;
+              }
+
+              // Launch official Razorpay Checkout modal
+              var options = {
+                key: data.keyId,
+                amount: data.amount,
+                currency: data.currency,
+                name: 'Nest by Ammakkili',
+                description: 'Order ' + data.orderId,
+                image: '/img/logo.svg',
+                order_id: data.razorpayOrderId,
+                prefill: {
+                  name: data.customer.name,
+                  email: data.customer.email,
+                  contact: data.customer.phone
+                },
+                theme: {
+                  color: '#892245'
+                },
+                handler: function (response) {
+                  verifyPaymentOnServer(
+                    data.orderId,
+                    response.razorpay_order_id,
+                    response.razorpay_payment_id,
+                    response.razorpay_signature
+                  );
+                },
+                modal: {
+                  ondismiss: function () {
+                    resetSubmitBtn();
+                    if (currentOrderData && currentOrderData.orderId && currentOrderData.orderToken) {
+                      cancelOrderOnServer(currentOrderData.orderId, currentOrderData.orderToken, 'Payment window closed');
+                    }
+                    if (window.showToast) {
+                      window.showToast('Payment window closed. Stock hold released.');
+                    }
+                  }
+                }
+              };
+
+              try {
+                var rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (response) {
+                  resetSubmitBtn();
+                  btnText.textContent = "Try again";
+                  var desc = (response.error && response.error.description) ? response.error.description : 'Payment declined.';
+                  if (currentOrderData && currentOrderData.orderId && currentOrderData.orderToken) {
+                    cancelOrderOnServer(currentOrderData.orderId, currentOrderData.orderToken, desc);
+                  }
+                  showCheckoutError('Payment failed: ' + desc);
+                });
+                rzp.open();
+              } catch (rzpOpenErr) {
+                resetSubmitBtn();
+                showCheckoutError('Could not launch payment gateway: ' + rzpOpenErr.message);
+              }
+            }
+          })
+          .catch(function (err) {
+            console.error('Checkout error:', err);
+            resetSubmitBtn();
+            showCheckoutError('Network or connection error. Please check your internet connection and try again.');
+          });
+      }
+
+      form.addEventListener('submit', handleSubmit);
+
+      function verifyPaymentOnServer(orderId, rzpOrderId, paymentId, signature) {
+        btnText.textContent = "Verifying payment...";
+        fetch('/checkout/verify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+          },
+          body: JSON.stringify({
+            orderId: orderId,
+            razorpay_order_id: rzpOrderId,
+            razorpay_payment_id: paymentId,
+            razorpay_signature: signature
+          })
+        })
+          .then(function (res) {
+            return res.json().then(function(data) {
+              return { ok: res.ok, status: res.status, data: data };
+            });
+          })
+          .then(function (result) {
+            if (result.ok && result.data && result.data.success) {
+              // Clear browser cart
+              if (window.CartStore) {
+                window.CartStore.clear();
+              } else {
+                window.saveCart([]);
+              }
+              location.href = '/checkout/confirmation/' + orderId;
+            } else {
+              var errMsg = (result.data && result.data.error) ? result.data.error : 'Payment verification failed.';
+              submitBtn.disabled = false;
+              btnText.textContent = "Try again";
+              if (window.showToast) {
+                window.showToast(errMsg);
+              } else {
+                alert(errMsg);
+              }
+            }
+          })
+          .catch(function (err) {
+            console.error('Verification error:', err);
+            submitBtn.disabled = false;
+            btnText.textContent = "Try again";
+            alert('Payment received but verification network error. Please contact WhatsApp support.');
+          });
+      }
   }
+
+  initCheckout();
 })();
 </script>
-

@@ -1,7 +1,20 @@
 <!DOCTYPE html>
-<html lang="<%= lang %>" data-theme="light">
+<html lang="<%= lang %>">
 <head>
   <meta charset="utf-8">
+  <script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
+    (function () {
+      try {
+        var t = localStorage.getItem('nest_theme');
+        if (!t) {
+          t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title><%= typeof title !== 'undefined' ? title + ' – Nest by Ammakkili' : 'Nest by Ammakkili – Nightwear, softly considered' %></title>
   <meta name="description" content="<%= typeof metaDesc !== 'undefined' ? metaDesc : t('site.description') %>">
@@ -32,7 +45,7 @@
   <link rel="manifest" href="/site.webmanifest">
 
   <!-- Organization JSON-LD -->
-  <script type="application/ld+json">
+  <script type="application/ld+json" nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
   {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -51,7 +64,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Jost:wght@400;500&family=Noto+Sans+Malayalam:wght@400;500&family=Noto+Serif+Malayalam:wght@400;500&display=swap" rel="stylesheet">
 
-  <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
   <link rel="stylesheet" href="/css/glass.css">
   <link rel="stylesheet" href="/css/header.css">
   <link rel="stylesheet" href="/css/footer.css">
@@ -79,7 +91,11 @@
 
   <!-- Scripts -->
   <script src="/js/header.js" defer></script>
-  <script src="/js/main.js"></script>
+  <script src="/js/main.js" defer></script>
+  <script src="/js/cart-store.js" defer></script>
+  <script src="/js/cart-page.js" defer></script>
+  <script src="/js/wishlist-store.js" defer></script>
+  <script src="/js/product-card.js" defer></script>
   <% if (typeof script !== 'undefined') { %>
     <%- script %>
   <% } %>

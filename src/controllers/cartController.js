@@ -15,55 +15,73 @@ exports.validateCart = async (req, res) => {
   try {
     const { items } = req.body;
     if (!items || !Array.isArray(items) || !items.length) {
-      return res.json({ valid: true, items: [], subtotal: 0 });
+      return res.json({ items: [], subtotal: 0, shipping: 0, total: 0, removed: [], valid: true, removedCount: 0 });
     }
 
     const settings = await Settings.getSettings();
-    const productIds = items.map(it => it.id);
-    const dbProducts = await Product.find({ _id: { $in: productIds }, active: true });
+    const mongoose = require('mongoose');
+
+    // Extract valid ObjectIds
+    const rawIds = items.map(it => it.productId || it.id).filter(Boolean);
+    const validIds = rawIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+    const dbProducts = await Product.find({ _id: { $in: validIds }, active: true });
 
     let subtotal = 0;
-    let allValid = true;
+    const validatedItems = [];
+    const removed = [];
 
-    const validatedItems = items.map(item => {
-      const p = dbProducts.find(doc => doc._id.toString() === item.id);
+    for (const item of items) {
+      const pid = String(item.productId || item.id || '');
+      const p = dbProducts.find(doc => doc._id.toString() === pid);
       if (!p) {
-        allValid = false;
-        return { ...item, exists: false, error: 'Product no longer available' };
+        removed.push({ productId: pid, size: item.size, qty: item.qty || item.quantity || 1 });
+        continue;
       }
 
-      const sizeObj = p.sizes.find(s => s.size === item.size);
-      const stock = sizeObj ? sizeObj.stock : 0;
-      const requestedQty = Math.max(1, parseInt(item.quantity, 10) || 1);
-      const isAvailable = stock >= requestedQty;
-
-      if (!isAvailable) {
-        allValid = false;
+      const sizeObj = p.sizes && p.sizes.find(s => s.size === item.size);
+      if (!sizeObj || sizeObj.stock <= 0) {
+        removed.push({ productId: pid, size: item.size, qty: item.qty || item.quantity || 1, name: p.getName(req.cookies.nest_lang || 'en') });
+        continue;
       }
 
-      const lineTotal = p.price * requestedQty;
+      const requestedQty = Math.max(1, parseInt(item.qty || item.quantity, 10) || 1);
+      const finalQty = Math.min(sizeObj.stock, requestedQty);
+      const lineTotal = p.price * finalQty;
       subtotal += lineTotal;
 
-      return {
-        id: p._id,
+      const firstImage = typeof p.getMainImage === 'function'
+        ? p.getMainImage()
+        : ((p.images && p.images.length > 0 && p.images[0]) ? (p.images[0].url || p.images[0]) : '/img/brand/logo-full-256.png');
+
+      validatedItems.push({
+        productId: p._id.toString(),
         slug: p.slug,
         name: p.getName(req.cookies.nest_lang || 'en'),
+        image: firstImage,
         size: item.size,
         price: p.price,
-        quantity: requestedQty,
-        stock,
-        isAvailable,
-        image: p.images && p.images[0] ? p.images[0] : '/img/logo.svg',
-        lineTotal
-      };
-    });
+        qty: finalQty,
+        stock: sizeObj.stock,
+        lineTotal,
+        // Legacy compatibility properties
+        id: p._id.toString(),
+        quantity: finalQty,
+        sizeName: item.size,
+        isAvailable: true
+      });
+    }
+
+    const shippingCharge = validatedItems.length > 0 ? (settings.shippingCharge ?? 60) : 0;
+    const total = subtotal + shippingCharge;
 
     res.json({
-      valid: allValid,
       items: validatedItems,
       subtotal,
-      shipping: items.length > 0 ? (settings.shippingCharge || 60) : 0,
-      total: subtotal + (items.length > 0 ? (settings.shippingCharge || 60) : 0)
+      shipping: shippingCharge,
+      total,
+      removed,
+      valid: removed.length === 0,
+      removedCount: removed.length
     });
   } catch (err) {
     console.error('Cart validation error:', err);

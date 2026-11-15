@@ -1,22 +1,25 @@
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const { trackOrderFailure, resetOrderTrackingFailures } = require('../middleware/trackOrderLimiter');
 
 // Home Page
 exports.getHome = async (req, res, next) => {
   try {
-    const [newArrivals, featuredProduct] = await Promise.all([
-      Product.find({ active: true }).sort({ createdAt: -1 }).limit(6),
-      Product.findOne({ active: true, featured: true })
+    const [newArrivals, featuredProducts] = await Promise.all([
+      Product.find({ active: true }).sort({ createdAt: -1 }).limit(8),
+      Product.find({ active: true, featured: true }).sort({ createdAt: -1 }).limit(3)
     ]);
 
-    // Use explicit featured product, or fallback to the first active product
-    const heroProduct = featuredProduct || newArrivals[0] || null;
+    // Use explicit featured products if available, fallback to empty array or first product
+    const heroProducts = featuredProducts.length > 0 ? featuredProducts : [];
+    const heroProduct = heroProducts[0] || newArrivals[0] || null;
 
     res.render('pages/home', {
       title: res.locals.t('site.tagline'),
       metaDesc: res.locals.t('site.description'),
       products: newArrivals,
-      featuredProduct: heroProduct
+      featuredProduct: heroProduct,
+      featuredProducts: heroProducts
     });
   } catch (err) {
     next(err);
@@ -26,13 +29,13 @@ exports.getHome = async (req, res, next) => {
 // Shop Page with Search, Category Filter, Sort, and Pagination
 exports.getShop = async (req, res, next) => {
   try {
-    const { q, style, sort, page = 1 } = req.query;
+    const { q, style, sort, page = 1, ajax } = req.query;
     const limit = 12;
     const skip = (parseInt(page, 10) - 1) * limit;
 
     const query = { active: true };
 
-    if (style && style.trim() !== '') {
+    if (style && style.trim() !== '' && style.toLowerCase() !== 'all') {
       query.style = style.trim();
     }
 
@@ -48,9 +51,11 @@ exports.getShop = async (req, res, next) => {
     }
 
     let sortObj = { featured: -1, createdAt: -1 };
-    if (sort === 'lo') sortObj = { price: 1 };
-    if (sort === 'hi') sortObj = { price: -1 };
-    if (sort === 'az') sortObj = { 'name.en': 1 };
+    if (sort === 'price-asc' || sort === 'lo') sortObj = { price: 1 };
+    else if (sort === 'price-desc' || sort === 'hi') sortObj = { price: -1 };
+    else if (sort === 'newest') sortObj = { createdAt: -1 };
+    else if (sort === 'featured') sortObj = { featured: -1, createdAt: -1 };
+    else if (sort === 'az') sortObj = { 'name.en': 1 };
 
     const [products, totalCount, styles] = await Promise.all([
       Product.find(query).sort(sortObj).skip(skip).limit(limit),
@@ -59,6 +64,27 @@ exports.getShop = async (req, res, next) => {
     ]);
 
     const totalPages = Math.ceil(totalCount / limit) || 1;
+    const isAjax = ajax === '1' || req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'));
+
+    if (isAjax) {
+      return res.json({
+        products: products.map(p => ({
+          _id: p._id,
+          slug: p.slug,
+          name: p.getName(res.locals.lang),
+          price: p.price,
+          style: p.style,
+          tag: p.tag,
+          images: typeof p.getOrderedImages === 'function' ? p.getOrderedImages().map(i => i.url) : p.images,
+          sizes: p.sizes,
+          totalStock: p.totalStock
+        })),
+        totalCount,
+        currentPage: parseInt(page, 10) || 1,
+        totalPages,
+        hasMore: (parseInt(page, 10) || 1) < totalPages
+      });
+    }
 
     res.render('pages/shop', {
       title: res.locals.t('shop.title'),
@@ -90,19 +116,26 @@ exports.getProductDetail = async (req, res, next) => {
       });
     }
 
-    // Related products (same style or other featured)
+    // Related products (same style or other featured, 4 cards excluding current)
     const related = await Product.find({
       active: true,
       _id: { $ne: product._id }
     })
       .sort({ createdAt: -1 })
-      .limit(3);
+      .limit(4);
 
     // Build Product Schema JSON-LD for rich snippet SEO
-    const firstImage = product.images && product.images.length > 0 ? product.images[0] : '/img/logo.svg';
+    const firstImage = typeof product.getMainImage === 'function'
+      ? product.getMainImage()
+      : (product.images && product.images.length > 0 ? (product.images[0].url || product.images[0]) : '/img/logo.svg');
     const absImage = firstImage.startsWith('http') ? firstImage : `${res.locals.currentUrl.split('/product')[0]}${firstImage}`;
     
     const inStock = product.sizes.some(s => s.stock > 0);
+    const lowStock = product.sizes.some(s => s.stock > 0 && s.stock <= 3);
+    const availability = !inStock
+      ? "https://schema.org/OutOfStock"
+      : (lowStock ? "https://schema.org/LimitedAvailability" : "https://schema.org/InStock");
+
     const jsonLd = {
       "@context": "https://schema.org/",
       "@type": "Product",
@@ -118,7 +151,7 @@ exports.getProductDetail = async (req, res, next) => {
         "url": res.locals.currentUrl,
         "priceCurrency": "INR",
         "price": product.price,
-        "availability": inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        "availability": availability,
         "itemCondition": "https://schema.org/NewCondition"
       }
     };
@@ -176,7 +209,7 @@ exports.getWishlistProducts = async (req, res) => {
         slug: p.slug,
         name: p.getName(req.cookies.nest_lang || 'en'),
         price: p.price,
-        image: p.images && p.images[0] ? p.images[0] : '/img/logo.svg',
+        image: typeof p.getMainImage === 'function' ? p.getMainImage() : (p.images && p.images[0] ? (p.images[0].url || p.images[0]) : '/img/logo.svg'),
         style: p.style,
         tag: p.tag
       }))
@@ -242,6 +275,12 @@ exports.postTrackOrder = async (req, res, next) => {
         orderId: cleanId,
         'customer.phone': { $regex: new RegExp(cleanPhone + '$') }
       });
+    }
+
+    if (!order && orderId) {
+      trackOrderFailure(orderId);
+    } else if (order && orderId) {
+      resetOrderTrackingFailures(orderId);
     }
 
     res.render('pages/track', {

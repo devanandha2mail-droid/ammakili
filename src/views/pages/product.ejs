@@ -1,258 +1,463 @@
-<div class="wrap pg">
-  <div class="crumb" style="font-size:0.78rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:28px;">
-    <a href="/"><%= t('nav.home') %></a> / <a href="/shop"><%= t('nav.shop') %></a> / <span><%= product.getName(lang) %></span>
-  </div>
+<%
+  const pName = product.getName(lang);
+  const pDesc = product.getDescription(lang);
+  const pFabric = product.getFabric(lang);
+  const pCare = product.getCare(lang);
+  const pFit = product.getFit(lang);
+  const hasFabricCare = Boolean(pFabric || pCare || pFit);
 
-  <div class="pdp">
-    <!-- Gallery Column -->
-    <div>
-      <div class="arch" id="main-arch" style="aspect-ratio:4/5;">
-        <% if (product.images && product.images.length > 0) { %>
-          <img id="main-image" src="<%= product.images[0] %>" alt="<%= product.getName(lang) %>" width="600" height="750">
-        <% } else { %>
-          <svg viewBox="0 0 60 100" aria-hidden="true"><path d="M22 4h16l3 14 6 6-5 8 9 60H9l9-60-5-8 6-6z"/></svg>
-        <% } %>
-        <small><%= t('product.photo') %></small>
-      </div>
+  const orderedImages = typeof product.getOrderedImages === 'function' ? product.getOrderedImages() : (product.images || []);
+  const rawList = orderedImages.length > 0 ? orderedImages : [{ url: '/img/placeholders/rose-garden-1.svg', kind: 'extra' }];
+  const images = rawList.map(item => typeof item === 'string' ? { url: item, kind: 'extra' } : item);
+  const firstImage = images[0].url;
 
-      <% if (product.images && product.images.length > 1) { %>
-        <div class="thumbs" id="thumbs">
-          <% product.images.forEach(function(img, idx) { %>
-            <button 
-              type="button" 
-              class="<%= idx === 0 ? 'active' : '' %>"
-              data-img-src="<%= img %>" 
-              aria-label="View photo <%= idx + 1 %>"
-              aria-pressed="<%= idx === 0 ? 'true' : 'false' %>"
+  // Check YouTube video ID
+  function getYouTubeId(url) {
+    if (!url) return null;
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    return m ? m[1] : null;
+  }
+  const ytId = getYouTubeId(product.videoUrl);
+  const ytEmbedUrl = ytId ? `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1` : '';
+  const ytPoster = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
+
+  const waNum = (typeof whatsappNumber !== 'undefined' && whatsappNumber) 
+    ? whatsappNumber 
+    : ((typeof settings !== 'undefined' && settings.whatsappNumber) ? settings.whatsappNumber : '919876543210');
+
+  const shareWaText = encodeURIComponent(`Take a look at this nighty from Nest by Ammakkili: ${pName} - ${currentUrl}`);
+%>
+
+<div class="wrap pg pdp-section" 
+     data-product-id="<%= product._id %>"
+     data-product-name="<%= pName %>"
+     data-product-price="<%= product.price %>"
+     data-wa-number="<%= waNum %>">
+
+  <!-- Breadcrumbs -->
+  <nav class="crumb" aria-label="Breadcrumb">
+    <a href="/"><%= t('nav.home') %></a>
+    <span class="crumb-sep">/</span>
+    <a href="/shop"><%= t('nav.shop') %></a>
+    <span class="crumb-sep">/</span>
+    <span aria-current="page"><%= pName %></span>
+  </nav>
+
+  <div class="pdp-layout">
+    <!-- LEFT: Gallery Column (Sticky on Desktop) -->
+    <div class="pdp-gallery-col">
+      <div class="pdp-gallery-sticky">
+        <div class="pdp-gallery-main">
+          <!-- Main 4:5 Arch Frame -->
+          <div class="arch pdp-arch-frame" id="pdpMainFrame" tabindex="0" role="button" aria-label="Enlarge <%= pName %> photo">
+            <img 
+              id="pdpMainImage" 
+              src="<%= firstImage %>" 
+              alt="<%= pName %> - primary photo" 
+              width="600" 
+              height="750"
+              fetchpriority="high"
+              decoding="async"
             >
-              <img src="<%= img %>" alt="<%= product.getName(lang) %> photo <%= idx + 1 %>" loading="lazy">
-            </button>
-          <% }); %>
-        </div>
-      <% } %>
-    </div>
+            <!-- 2x Zoom Layer for Desktop Hover -->
+            <div 
+              class="pdp-zoom-layer" 
+              id="pdpZoomLayer" 
+              style="background-image: url('<%= firstImage %>');"
+              aria-hidden="true"
+            ></div>
 
-    <!-- Product Info & Actions Column -->
-    <div>
-      <h1><%= product.getName(lang) %></h1>
-      <div class="price" style="font-size:1.5rem; margin-bottom:16px;">₹<%= product.price.toLocaleString('en-IN') %></div>
-      <p style="color:var(--muted); line-height:1.7;"><%= product.getDescription(lang) %></p>
-
-      <!-- Size Selection -->
-      <div class="opt" style="margin:26px 0;">
-        <label><%= t('product.size') %></label>
-        <div class="sizes" id="size-selector">
-          <% product.sizes.forEach(function(s) { %>
-            <button 
-              type="button" 
-              data-size="<%= s.size %>" 
-              data-stock="<%= s.stock %>"
-              <%= s.stock <= 0 ? 'disabled' : '' %>
-              title="<%= s.stock <= 0 ? t('product.soldOut') : (s.stock <= 3 ? t('product.onlyLeft', { n: s.stock, size: s.size }) : t('product.inStock', { n: s.stock })) %>"
-            >
-              <%= s.size %>
-            </button>
-          <% }); %>
-        </div>
-        <p class="err" id="size-warning" style="margin-top:8px;"></p>
-        <div style="margin-top:8px;">
-          <a href="/sizes" class="tlink" style="margin-left:0; font-size:0.8rem;"><%= t('product.sizeGuide') %></a>
-        </div>
-      </div>
-
-      <!-- Quantity Selector -->
-      <div class="opt" style="margin:22px 0;">
-        <label><%= t('product.quantity') %></label>
-        <div class="qty">
-          <button type="button" id="qty-minus" aria-label="Decrease quantity">−</button>
-          <span id="qty-val">1</span>
-          <button type="button" id="qty-plus" aria-label="Increase quantity">+</button>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="acts">
-        <button type="button" class="btn" id="add-to-cart-btn"><%= t('product.addToCart') %></button>
-        <a href="/cart" class="btn ghost"><%= t('product.viewCart') %></a>
-        <button type="button" class="hbtn" data-wish-id="<%= product._id %>" data-wish-name="<%= product.getName(lang) %>" aria-label="Save to wishlist">♡</button>
-      </div>
-
-      <!-- Fact checklist -->
-      <ul class="facts">
-        <li><%= t('product.facts.style', { style: product.style }) %></li>
-        <li><%= t('product.facts.sizesRange') %></li>
-        <li><%= t('product.facts.prepaidOnly') %></li>
-        <li><%= t('product.facts.noReturns') %></li>
-      </ul>
-
-      <!-- YouTube Embed if available -->
-      <% if (product.videoUrl) { %>
-        <div style="margin-top:28px;">
-          <label><%= t('product.watchVideo') %></label>
-          <div style="position:relative; aspect-ratio:16/9; border-radius:18px; overflow:hidden; border:1px solid var(--gb);">
-            <% 
-              // Extract YouTube video id if standard watch link
-              let embedUrl = product.videoUrl;
-              if (embedUrl.includes('youtube.com/watch?v=')) {
-                embedUrl = embedUrl.replace('watch?v=', 'embed/');
-              } else if (embedUrl.includes('youtu.be/')) {
-                embedUrl = embedUrl.replace('youtu.be/', 'www.youtube.com/embed/');
-              }
-            %>
-            <% if (embedUrl.includes('youtube.com/embed/')) { %>
-              <iframe 
-                src="<%= embedUrl %>" 
-                title="<%= product.getName(lang) %> Video"
-                style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen
-              ></iframe>
-            <% } else { %>
-              <div style="display:grid; place-items:center; height:100%; background:var(--glass);">
-                <a href="<%= product.videoUrl %>" target="_blank" rel="noopener" class="btn small">
-                  ▶ <%= t('product.watchVideo') %>
-                </a>
+            <!-- YouTube Video Container (active when video slide is selected) -->
+            <% if (ytId) { %>
+              <div class="pdp-video-container" id="pdpVideoContainer" hidden>
+                <div class="pdp-video-poster" id="pdpVideoPoster">
+                  <img src="<%= ytPoster %>" alt="<%= pName %> Video Poster" width="600" height="750" loading="lazy">
+                  <button 
+                    type="button" 
+                    class="pdp-video-play-btn" 
+                    id="pdpVideoPlayBtn"
+                    data-embed-url="<%= ytEmbedUrl %>"
+                    aria-label="Play video showcase for <%= pName %>"
+                  >
+                    <span class="pdp-play-icon" aria-hidden="true">▶</span>
+                  </button>
+                </div>
+                <div class="pdp-video-iframe-wrap" id="pdpVideoIframeWrap"></div>
               </div>
             <% } %>
+
+            <span class="pdp-zoom-hint" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+              <%= lang === 'ml' ? 'വലുതാക്കുക' : 'Hover to zoom' %>
+            </span>
+          </div>
+
+          <!-- Thumbnails: Vertical beside arch on desktop, horizontal scroll on phones -->
+          <% if (images.length > 1 || ytId) { %>
+            <div class="pdp-thumbs" id="pdpThumbs" role="tablist" aria-label="Product media gallery">
+              <% images.forEach(function(imgObj, idx) { 
+                   const imgUrl = imgObj.url || imgObj;
+                   const isOrig = imgObj.kind === 'original';
+                   const isDetail = imgObj.kind === 'detail';
+              %>
+                <button 
+                  type="button" 
+                  class="pdp-thumb-btn <%= idx === 0 ? 'is-active' : '' %>"
+                  data-src="<%= imgUrl %>"
+                  data-alt="<%= isOrig ? ('Original photo of ' + pName) : (isDetail ? ('Detail photo of ' + pName) : (pName + ' photo ' + (idx + 1))) %>"
+                  data-slide-type="img"
+                  role="tab"
+                  aria-selected="<%= idx === 0 ? 'true' : 'false' %>"
+                  aria-label="<%= isOrig ? 'Original photo' : (isDetail ? 'Detail photo' : ('View photo ' + (idx + 1))) %>"
+                  style="position:relative;"
+                >
+                  <img src="<%= imgUrl %>" alt="" loading="lazy" width="80" height="100">
+                  <% if (isOrig) { %>
+                    <span class="pdp-thumb-orig-badge" style="position:absolute; bottom:2px; left:2px; right:2px; background:rgba(0,0,0,0.72); color:#fff; font-size:0.58rem; text-align:center; padding:1px 2px; border-radius:3px; letter-spacing:0.04em;">Original</span>
+                  <% } else if (isDetail) { %>
+                    <span class="pdp-thumb-orig-badge" style="position:absolute; bottom:2px; left:2px; right:2px; background:rgba(180,83,9,0.85); color:#fff; font-size:0.58rem; text-align:center; padding:1px 2px; border-radius:3px; letter-spacing:0.04em;">Detail</span>
+                  <% } %>
+                </button>
+              <% }); %>
+
+              <% if (ytId) { %>
+                <button 
+                  type="button" 
+                  class="pdp-thumb-btn pdp-thumb-btn--video"
+                  data-slide-type="video"
+                  role="tab"
+                  aria-selected="false"
+                  aria-label="Watch product showcase video"
+                >
+                  <div class="pdp-thumb-video-icon">▶ Video</div>
+                </button>
+              <% } %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Product Details (In One Glass Panel) -->
+    <div class="pdp-info-col">
+      <div class="pdp-card-panel">
+        <div class="pdp-meta-top">
+          <span class="pdp-style-tag"><%= product.style %></span>
+          <% if (product.tag && product.tag !== 'None') { %>
+            <span class="pdp-badge pdp-badge--<%= product.tag.toLowerCase() %>"><%= product.tag %></span>
+          <% } %>
+        </div>
+
+        <h1 class="pdp-title"><%= pName %></h1>
+
+        <div class="pdp-price">
+          ₹<%= product.price.toLocaleString('en-IN') %>
+          <span class="pdp-tax-note"><%= lang === 'ml' ? '(നികുതി ഉൾപ്പെടെ)' : '(inclusive of all taxes)' %></span>
+        </div>
+
+        <p class="pdp-short-desc"><%= pDesc %></p>
+
+        <!-- Accessible Size Selector -->
+        <div class="pdp-size-section">
+          <div class="pdp-size-head">
+            <label id="pdpSizeLabel" class="pdp-size-title"><%= t('product.size') %></label>
+            <button type="button" class="pdp-size-guide-link" id="pdpOpenSizeDrawer" aria-haspopup="dialog">
+              📏 <%= t('product.sizeGuide') %>
+            </button>
+          </div>
+
+          <div 
+            class="pdp-sizes-radiogroup" 
+            id="pdpSizeRadiogroup" 
+            role="radiogroup" 
+            aria-labelledby="pdpSizeLabel"
+          >
+            <% product.sizes.forEach(function(s) { 
+              const isOut = (s.stock || 0) <= 0;
+              const isLow = !isOut && (s.stock || 0) <= 3;
+            %>
+              <button 
+                type="button" 
+                class="pdp-size-pill <%= isOut ? 'is-sold-out' : '' %> <%= isLow ? 'is-low-stock' : '' %>"
+                data-size="<%= s.size %>"
+                data-stock="<%= s.stock %>"
+                role="radio"
+                aria-checked="false"
+                <%= isOut ? 'disabled' : '' %>
+                title="<%= isOut ? 'Sold out' : (isLow ? ('Only ' + s.stock + ' left') : 'In stock') %>"
+              >
+                <span class="pdp-size-text"><%= s.size %></span>
+                <% if (isLow) { %>
+                  <span class="pdp-low-dot" aria-hidden="true"></span>
+                  <span class="pdp-low-count"><%= s.stock %> left</span>
+                <% } %>
+              </button>
+            <% }); %>
+          </div>
+
+          <!-- Aria Live Status Message -->
+          <div id="pdpSizeWarning" class="pdp-size-note" role="alert" aria-live="polite"></div>
+
+          <% 
+            const pdpLowStockSizes = product.sizes ? product.sizes.filter(s => (s.stock || 0) > 0 && (s.stock || 0) <= 3) : [];
+          %>
+          <% if (pdpLowStockSizes.length > 0) { %>
+            <div class="pdp-low-stock-summary" style="margin-top:6px; font-size:0.85rem; color:#b45309; font-weight:500;">
+              <% pdpLowStockSizes.forEach(function(ls) { %>
+                <div class="pdp-low-stock-item">
+                  ⚡ <%= lang === 'ml' ? (ls.size + '-ൽ ' + ls.stock + ' എണ്ണം മാത്രം ബാക്കി') : ('Only ' + ls.stock + ' left in ' + ls.size) %>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+
+          <!-- Sold Out Size WhatsApp Request Link (hidden until sold-out size tapped) -->
+          <a href="#" class="pdp-wa-enquire-link" id="pdpAskWaLink" target="_blank" rel="noopener" hidden>
+            <span class="pdp-wa-icon">💬</span>
+            <span class="pdp-wa-text">Ask on WhatsApp</span>
+          </a>
+        </div>
+
+        <!-- Quantity Stepper -->
+        <div class="pdp-qty-section">
+          <label class="pdp-qty-label"><%= t('product.quantity') %></label>
+          <div class="pdp-qty-stepper">
+            <button type="button" id="pdpQtyMinus" aria-label="Decrease quantity">−</button>
+            <span id="pdpQtyVal" aria-live="polite">1</span>
+            <button type="button" id="pdpQtyPlus" aria-label="Increase quantity">+</button>
           </div>
         </div>
-      <% } %>
+
+        <!-- Add to Cart & Actions -->
+        <div class="pdp-actions">
+          <button type="button" class="btn pdp-add-btn" id="pdpAddToCartBtn">
+            <%= t('product.addToCart') %>
+          </button>
+          <button 
+            type="button" 
+            class="pdp-heart-btn" 
+            data-wish-id="<%= product._id %>" 
+            data-wish-name="<%= pName %>" 
+            aria-label="Save <%= pName %> to wishlist"
+            aria-pressed="false"
+          >♡</button>
+        </div>
+
+        <!-- WhatsApp Share Button -->
+        <div class="pdp-share-wrap">
+          <a href="https://wa.me/?text=<%= shareWaText %>" target="_blank" rel="noopener" class="pdp-share-wa-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            <%= lang === 'ml' ? 'വാട്സാപ്പിൽ ഷെയർ ചെയ്യുക' : 'Share on WhatsApp' %>
+          </a>
+        </div>
+
+        <!-- Quiet Reassurance List -->
+        <ul class="pdp-reassurances">
+          <li>
+            <span class="pdp-check" aria-hidden="true">✓</span>
+            <span><%= lang === 'ml' ? 'പ്രീപെയ്ഡ് ഓർഡറുകൾ മാത്രം, സുരക്ഷിതമായ പേയ്‌മെന്റ്' : 'Prepaid orders only, secure payment' %></span>
+          </li>
+          <li>
+            <span class="pdp-check" aria-hidden="true">✓</span>
+            <span><%= lang === 'ml' ? 'റിട്ടേൺ അല്ലെങ്കിൽ സൈസ് മാറ്റം അനുവദനീയമല്ല; ദയവായി സൈസ് ഗൈഡ് പരിശോധിക്കുക' : 'No returns or size changes, please check the size guide' %></span>
+          </li>
+          <li>
+            <span class="pdp-check" aria-hidden="true">✓</span>
+            <span><%= lang === 'ml' ? 'ഫ്ലാറ്റ് ₹60 ഷിപ്പിംഗ് നിരക്ക്' : 'Flat ₹60 shipping' %></span>
+          </li>
+          <li>
+            <span class="pdp-check" aria-hidden="true">✓</span>
+            <span><%= lang === 'ml' ? 'വാട്സാപ്പ് സപ്പോർട്ട് ലഭ്യമാണ്' : 'WhatsApp support' %></span>
+          </li>
+        </ul>
+
+        <!-- Accordions: Description, Fabric & Care, Shipping & Policies -->
+        <div class="pdp-accordions">
+          <!-- Accordion 1: Description -->
+          <details class="pdp-accordion" open>
+            <summary class="pdp-accordion-title">
+              <span><%= lang === 'ml' ? 'വിവരണം' : 'Description' %></span>
+              <span class="pdp-accordion-icon" aria-hidden="true"></span>
+            </summary>
+            <div class="pdp-accordion-body">
+              <p><%= pDesc %></p>
+            </div>
+          </details>
+
+          <!-- Accordion 2: Fabric & Care (Hidden if all fields empty) -->
+          <% if (hasFabricCare) { %>
+            <details class="pdp-accordion">
+              <summary class="pdp-accordion-title">
+                <span><%= lang === 'ml' ? 'ഫാബ്രിക്കും പരിചരണവും' : 'Fabric and care' %></span>
+                <span class="pdp-accordion-icon" aria-hidden="true"></span>
+              </summary>
+              <div class="pdp-accordion-body">
+                <% if (pFabric) { %>
+                  <p><strong><%= lang === 'ml' ? 'ഫാബ്രിക്:' : 'Fabric:' %></strong> <%= pFabric %></p>
+                <% } %>
+                <% if (pFit) { %>
+                  <p><strong><%= lang === 'ml' ? 'ഫിറ്റ് / സ്റ്റൈൽ:' : 'Fit & Silhouette:' %></strong> <%= pFit %></p>
+                <% } %>
+                <% if (pCare) { %>
+                  <p><strong><%= lang === 'ml' ? 'കഴുകുന്ന രീതി:' : 'Care:' %></strong> <%= pCare %></p>
+                <% } %>
+              </div>
+            </details>
+          <% } %>
+
+          <!-- Accordion 3: Shipping & Policies -->
+          <details class="pdp-accordion">
+            <summary class="pdp-accordion-title">
+              <span><%= lang === 'ml' ? 'ഷിപ്പിംഗും പോളിസികളും' : 'Shipping and policies' %></span>
+              <span class="pdp-accordion-icon" aria-hidden="true"></span>
+            </summary>
+            <div class="pdp-accordion-body">
+              <p>
+                <strong><%= lang === 'ml' ? 'ഡെലിവറി:' : 'Delivery:' %></strong> 
+                <%= lang === 'ml' ? 'ഇന്ത്യയിലുടനീളം ഫ്ലാറ്റ് ₹60 ഷിപ്പിംഗ്. ഓർഡറുകൾ 24-48 മണിക്കൂറിനുള്ളിൽ അയക്കുന്നു.' : 'Flat ₹60 shipping across India. Orders are packed and dispatched within 24-48 hours.' %>
+              </p>
+              <p>
+                <strong><%= lang === 'ml' ? 'പേയ്‌മെന്റ്:' : 'Payment:' %></strong> 
+                <%= lang === 'ml' ? '100% പ്രീപെയ്ഡ് ഓർഡറുകൾ മാത്രം (UPI, കാർഡുകൾ, നെറ്റ് ബാങ്കിംഗ്).' : '100% prepaid orders only via UPI, Cards, or Net Banking.' %>
+              </p>
+              <p>
+                <strong><%= lang === 'ml' ? 'റിട്ടേൺ പോളിസി:' : 'Returns & Exchange:' %></strong> 
+                <%= lang === 'ml' ? 'കൃത്യമായ സൈസിംഗ്. ശുചിത്വവും ചെലവും കണക്കിലെടുത്ത് ഓർഡർ അയച്ചതിനുശേഷം റിട്ടേൺ അനുവദിക്കുന്നതല്ല.' : 'Honest sizing. Due to hygiene considerations, no returns or exchanges are accepted once shipped. Please verify with our Size Guide.' %>
+              </p>
+            </div>
+          </details>
+        </div>
+
+      </div>
     </div>
   </div>
 
-  <!-- Related Products -->
+  <!-- Related Products: "You may also like", 4 cards -->
   <% if (related && related.length > 0) { %>
-    <div class="head" style="margin-top:96px;">
-      <hr class="rule">
-      <h2><%= t('product.relatedTitle') %></h2>
-    </div>
-    <div class="grid">
-      <% related.forEach(function(p) { %>
-        <div class="item">
-          <div class="pw">
-            <a class="ph" href="/product/<%= p.slug %>" aria-label="<%= p.getName(lang) %>">
-              <% if (p.images && p.images.length > 0) { %>
-                <img src="<%= p.images[0] %>" alt="<%= p.getName(lang) %>" loading="lazy" width="400" height="500">
-              <% } else { %>
-                <svg viewBox="0 0 60 100" aria-hidden="true"><path d="M22 4h16l3 14 6 6-5 8 9 60H9l9-60-5-8 6-6z"/></svg>
-              <% } %>
-            </a>
-            <button type="button" class="hbtn cardh" data-wish-id="<%= p._id %>" data-wish-name="<%= p.getName(lang) %>" aria-label="Save to wishlist">♡</button>
-          </div>
-          <div class="meta">
-            <h3><a href="/product/<%= p.slug %>"><%= p.getName(lang) %></a></h3>
-            <div class="price">₹<%= p.price.toLocaleString('en-IN') %></div>
-            <small><%= p.style %></small>
-          </div>
-        </div>
-      <% }); %>
-    </div>
+    <section class="pdp-related-section">
+      <div class="head">
+        <hr class="rule">
+        <h2><%= t('product.relatedTitle') %></h2>
+      </div>
+      <div class="grid pdp-related-grid">
+        <% related.forEach(function(rel) { %>
+          <%- include('../partials/product-card', { p: rel, lang: lang }) %>
+        <% }); %>
+      </div>
+    </section>
   <% } %>
 </div>
 
+<!-- ============================================== -->
+<!-- DRAWERS & OVERLAYS                             -->
+<!-- ============================================== -->
+
+<!-- Common Backdrop Overlay for Drawers -->
+<div class="drawer-backdrop" id="pdpDrawerBackdrop" hidden></div>
+
+<!-- 1. Size Guide Side Drawer -->
+<aside class="side-drawer" id="pdpSizeDrawer" role="dialog" aria-modal="true" aria-labelledby="sizeDrawerTitle" hidden>
+  <div class="side-drawer__header">
+    <h2 id="sizeDrawerTitle" class="side-drawer__title"><%= t('sizes.title') %></h2>
+    <button type="button" class="side-drawer__close" id="pdpCloseSizeDrawer" aria-label="Close size guide">✕</button>
+  </div>
+  <div class="side-drawer__body">
+    <!-- Interactive Bust Calculator -->
+    <div class="finder" style="margin-bottom:24px;">
+      <label for="drawerBust" style="font-weight:600; font-size:0.95rem; display:block; margin-bottom:8px;">
+        <%= t('sizes.calculatorTitle') %>
+      </label>
+      <input 
+        id="drawerBust" 
+        type="number" 
+        inputmode="decimal" 
+        min="30" 
+        max="56" 
+        step="0.5" 
+        placeholder="<%= t('sizes.calculatorPlaceholder') %>"
+        style="width:100%;"
+      >
+      <p id="drawerBustResult" aria-live="polite" data-default="<%= t('sizes.calculatorHelp') %>" style="margin:10px 0 0; color:var(--muted); font-size:0.9rem;">
+        <%= t('sizes.calculatorHelp') %>
+      </p>
+    </div>
+
+    <!-- Size Chart Table -->
+    <div class="tablewrap" style="margin-bottom:18px;">
+      <table style="width:100%; text-align:center;">
+        <thead>
+          <tr>
+            <th><%= t('sizes.tableHeadSize') %></th>
+            <th><%= t('sizes.tableHeadBust') %> (in)</th>
+            <th><%= t('sizes.tableHeadLength') %> (in)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>M</strong></td><td>36</td><td>48</td></tr>
+          <tr><td><strong>L</strong></td><td>38</td><td>48</td></tr>
+          <tr><td><strong>XL</strong></td><td>40</td><td>49</td></tr>
+          <tr><td><strong>XXL</strong></td><td>42</td><td>49</td></tr>
+          <tr><td><strong>3XL</strong></td><td>44</td><td>50</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="note" style="font-size:0.85rem; color:var(--muted); line-height:1.5;">
+      <%= t('sizes.note') %>
+    </p>
+  </div>
+</aside>
+
+<!-- 2. Mini Cart Drawer -->
+<aside class="side-drawer" id="pdpMiniCartDrawer" role="dialog" aria-modal="true" aria-labelledby="miniCartTitle" hidden>
+  <div class="side-drawer__header">
+    <h2 id="miniCartTitle" class="side-drawer__title">Shopping Bag</h2>
+    <button type="button" class="side-drawer__close" id="pdpCloseMiniCart" aria-label="Close shopping bag">✕</button>
+  </div>
+  <div class="side-drawer__body">
+    <div class="mini-cart-items" id="pdpMiniCartItems">
+      <!-- Populated dynamically via CartStore -->
+    </div>
+  </div>
+  <div class="mini-cart-footer">
+    <div class="mini-cart-subtotal-row">
+      <span>Subtotal</span>
+      <strong id="pdpMiniCartSubtotal">₹0</strong>
+    </div>
+    <p class="mini-cart-shipping-note">Flat ₹60 shipping added at checkout.</p>
+    <div class="mini-cart-actions">
+      <a href="/checkout" class="btn" style="width:100%; text-align:center;">Proceed to Checkout</a>
+      <a href="/cart" class="btn ghost small" style="width:100%; text-align:center; margin-top:8px;">View Full Cart</a>
+    </div>
+  </div>
+</aside>
+
+<!-- 3. Full-Screen Image Lightbox -->
+<div class="pdp-lightbox" id="pdpLightbox" role="dialog" aria-modal="true" aria-label="Image gallery lightbox" hidden>
+  <button type="button" class="pdp-lightbox__close" id="pdpLightboxClose" aria-label="Close lightbox">✕</button>
+  <button type="button" class="pdp-lightbox__arrow pdp-lightbox__arrow--prev" id="pdpLightboxPrev" aria-label="Previous image">‹</button>
+  <div class="pdp-lightbox__stage">
+    <img id="pdpLightboxImg" src="<%= firstImage %>" alt="<%= pName %> full size">
+  </div>
+  <button type="button" class="pdp-lightbox__arrow pdp-lightbox__arrow--next" id="pdpLightboxNext" aria-label="Next image">›</button>
+</div>
+
+<!-- 4. Mobile Sticky Bottom Bar (IntersectionObserver) -->
+<div class="mobile-sticky-bar" id="pdpMobileStickyBar" aria-hidden="true" hidden>
+  <div class="mobile-sticky-content">
+    <div class="mobile-sticky-info">
+      <span class="mobile-sticky-name"><%= pName %></span>
+      <span class="mobile-sticky-price">₹<%= product.price.toLocaleString('en-IN') %></span>
+    </div>
+    <button type="button" class="btn small" id="pdpMobileStickyAddBtn">
+      <%= t('product.addToCart') %>
+    </button>
+  </div>
+</div>
+
 <!-- Embedded JSON-LD schema for Google Rich Results -->
-<script type="application/ld+json">
+<script type="application/ld+json" nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
 <%- JSON.stringify(jsonLd) %>
 </script>
 
-<script>
-(function() {
-  var selectedSize = '';
-  var currentStock = 0;
-  var qty = 1;
-
-  // Thumbnail switching
-  var thumbs = document.getElementById('thumbs');
-  var mainImage = document.getElementById('main-image');
-  if (thumbs && mainImage) {
-    thumbs.querySelectorAll('button').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var src = btn.getAttribute('data-img-src');
-        mainImage.src = src;
-        thumbs.querySelectorAll('button').forEach(function(b) {
-          b.classList.remove('active');
-          b.setAttribute('aria-pressed', 'false');
-        });
-        btn.classList.add('active');
-        btn.setAttribute('aria-pressed', 'true');
-      });
-    });
-  }
-
-  // Size Picker
-  var sizeButtons = document.querySelectorAll('#size-selector button');
-  var warningEl = document.getElementById('size-warning');
-  sizeButtons.forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      if (btn.disabled) return;
-      sizeButtons.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
-      btn.classList.add('active');
-      btn.setAttribute('aria-pressed', 'true');
-      selectedSize = btn.getAttribute('data-size');
-      currentStock = parseInt(btn.getAttribute('data-stock'), 10) || 0;
-      
-      if (currentStock <= 3) {
-        warningEl.textContent = 'Only ' + currentStock + ' left in size ' + selectedSize + '!';
-      } else {
-        warningEl.textContent = '';
-      }
-    });
-  });
-
-  // Quantity controls
-  var minusBtn = document.getElementById('qty-minus');
-  var plusBtn = document.getElementById('qty-plus');
-  var qtyDisplay = document.getElementById('qty-val');
-  if (minusBtn && plusBtn && qtyDisplay) {
-    minusBtn.addEventListener('click', function() {
-      if (qty > 1) {
-        qty--;
-        qtyDisplay.textContent = qty;
-      }
-    });
-    plusBtn.addEventListener('click', function() {
-      var maxAvailable = currentStock > 0 ? Math.min(10, currentStock) : 10;
-      if (qty < maxAvailable) {
-        qty++;
-        qtyDisplay.textContent = qty;
-      } else if (currentStock > 0) {
-        window.showToast('Maximum available quantity reached (' + currentStock + ')');
-      }
-    });
-  }
-
-  // Add to cart
-  var addBtn = document.getElementById('add-to-cart-btn');
-  if (addBtn) {
-    addBtn.addEventListener('click', function() {
-      if (!selectedSize) {
-        warningEl.textContent = "<%= t('product.selectSizeFirst') %>";
-        return;
-      }
-
-      var cart = window.getCart();
-      var existing = cart.find(function(it) {
-        return it.id === "<%= product._id %>" && it.size === selectedSize;
-      });
-
-      if (existing) {
-        existing.quantity = Math.min(currentStock || 10, existing.quantity + qty);
-      } else {
-        cart.push({
-          id: "<%= product._id %>",
-          slug: "<%= product.slug %>",
-          name: "<%= product.getName(lang) %>",
-          size: selectedSize,
-          price: <%= product.price %>,
-          quantity: qty,
-          image: "<%= product.images && product.images[0] ? product.images[0] : '/img/logo.svg' %>"
-        });
-      }
-
-      window.saveCart(cart);
-      window.showToast("<%= t('product.addToCart') %> ✓");
-    });
-  }
-})();
-</script>
-
+<script src="/js/product-detail.js" defer></script>

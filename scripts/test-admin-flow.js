@@ -23,7 +23,9 @@ async function testAdminFlow() {
     throw new Error('Admin login failed or did not set session cookie!');
   }
 
-  const sessionCookie = cookieHeader.split(';')[0];
+  // Extract connect.sid cookie
+  const sidMatch = cookieHeader.match(/connect\.sid=([^;]+)/);
+  const sessionCookie = sidMatch ? `connect.sid=${sidMatch[1]}` : cookieHeader.split(';')[0];
   console.log('[Admin Test] Session established successfully.');
 
   // 2. Test Admin Dashboard GET

@@ -5,6 +5,8 @@ const checkoutController = require('../controllers/checkoutController');
 router.get('/', checkoutController.getCheckout);
 router.post('/create', checkoutController.createOrder);
 router.post('/verify', checkoutController.verifyPayment);
+router.post('/cancel', checkoutController.cancelOrder);
+router.post('/fail', checkoutController.failPayment);
 router.get('/confirmation/:orderId', checkoutController.getConfirmation);
 
 module.exports = router;

@@ -1,0 +1,110 @@
+<%
+  const productName = typeof p.getName === 'function' 
+    ? p.getName(lang) 
+    : (lang === 'ml' && p.name && p.name.ml ? p.name.ml : (p.name && p.name.en ? p.name.en : (typeof p.name === 'string' ? p.name : 'Nighty')));
+  const orderedImages = typeof p.getOrderedImages === 'function' ? p.getOrderedImages() : (p.images || []);
+  const img0Obj = orderedImages.length > 0 ? orderedImages[0] : null;
+  const img1Obj = orderedImages.length > 1 ? orderedImages[1] : null;
+  const img0 = img0Obj ? (img0Obj.url || img0Obj) : '/img/placeholders/rose-garden-1.svg';
+  const img1 = img1Obj ? (img1Obj.url || img1Obj) : null;
+  const isSoldOut = !p.sizes || p.sizes.length === 0 || p.sizes.every(s => (s.stock || 0) <= 0);
+  const lowStockSize = !isSoldOut && p.sizes && p.sizes.find(s => (s.stock || 0) > 0 && (s.stock || 0) <= 3);
+%>
+<article class="p-card <%= isSoldOut ? 'p-card--soldout' : '' %>" data-product-id="<%= p._id %>">
+  <div class="p-card__media">
+    <a href="/product/<%= p.slug %>" class="p-card__img-link" aria-label="<%= productName %>">
+      <div class="p-card__aspect">
+        <img 
+          class="p-card__img p-card__img--primary" 
+          src="<%= img0 %>" 
+          alt="<%= productName %>" 
+          loading="lazy" 
+          width="400" 
+          height="500"
+          decoding="async"
+        >
+        <% if (img1) { %>
+          <img 
+            class="p-card__img p-card__img--secondary" 
+            src="<%= img1 %>" 
+            alt="<%= productName %> alternate view" 
+            loading="lazy" 
+            width="400" 
+            height="500"
+            decoding="async"
+          >
+        <% } %>
+      </div>
+    </a>
+
+    <!-- Tag Pill (Sold out, New, Bestseller) -->
+    <% if (isSoldOut) { %>
+      <span class="p-card__pill p-card__pill--soldout"><%= lang === 'ml' ? 'തീർന്നുപോയി' : 'Sold out' %></span>
+    <% } else if (p.tag && p.tag !== 'None' && p.tag.trim() !== '') { %>
+      <span class="p-card__pill p-card__pill--<%= p.tag.toLowerCase() %>"><%= p.tag %></span>
+    <% } %>
+
+    <!-- Wishlist Heart Button (44px target) -->
+    <button 
+      type="button" 
+      class="p-card__heart" 
+      data-wish-id="<%= p._id %>" 
+      data-wish-name="<%= productName %>" 
+      aria-label="Save <%= productName %> to wishlist"
+      aria-pressed="false"
+    >♡</button>
+
+    <!-- Quick Add Popover Trigger & Container -->
+    <% if (!isSoldOut && p.sizes && p.sizes.length > 0) { %>
+      <button 
+        type="button" 
+        class="p-card__quick-add" 
+        aria-haspopup="dialog" 
+        aria-expanded="false" 
+        aria-label="Quick add <%= productName %>"
+      >
+        <%= lang === 'ml' ? 'പെട്ടെന്ന് ചേർക്കുക' : 'Quick add' %>
+      </button>
+
+      <div class="p-card__popover" role="dialog" aria-label="Select size for <%= productName %>" hidden>
+        <div class="p-card__popover-head">
+          <span><%= lang === 'ml' ? 'സൈസ് തിരഞ്ഞെടുക്കുക' : 'Select size' %></span>
+          <button type="button" class="p-card__popover-close" aria-label="Close quick add">✕</button>
+        </div>
+        <div class="p-card__sizes">
+          <% p.sizes.forEach(function(s) { 
+            const out = (s.stock || 0) <= 0;
+            const low = !out && (s.stock || 0) <= 3;
+          %>
+            <button 
+              type="button" 
+              class="p-card__size-pill <%= out ? 'is-out' : '' %> <%= low ? 'is-low' : '' %>"
+              data-size="<%= s.size %>" 
+              data-stock="<%= s.stock %>"
+              <%= out ? 'disabled' : '' %>
+              title="<%= out ? 'Sold out' : (low ? ('Only ' + s.stock + ' left') : 'In stock') %>"
+            >
+              <%= s.size %>
+            </button>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="p-card__info">
+    <div class="p-card__style"><%= p.style %></div>
+    <h3 class="p-card__title">
+      <a href="/product/<%= p.slug %>"><%= productName %></a>
+    </h3>
+    <div class="p-card__price">₹<%= p.price.toLocaleString('en-IN') %></div>
+    <% if (lowStockSize) { %>
+      <div class="p-card__stock-note">
+        <%= lang === 'ml' 
+          ? (lowStockSize.size + '-ൽ ' + lowStockSize.stock + ' എണ്ണം മാത്രം ബാക്കി') 
+          : ('Only ' + lowStockSize.stock + ' left in ' + lowStockSize.size) %>
+      </div>
+    <% } %>
+  </div>
+</article>
+

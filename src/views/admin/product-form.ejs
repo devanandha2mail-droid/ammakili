@@ -1,26 +1,33 @@
 <div style="margin-bottom:24px;">
-  <a href="/admin/products" class="tlink" style="margin-left:0; font-size:0.8rem;">← Back to Products</a>
-  <h1 style="font-size:2rem; margin:8px 0 0;"><%= product ? 'Edit Nighty: ' + product.name.en : 'Add New Nighty Design' %></h1>
+  <a href="/admin/products" class="a-back">← Back to Products</a>
+  <div style="display:flex; align-items:center; gap:12px; margin-top:8px; flex-wrap:wrap;">
+    <h1 style="font-size:2rem; margin:0; font-family:var(--a-serif); color:var(--a-ink);"><%= product ? 'Edit Nighty: ' + product.name.en : 'Add New Nighty Design' %></h1>
+    <% if (product && product.isSample) { %>
+      <span class="a-sample">Sample Product</span>
+    <% } %>
+  </div>
 </div>
 
-<form method="POST" action="<%= product ? '/admin/products/edit/' + product._id : '/admin/products/add' %>" enctype="multipart/form-data" class="admin-card">
+<form method="POST" action="<%= product ? '/admin/products/edit/' + product._id : '/admin/products/add' %>" enctype="multipart/form-data" class="a-card a-form">
   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
-  <div class="form">
+  <div class="a-grid-2">
     <!-- English Name -->
-    <div class="h">
+    <div class="a-field">
       <label for="name_en">Product Name (English) *</label>
       <input id="name_en" name="name_en" required value="<%= product ? product.name.en : '' %>" placeholder="e.g. Rose Garden Nighty">
     </div>
 
     <!-- Malayalam Name -->
-    <div class="h">
+    <div class="a-field">
       <label for="name_ml">Product Name (Malayalam)</label>
       <input id="name_ml" name="name_ml" value="<%= product ? product.name.ml : '' %>" placeholder="ഉദാ: റോസ് ഗാർഡൻ നൈറ്റി">
     </div>
+  </div>
 
+  <div class="a-grid-2">
     <!-- Style -->
-    <div class="h">
+    <div class="a-field">
       <label for="style">Fabric / Style *</label>
       <input id="style" name="style" required list="style-suggestions" value="<%= product ? product.style : 'Cotton' %>" placeholder="Cotton, Satin, Printed, Plain...">
       <datalist id="style-suggestions">
@@ -33,32 +40,69 @@
     </div>
 
     <!-- Price -->
-    <div class="h">
+    <div class="a-field">
       <label for="price">Price (₹ INR) *</label>
       <input id="price" name="price" type="number" step="1" min="0" required value="<%= product ? product.price : '' %>" placeholder="e.g. 599">
     </div>
+  </div>
 
-    <!-- English Description -->
-    <div class="f">
-      <label for="description_en">Description (English) *</label>
-      <textarea id="description_en" name="description_en" rows="3" required placeholder="Detailed fabric composition, sleeve length, fit, comfort..."><%= product ? product.description.en : '' %></textarea>
+  <!-- English Description -->
+  <div class="a-field">
+    <label for="description_en">Description (English) *</label>
+    <textarea id="description_en" name="description_en" rows="3" required placeholder="Detailed fabric composition, sleeve length, fit, comfort..."><%= product ? product.description.en : '' %></textarea>
+  </div>
+
+  <!-- Malayalam Description -->
+  <div class="a-field">
+    <label for="description_ml">Description (Malayalam)</label>
+    <textarea id="description_ml" name="description_ml" rows="3" placeholder="വിശദാംശങ്ങൾ മലയാളത്തിൽ..."><%= product ? product.description.ml : '' %></textarea>
+  </div>
+
+  <!-- YouTube Video URL -->
+  <div class="a-field">
+    <label for="videoUrl">YouTube Showcase Video URL</label>
+    <input id="videoUrl" name="videoUrl" value="<%= product ? product.videoUrl : '' %>" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/...">
+    <small style="color:var(--a-muted); font-size:0.8rem; display:block; margin-top:6px;">Will be embedded on the product page so customers can inspect the fabric in motion.</small>
+  </div>
+
+  <!-- Fabric & Care / Fit (Optional Accordion Details) -->
+  <div style="margin:24px 0 12px; padding:16px; border:1px solid var(--a-line2); border-radius:12px; background:var(--a-s2);">
+    <h3 style="font-size:1.05rem; margin-bottom:12px; color:var(--a-ink);">Fabric, Care & Fit Details (Optional Accordions)</h3>
+    <div class="a-grid-2">
+      <div class="a-field">
+        <label for="fabric_en">Fabric Details (English)</label>
+        <input id="fabric_en" name="fabric_en" value="<%= product && product.fabric ? product.fabric.en : '' %>" placeholder="e.g. 100% combed cotton, breathable weave">
+      </div>
+      <div class="a-field">
+        <label for="fabric_ml">Fabric Details (Malayalam)</label>
+        <input id="fabric_ml" name="fabric_ml" value="<%= product && product.fabric ? product.fabric.ml : '' %>" placeholder="ഉദാ: 100% കോട്ടൺ">
+      </div>
     </div>
-
-    <!-- Malayalam Description -->
-    <div class="f">
-      <label for="description_ml">Description (Malayalam)</label>
-      <textarea id="description_ml" name="description_ml" rows="3" placeholder="വിശദാംശങ്ങൾ മലയാളത്തിൽ..."><%= product ? product.description.ml : '' %></textarea>
+    <div class="a-grid-2">
+      <div class="a-field">
+        <label for="care_en">Care Instructions (English)</label>
+        <input id="care_en" name="care_en" value="<%= product && product.care ? product.care.en : '' %>" placeholder="e.g. Gentle machine wash, dry in shade, warm iron">
+      </div>
+      <div class="a-field">
+        <label for="care_ml">Care Instructions (Malayalam)</label>
+        <input id="care_ml" name="care_ml" value="<%= product && product.care ? product.care.ml : '' %>" placeholder="ഉദാ: കൈകൊണ്ട് കഴുകുക, തണലിൽ ഉണക്കുക">
+      </div>
     </div>
-
-    <!-- YouTube Video URL -->
-    <div class="f">
-      <label for="videoUrl">YouTube Showcase Video URL</label>
-      <input id="videoUrl" name="videoUrl" value="<%= product ? product.videoUrl : '' %>" placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/...">
-      <small style="color:var(--admin-muted); font-size:0.8rem;">Will be embedded on the product page so customers can inspect the fabric in motion.</small>
+    <div class="a-grid-2">
+      <div class="a-field">
+        <label for="fit_en">Fit / Silhouette (English)</label>
+        <input id="fit_en" name="fit_en" value="<%= product && product.fit ? product.fit.en : '' %>" placeholder="e.g. Relaxed A-line silhouette, calf length, side pocket">
+      </div>
+      <div class="a-field">
+        <label for="fit_ml">Fit / Silhouette (Malayalam)</label>
+        <input id="fit_ml" name="fit_ml" value="<%= product && product.fit ? product.fit.ml : '' %>" placeholder="ഉദാ: അയഞ്ഞ എ-ലൈൻ കട്ട്, പോക്കറ്റ്">
+      </div>
     </div>
+  </div>
 
-    <!-- Tag & Featured -->
-    <div class="h">
+  <!-- Tag & Featured -->
+  <div class="a-grid-2">
+    <div class="a-field">
       <label for="tag">Badge Tag</label>
       <select id="tag" name="tag">
         <option value="None" <%= product && product.tag === 'None' ? 'selected' : '' %>>None</option>
@@ -67,12 +111,12 @@
       </select>
     </div>
 
-    <div class="h" style="display:flex; flex-direction:column; justify-content:center; gap:8px;">
-      <label class="chk" style="padding:0;">
+    <div class="a-field" style="display:flex; flex-direction:column; justify-content:center; gap:12px; margin-top:24px;">
+      <label class="a-check">
         <input type="checkbox" name="featured" value="true" <%= product && product.featured ? 'checked' : '' %>>
         <span>Show as Featured Design on Home</span>
       </label>
-      <label class="chk" style="padding:0;">
+      <label class="a-check">
         <input type="checkbox" name="active" value="true" <%= !product || product.active ? 'checked' : '' %>>
         <span>Active (Visible on public store)</span>
       </label>
@@ -81,8 +125,8 @@
 
   <!-- Per-Size Stock Table -->
   <div style="margin:32px 0 24px;">
-    <h3 style="font-size:1.2rem; margin-bottom:12px;">Per-Size Inventory (Units in Stock)</h3>
-    <div class="tablewrap" style="background:var(--admin-card);">
+    <h3 style="font-size:1.2rem; margin-bottom:12px; color:var(--a-ink);">Per-Size Inventory (Units in Stock)</h3>
+    <div class="a-table-wrap">
       <table>
         <thead>
           <tr>
@@ -100,7 +144,7 @@
                 if (found) currentStock = found.stock;
               }
             %>
-              <td style="padding:8px 12px; text-align:center;">
+              <td style="padding:10px 14px; text-align:center;">
                 <input 
                   type="number" 
                   name="stock_<%= s %>" 
@@ -116,32 +160,732 @@
     </div>
   </div>
 
-  <!-- Images Upload & Management -->
-  <div style="margin:28px 0;">
-    <h3 style="font-size:1.2rem; margin-bottom:8px;">Product Images</h3>
-    <p style="color:var(--admin-muted); font-size:0.85rem; margin-bottom:16px;">
-      Upload photos or swatch renders. Supported: JPG, PNG, WebP, SVG.
-    </p>
+  <!-- Photo Stylist Area -->
+  <div style="margin:32px 0 24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h3 style="font-size:1.3rem; margin:0; color:var(--a-ink);">Photo Stylist</h3>
+        <p style="color:var(--a-muted); font-size:0.85rem; margin:2px 0 0;">
+          Upload ordinary dress photos. The system creates a styled product picture and preserves the original.
+        </p>
+      </div>
+      <span id="stylist-status-pill" class="a-pill <%= isStylistAvailable ? 'a-pill--ok' : 'a-pill--warn' %>">
+        <%= isStylistAvailable ? '● Stylist Ready' : '○ Stylist Offline' %>
+      </span>
+    </div>
 
-    <% if (product && product.images && product.images.length > 0) { %>
-      <div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px;">
-        <% product.images.forEach(function(imgUrl, idx) { %>
-          <div style="position:relative; width:90px; text-align:center; border:1px solid var(--admin-border); border-radius:8px; padding:4px; background:#fff;">
-            <img src="<%= imgUrl %>" alt="Product image <%= idx + 1 %>" style="width:100%; height:110px; object-fit:cover; border-radius:6px;">
-            <label style="font-size:0.7rem; margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px;">
-              <input type="checkbox" name="existing_images" value="<%= imgUrl %>" checked> Keep
-            </label>
-          </div>
-        <% }); %>
+    <% if (product && product.isSample) { %>
+      <div class="a-alert a-alert--warn" style="font-size:0.85rem; margin-bottom:16px;">
+        ℹ️ Currently using placeholder illustration. Uploading real photos will convert this to a live product (unmarking as sample).
       </div>
     <% } %>
 
-    <input type="file" name="images" multiple accept="image/*" style="padding:10px;">
+    <!-- Offline Alert Banner -->
+    <div id="stylist-offline-banner" class="a-alert a-alert--warn" style="display:<%= !isStylistAvailable ? 'block' : 'none' %>; margin-bottom:18px;">
+      ⚠️ <strong>Photo styling is offline.</strong> You can still upload photos and they will be saved as originals.
+    </div>
+
+    <!-- Drop Zone & Tips Grid -->
+    <div class="a-stylist-grid">
+      <!-- 1. Drop Zone -->
+      <div class="a-stylist-drop" id="stylist-drop-zone">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--a-accent);" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <div style="font-weight:600; font-size:1.05rem; color:var(--a-ink);">
+          Drop dress photos here. We will style them for you.
+        </div>
+        <div style="font-size:0.82rem; color:var(--a-muted);">
+          or <span style="color:var(--a-accent); text-decoration:underline;">browse files</span> (JPEG, PNG, WebP up to 12 MB)
+        </div>
+        <input type="file" id="stylist-file-input" multiple accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" style="display:none;">
+      </div>
+
+      <!-- 2. Tips Card -->
+      <div class="a-stylist-tips">
+        <h4>Tips for the best result</h4>
+        <p style="margin:4px 0 6px; font-size:0.85rem; font-weight:600; color:var(--a-ink);">For the styled picture:</p>
+        <ol>
+          <li>Unfold the dress and lay it flat on a plain, light bed sheet.</li>
+          <li>Take the photo from straight above, with the whole dress in frame and a little space around it.</li>
+          <li>Use daylight. Avoid shadows.</li>
+        </ol>
+        <p style="margin:8px 0 0; font-size:0.82rem; color:var(--a-ink);"><strong>Also add:</strong> one close-up of the print and neckline, like you already do. It is saved as a detail photo.</p>
+        <p style="margin:8px 0 0; font-size:0.8rem; color:var(--a-dim);">Folded or cropped photos cannot be styled, and photos with a person keep the person and skip the hanger.</p>
+      </div>
+    </div>
+
+    <!-- Upload Progress & Status Bar -->
+    <div id="stylist-upload-status" style="display:none; margin-bottom:16px;" class="a-alert a-alert--info">
+      Uploading photos... please wait.
+    </div>
+
+    <!-- 3 & 4. Cards Container (Shimmer + Before/After Slider + Restyle) -->
+    <div class="a-stylist-cards" id="stylist-cards-container"></div>
+
+    <!-- Gentle banner if no whole-dress photo -->
+    <div id="no-whole-dress-banner" class="a-alert a-alert--info" style="display:none; font-size:0.88rem; margin-top:24px; margin-bottom:12px;">
+      ℹ️ Add one photo of the whole dress, laid flat or hanging, to get the styled picture. Close-ups are saved as detail photos.
+    </div>
+
+    <!-- 5. Draggable Reorder Strip -->
+    <div style="margin-top:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <h4 style="margin:0; font-family:var(--a-serif); font-size:1.15rem; color:var(--a-ink);">
+          Final Gallery Order (Drag to reorder)
+        </h4>
+        <small style="color:var(--a-muted);">The first photo is the main storefront image.</small>
+      </div>
+      <div id="stylist-thumbnails-strip" style="display:flex; gap:12px; flex-wrap:wrap; padding:16px; background:var(--a-bg2); border-radius:16px; border:1px solid var(--a-line); min-height:80px; align-items:center;">
+        <span id="strip-empty-hint" style="color:var(--a-dim); font-size:0.85rem;">No photos selected yet. Upload photos above to preview gallery order.</span>
+      </div>
+    </div>
+
+    <!-- Hidden input to submit ordered photo objects to server -->
+    <input type="hidden" name="styled_images_json" id="styled_images_json" value="">
+    <input type="hidden" name="draftId" value="<%= typeof draftId !== 'undefined' ? draftId : '' %>">
   </div>
 
-  <div style="margin-top:32px; display:flex; gap:16px;">
-    <button type="submit" class="btn"><%= product ? 'Save Changes' : 'Create Nighty' %></button>
-    <a href="/admin/products" class="btn ghost">Cancel</a>
+  <div style="margin-top:32px; display:flex; gap:16px; flex-wrap:wrap;">
+    <button type="submit" class="a-btn"><%= product ? 'Save Changes' : 'Create Nighty' %></button>
+    <a href="/admin/products" class="a-btn a-btn--ghost">Cancel</a>
   </div>
 </form>
+
+<script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
+(function() {
+  const form = document.querySelector('.a-form');
+  const csrfToken = '<%= csrfToken %>';
+  const productId = '<%= product ? product._id : "" %>';
+  const draftId = '<%= typeof draftId !== "undefined" ? draftId : "" %>';
+  const initialImages = <%- JSON.stringify(product && product.images ? product.images : []) %>;
+  const initialJobs = <%- JSON.stringify(typeof existingJobs !== "undefined" ? existingJobs : []) %>;
+
+  const dropZone = document.getElementById('stylist-drop-zone');
+  const fileInput = document.getElementById('stylist-file-input');
+  const uploadStatus = document.getElementById('stylist-upload-status');
+  const cardsContainer = document.getElementById('stylist-cards-container');
+  const strip = document.getElementById('stylist-thumbnails-strip');
+  const hiddenJson = document.getElementById('styled_images_json');
+
+  // Map of active jobs: jobId -> jobData
+  const jobsMap = new Map();
+  // Ordered array of gallery items: { url, kind, sourceId, meta, label }
+  let galleryItems = [];
+  const pollTimers = new Map();
+
+  if (cardsContainer) {
+    cardsContainer.addEventListener('click', function(e) {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.dataset.action;
+      const jobId = btn.dataset.jobId;
+      if (action === 'retry') window.retryStylistJob(jobId);
+      else if (action === 'use-original') window.useOriginalOnly(jobId);
+      else if (action === 'remove') window.removeStylistCard(jobId);
+      else if (action === 'restyle') window.restyleJob(jobId);
+    });
+  }
+
+  // 1. Initialize existing images
+  if (initialImages && initialImages.length > 0) {
+    initialImages.forEach(function(img, idx) {
+      const url = typeof img === 'string' ? img : img.url;
+      const kind = (typeof img === 'object' && img.kind) ? img.kind : 'extra';
+      if (url && !url.includes('/placeholders/')) {
+        galleryItems.push({
+          url: url,
+          kind: kind,
+          sourceId: 'existing-' + idx,
+          meta: (typeof img === 'object' && img.meta) ? img.meta : {}
+        });
+      }
+    });
+    sortGalleryKeepWholeDressFirst();
+  }
+
+  // 2. Initialize existing jobs if any
+  if (initialJobs && initialJobs.length > 0) {
+    initialJobs.forEach(function(j) {
+      jobsMap.set(String(j._id), j);
+      renderJobCard(j);
+      if (j.status === 'queued' || j.status === 'processing') {
+        startPollingJob(String(j._id));
+      }
+    });
+  }
+
+  sortGalleryKeepWholeDressFirst();
+  updateThumbnailsStrip();
+
+  // Drag & drop handlers
+  if (dropZone) {
+    dropZone.addEventListener('click', function() { fileInput.click(); });
+    dropZone.addEventListener('dragenter', function(e) { e.preventDefault(); dropZone.classList.add('is-over'); });
+    dropZone.addEventListener('dragover', function(e) { e.preventDefault(); dropZone.classList.add('is-over'); });
+    dropZone.addEventListener('dragleave', function(e) { e.preventDefault(); dropZone.classList.remove('is-over'); });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('is-over');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        handleFiles(e.dataTransfer.files);
+      }
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', function() {
+      if (fileInput.files && fileInput.files.length) {
+        handleFiles(fileInput.files);
+      }
+    });
+  }
+
+  function handleFiles(files) {
+    if (!files.length) return;
+    if (files.length > 10) {
+      alert('You can upload at most 10 photos at once.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('_csrf', csrfToken);
+    if (productId) formData.append('productId', productId);
+    if (draftId) formData.append('draftId', draftId);
+
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      const ext = (f.name || '').toLowerCase().split('.').pop();
+      if (ext === 'heic' || ext === 'heif' || (f.type && (f.type.includes('heic') || f.type.includes('heif')))) {
+        alert('iPhone HEIC format is not supported directly. Please export or convert "' + f.name + '" to JPEG, PNG, or WebP before uploading.');
+        return;
+      }
+      if (f.size > 12 * 1024 * 1024) {
+        alert('File ' + f.name + ' exceeds the 12 MB limit.');
+        return;
+      }
+      formData.append('photos', f);
+    }
+
+    uploadStatus.style.display = 'block';
+    uploadStatus.textContent = 'Uploading ' + files.length + ' photo(s)...';
+
+    fetch('/admin/stylist/upload', {
+      method: 'POST',
+      body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      uploadStatus.style.display = 'none';
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+      if (data.jobs && data.jobs.length) {
+        data.jobs.forEach(function(j) {
+          const jobObj = {
+            _id: j.jobId,
+            status: j.status,
+            originalUrl: j.originalUrl,
+            warning: j.warning,
+            width: j.width,
+            height: j.height,
+            options: j.options || { mode: 'auto', hanger: 'auto', background: 'pink' }
+          };
+          jobsMap.set(String(j.jobId), jobObj);
+          renderJobCard(jobObj);
+          startPollingJob(String(j.jobId));
+        });
+      }
+    })
+    .catch(function(err) {
+      uploadStatus.style.display = 'none';
+      console.error(err);
+      alert('Upload failed. Please check network connection.');
+    });
+  }
+
+  function startPollingJob(jobId) {
+    if (pollTimers.has(jobId)) return;
+    const timer = setInterval(function() {
+      fetch('/admin/stylist/job/' + jobId)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data && data.success && data.job) {
+            const j = data.job;
+            j._id = jobId;
+            const existing = jobsMap.get(jobId) || {};
+            const merged = Object.assign({}, existing, j);
+            jobsMap.set(jobId, merged);
+            renderJobCard(merged);
+            if (merged.status === 'done' || merged.status === 'failed') {
+              clearInterval(timer);
+              pollTimers.delete(jobId);
+              applyJobToGallery(merged);
+            }
+          }
+        })
+        .catch(function() {});
+    }, 2000);
+    pollTimers.set(jobId, timer);
+  }
+
+  function renderJobCard(job) {
+    const jobId = String(job._id || job.id);
+    let card = document.getElementById('stylist-card-' + jobId);
+    if (!card) {
+      card = document.createElement('div');
+      card.id = 'stylist-card-' + jobId;
+      card.className = 'a-stylist-card';
+      cardsContainer.appendChild(card);
+    }
+
+    if (job.status === 'queued' || job.status === 'processing') {
+      card.className = 'a-stylist-card';
+      card.innerHTML =
+        '<div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">' +
+          '<div style="width:70px; height:88px; border-radius:10px; overflow:hidden; border:1px solid var(--a-line); flex-shrink:0;">' +
+            '<img src="' + (job.originalUrl || '') + '" alt="Original" style="width:100%; height:100%; object-fit:cover;">' +
+          '</div>' +
+          '<div style="flex:1; min-width:200px;">' +
+            '<div class="a-shimmer" style="height:28px; border-radius:8px; margin-bottom:8px; display:flex; align-items:center; padding:0 12px; font-size:0.85rem; font-weight:500; color:var(--a-ink);">' +
+              '✨ Styling... about 15 to 30 seconds' +
+            '</div>' +
+            '<div style="font-size:0.8rem; color:var(--a-muted);">' +
+              'Removing background, adding wooden hanger & soft shadow in the background.' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      return;
+    }
+
+    if (job.status === 'failed') {
+      card.className = 'a-stylist-card';
+      card.innerHTML =
+        '<div style="display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap;">' +
+          '<div style="width:70px; height:88px; border-radius:10px; overflow:hidden; border:1px solid var(--a-line); flex-shrink:0;">' +
+            '<img src="' + (job.originalUrl || '') + '" alt="Original" style="width:100%; height:100%; object-fit:cover;">' +
+          '</div>' +
+          '<div style="flex:1;">' +
+            '<div style="color:var(--a-bad); font-weight:600; margin-bottom:4px;">Styling Failed</div>' +
+            '<div style="color:var(--a-muted); font-size:0.85rem; margin-bottom:12px;">' + (job.error || 'Could not process image') + '</div>' +
+            '<div style="display:flex; gap:10px; flex-wrap:wrap;">' +
+              '<button type="button" class="a-btn a-btn--sm" data-action="retry" data-job-id="' + jobId + '">Retry</button>' +
+              '<button type="button" class="a-btn a-btn--sm a-btn--ghost" data-action="use-original" data-job-id="' + jobId + '">Use Original Only</button>' +
+              '<button type="button" class="a-btn a-btn--sm a-btn--danger" data-action="remove" data-job-id="' + jobId + '">Remove</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      return;
+    }
+
+    // Status is 'done'
+    const meta = job.meta || {};
+    const quality = meta.quality || 'good';
+    const warnings = meta.warnings || [];
+    const isRefused = (job.styled_ok === false || job.mode_used === 'closeup' || meta.styled_ok === false || meta.mode_used === 'closeup');
+    const lowResNote = job.warning || meta.lowResWarning;
+    const opts = job.options || { mode: 'auto', hanger: 'auto', background: 'pink' };
+
+    let lowResHtml = '';
+    if (lowResNote) {
+      lowResHtml = '<div class="a-stylist-warn" style="margin-bottom:12px;">⚠️ ' + lowResNote + '</div>';
+    }
+
+    if (isRefused) {
+      card.className = 'a-stylist-card a-stylist-card--amber';
+      const defaultChoice = job._choice || 'detail';
+      job._choice = defaultChoice;
+      const warnText = (warnings.length > 0) ? warnings[0] : (job.error || 'The dress could not be cleanly isolated from the background.');
+      const previewUrl = job.detailKey || job.originalUrl;
+
+      card.innerHTML =
+        '<div style="display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start;">' +
+          '<div>' +
+            '<div style="position:relative; width:100%; aspect-ratio:4/5; border-radius:14px; overflow:hidden; border:1px solid rgba(243,200,115,0.45); background:#000;">' +
+              '<img src="' + previewUrl + '" alt="Detail photo preview" style="width:100%; height:100%; object-fit:cover; display:block;">' +
+              '<span class="a-tag a-tag--detail" style="position:absolute; bottom:8px; left:8px;">Detail Photo</span>' +
+            '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+              '<span class="a-tag a-tag--detail">Detail Photo (Print / Neckline)</span>' +
+              '<small style="color:var(--a-dim);">' + (meta.seconds ? meta.seconds + 's' : '') + '</small>' +
+            '</div>' +
+            lowResHtml +
+            '<div class="a-stylist-warn" style="font-size:0.88rem; line-height:1.5;">' +
+              '<strong>⚠️ Notice:</strong> ' + warnText + ' We saved it as a detail photo.' +
+              '<div style="margin-top:8px;">' +
+                '<a href="https://claude.ai/artifact/3eU2KHS9fN4qySxWq88gDS" target="_blank" rel="noopener" style="color:var(--a-accent); text-decoration:underline; font-weight:600;">📖 Retake tips</a>' +
+              '</div>' +
+            '</div>' +
+            '<div style="margin:16px 0; padding:14px; background:var(--a-bg2); border-radius:12px; border:1px solid var(--a-line);">' +
+              '<div style="font-weight:600; font-size:0.88rem; margin-bottom:10px; color:var(--a-ink);">Photo Choice for Storefront:</div>' +
+              '<div style="display:flex; flex-direction:column; gap:8px;">' +
+                '<label class="a-check" style="font-size:0.88rem;">' +
+                  '<input type="radio" name="choice_' + jobId + '" value="detail" ' + (defaultChoice === 'detail' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'detail\')">' +
+                  '<span><strong>Use as detail photo</strong> (Recommended)</span>' +
+                '</label>' +
+                '<label class="a-check" style="font-size:0.88rem;">' +
+                  '<input type="radio" name="choice_' + jobId + '" value="original" ' + (defaultChoice === 'original' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'original\')">' +
+                  '<span>Use original only</span>' +
+                '</label>' +
+                '<label class="a-check" style="font-size:0.88rem; color:var(--a-bad);">' +
+                  '<input type="radio" name="choice_' + jobId + '" value="remove" ' + (defaultChoice === 'remove' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'remove\')">' +
+                  '<span>Remove photo</span>' +
+                '</label>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      return;
+    }
+
+    card.className = 'a-stylist-card';
+    let warnHtml = '';
+    if (warnings.length > 0) {
+      warnHtml = '<div class="a-stylist-warn"><strong>⚠️ Notice:</strong><ul>' +
+        warnings.map(function(w) { return '<li>' + w + '</li>'; }).join('') +
+        '</ul></div>';
+    }
+
+    let qualityAlertHtml = '';
+    if (quality === 'poor') {
+      qualityAlertHtml = '<div class="a-stylist-poor">⚠️ <strong>Quality rating: Poor.</strong> ' +
+        (warnings.length ? warnings.join(', ') : 'The dress could not be cleanly isolated.') +
+        ' We defaulted to using the original photo only.</div>';
+    } else if (quality === 'fair') {
+      qualityAlertHtml = '<div class="a-stylist-warn" style="font-size:0.82rem;">ℹ️ <strong>Quality rating: Fair.</strong> Review the styled cutout below to ensure it looks natural.</div>';
+    }
+
+    const defaultChoice = quality === 'poor' ? 'original' : (job._choice || 'both');
+    job._choice = defaultChoice;
+
+    card.innerHTML =
+      '<div style="display:grid; grid-template-columns:340px 1fr; gap:24px; align-items:start;">' +
+        // Left: 4:5 Slider
+        '<div>' +
+          '<div class="a-slider-box" id="slider-box-' + jobId + '">' +
+            '<img src="' + job.resultKey + '" alt="Styled preview" class="a-slider-styled">' +
+            '<div class="a-slider-orig-wrap" id="slider-orig-wrap-' + jobId + '" style="width:50%;">' +
+              '<img src="' + job.originalUrl + '" alt="Original" class="a-slider-orig" id="slider-orig-img-' + jobId + '">' +
+            '</div>' +
+            '<span class="a-slider-label a-slider-label--orig">Original</span>' +
+            '<span class="a-slider-label a-slider-label--styled">Styled</span>' +
+            '<input type="range" min="0" max="100" value="50" class="a-slider-input" id="slider-range-' + jobId + '" aria-label="Slide to compare">' +
+          '</div>' +
+          '<div style="text-align:center; font-size:0.75rem; color:var(--a-dim); margin-top:6px;">Drag slider left/right to compare original & styled</div>' +
+        '</div>' +
+
+        // Right: Options & Choices
+        '<div>' +
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+            '<span class="a-tag a-tag--styled">Styled Result</span>' +
+            '<small style="color:var(--a-dim);">' + (meta.seconds ? meta.seconds + 's' : '') + '</small>' +
+          '</div>' +
+
+          lowResHtml +
+          qualityAlertHtml +
+          warnHtml +
+
+          // 3 Choices Radio Group
+          '<div style="margin:16px 0; padding:14px; background:var(--a-bg2); border-radius:12px; border:1px solid var(--a-line);">' +
+            '<div style="font-weight:600; font-size:0.88rem; margin-bottom:10px; color:var(--a-ink);">Photo Choice for Storefront:</div>' +
+            '<div style="display:flex; flex-direction:column; gap:8px;">' +
+              '<label class="a-check" style="font-size:0.88rem;">' +
+                '<input type="radio" name="choice_' + jobId + '" value="both" ' + (defaultChoice === 'both' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'both\')">' +
+                '<span><strong>Use styled + keep original</strong> (Recommended: styled first, original second)</span>' +
+              '</label>' +
+              '<label class="a-check" style="font-size:0.88rem;">' +
+                '<input type="radio" name="choice_' + jobId + '" value="original" ' + (defaultChoice === 'original' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'original\')">' +
+                '<span>Use original only</span>' +
+              '</label>' +
+              '<label class="a-check" style="font-size:0.88rem; color:var(--a-bad);">' +
+                '<input type="radio" name="choice_' + jobId + '" value="remove" ' + (defaultChoice === 'remove' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'remove\')">' +
+                '<span>Remove photo</span>' +
+              '</label>' +
+            '</div>' +
+          '</div>' +
+
+          // Restyle Controls Form
+          '<div style="margin-top:14px; padding:14px; background:var(--a-s1); border-radius:12px; border:1px solid var(--a-line2);">' +
+            '<div style="font-weight:600; font-size:0.82rem; margin-bottom:10px; color:var(--a-muted); text-transform:uppercase;">Adjust & Restyle</div>' +
+            '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px;">' +
+              '<div>' +
+                '<label style="font-size:0.7rem;">Photo Type</label>' +
+                '<select id="opt-mode-' + jobId + '" style="padding:6px 10px; font-size:0.82rem;">' +
+                  '<option value="auto" ' + (opts.mode === 'auto' ? 'selected' : '') + '>Auto</option>' +
+                  '<option value="hanging" ' + (opts.mode === 'hanging' ? 'selected' : '') + '>Hanging</option>' +
+                  '<option value="flat" ' + (opts.mode === 'flat' ? 'selected' : '') + '>Laid flat</option>' +
+                  '<option value="worn" ' + (opts.mode === 'worn' ? 'selected' : '') + '>Worn or held</option>' +
+                '</select>' +
+              '</div>' +
+              '<div>' +
+                '<label style="font-size:0.7rem;">Hanger</label>' +
+                '<select id="opt-hanger-' + jobId + '" style="padding:6px 10px; font-size:0.82rem;">' +
+                  '<option value="auto" ' + (opts.hanger === 'auto' ? 'selected' : '') + '>Auto</option>' +
+                  '<option value="yes" ' + (opts.hanger === 'yes' ? 'selected' : '') + '>Add</option>' +
+                  '<option value="no" ' + (opts.hanger === 'no' ? 'selected' : '') + '>No hanger</option>' +
+                '</select>' +
+              '</div>' +
+              '<div>' +
+                '<label style="font-size:0.7rem;">Background</label>' +
+                '<select id="opt-bg-' + jobId + '" style="padding:6px 10px; font-size:0.82rem;">' +
+                  '<option value="pink" ' + (opts.background === 'pink' ? 'selected' : '') + '>Pink (Default)</option>' +
+                  '<option value="cream" ' + (opts.background === 'cream' ? 'selected' : '') + '>Cream</option>' +
+                  '<option value="white" ' + (opts.background === 'white' ? 'selected' : '') + '>White</option>' +
+                '</select>' +
+              '</div>' +
+            '</div>' +
+            '<button type="button" class="a-btn a-btn--sm" data-action="restyle" data-job-id="' + jobId + '">🔄 Restyle with Options</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    // Initialize the slider mechanics
+    setTimeout(function() {
+      initSlider(jobId);
+    }, 50);
+  }
+
+  function initSlider(jobId) {
+    const box = document.getElementById('slider-box-' + jobId);
+    const wrap = document.getElementById('slider-orig-wrap-' + jobId);
+    const origImg = document.getElementById('slider-orig-img-' + jobId);
+    const range = document.getElementById('slider-range-' + jobId);
+    if (!box || !wrap || !origImg || !range) return;
+
+    function syncWidth() {
+      origImg.style.width = box.clientWidth + 'px';
+    }
+    syncWidth();
+    window.addEventListener('resize', syncWidth);
+
+    range.addEventListener('input', function() {
+      wrap.style.width = range.value + '%';
+    });
+  }
+
+  // Global actions attached to window for event attributes
+  window.setJobChoice = function(jobId, choice) {
+    const job = jobsMap.get(jobId);
+    if (!job) return;
+    job._choice = choice;
+    applyJobToGallery(job);
+  };
+
+  window.restyleJob = function(jobId) {
+    const mode = document.getElementById('opt-mode-' + jobId)?.value || 'auto';
+    const hanger = document.getElementById('opt-hanger-' + jobId)?.value || 'auto';
+    const background = document.getElementById('opt-bg-' + jobId)?.value || 'pink';
+
+    const card = document.getElementById('stylist-card-' + jobId);
+    if (card) {
+      card.innerHTML =
+        '<div class="a-shimmer" style="height:48px; border-radius:12px; display:flex; align-items:center; padding:0 16px; font-weight:500;">' +
+          '🔄 Restyling with ' + mode + ' / ' + background + ' background...' +
+        '</div>';
+    }
+
+    fetch('/admin/stylist/restyle/' + jobId, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
+      body: JSON.stringify({ mode: mode, hanger: hanger, background: background })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function() {
+      startPollingJob(jobId);
+    })
+    .catch(function(err) {
+      alert('Restyle request failed: ' + err.message);
+    });
+  };
+
+  window.retryStylistJob = function(jobId) {
+    fetch('/admin/stylist/retry/' + jobId, {
+      method: 'POST',
+      headers: { 'X-CSRF-Token': csrfToken }
+    })
+    .then(function() { startPollingJob(jobId); });
+  };
+
+  window.useOriginalOnly = function(jobId) {
+    window.setJobChoice(jobId, 'original');
+  };
+
+  window.removeStylistCard = function(jobId) {
+    fetch('/admin/stylist/delete/' + jobId, {
+      method: 'POST',
+      headers: { 'X-CSRF-Token': csrfToken }
+    }).catch(function() {});
+
+    jobsMap.delete(jobId);
+    const card = document.getElementById('stylist-card-' + jobId);
+    if (card) card.remove();
+    galleryItems = galleryItems.filter(function(i) { return i.sourceId !== jobId; });
+    updateThumbnailsStrip();
+  };
+
+  function sortGalleryKeepWholeDressFirst() {
+    const whole = galleryItems.filter(function(i) { return i.kind === 'styled' || i.kind === 'original'; });
+    const details = galleryItems.filter(function(i) { return i.kind === 'detail'; });
+    const extras = galleryItems.filter(function(i) { return i.kind !== 'styled' && i.kind !== 'original' && i.kind !== 'detail'; });
+    galleryItems = [].concat(whole, details, extras);
+  }
+
+  function applyJobToGallery(job) {
+    const jobId = String(job._id || job.id);
+    const meta = job.meta || {};
+    const isRefused = (job.styled_ok === false || job.mode_used === 'closeup' || meta.styled_ok === false || meta.mode_used === 'closeup');
+    const defaultChoice = isRefused ? 'detail' : (meta.quality === 'poor' ? 'original' : 'both');
+    const choice = job._choice || defaultChoice;
+
+    // Remove existing entries for this job
+    galleryItems = galleryItems.filter(function(i) { return i.sourceId !== jobId; });
+
+    if (choice === 'detail') {
+      galleryItems.push({
+        url: job.detailKey || job.originalUrl,
+        kind: 'detail',
+        sourceId: jobId,
+        meta: job.meta || {}
+      });
+    } else if (choice === 'both') {
+      if (job.resultKey) {
+        galleryItems.push({
+          url: job.resultKey,
+          kind: 'styled',
+          sourceId: jobId,
+          meta: job.meta || {}
+        });
+      }
+      if (job.originalUrl) {
+        galleryItems.push({
+          url: job.originalUrl,
+          kind: 'original',
+          sourceId: jobId,
+          meta: {}
+        });
+      }
+    } else if (choice === 'original') {
+      if (job.originalUrl) {
+        galleryItems.push({
+          url: job.originalUrl,
+          kind: 'original',
+          sourceId: jobId,
+          meta: {}
+        });
+      }
+    }
+
+    sortGalleryKeepWholeDressFirst();
+    updateThumbnailsStrip();
+  }
+
+  function updateThumbnailsStrip() {
+    const hasWholeDress = galleryItems.some(function(i) { return i.kind === 'styled' || i.kind === 'original'; });
+    const banner = document.getElementById('no-whole-dress-banner');
+    if (banner) {
+      banner.style.display = (!hasWholeDress) ? 'block' : 'none';
+    }
+
+    strip.innerHTML = '';
+    if (!galleryItems.length) {
+      strip.innerHTML = '<span id="strip-empty-hint" style="color:var(--a-dim); font-size:0.85rem;">No photos selected yet. Upload photos above to preview gallery order.</span>';
+      return;
+    }
+
+    galleryItems.forEach(function(item, idx) {
+      const thumb = document.createElement('div');
+      thumb.className = 'a-thumb-item';
+      thumb.draggable = true;
+      thumb.dataset.index = idx;
+      thumb.style.cssText = 'display:flex; flex-direction:column; align-items:center; gap:4px; width:88px; flex-shrink:0; cursor:grab;';
+
+      let tagClass = '';
+      let tagText = 'Photo';
+      if (item.kind === 'styled') {
+        tagClass = 'a-tag--styled';
+        tagText = 'Styled';
+      } else if (item.kind === 'original') {
+        tagClass = 'a-tag--orig';
+        tagText = 'Original';
+      } else if (item.kind === 'detail') {
+        tagClass = 'a-tag--detail';
+        tagText = 'Detail';
+      } else {
+        tagClass = '';
+        tagText = 'Other';
+      }
+
+      thumb.innerHTML =
+        '<div style="position:relative; width:88px; height:110px; border-radius:10px; overflow:hidden; border:2px solid ' + (idx === 0 ? 'var(--a-accent)' : 'var(--a-line)') + '; background:#000;">' +
+          '<img src="' + item.url + '" alt="Gallery thumbnail" style="width:100%; height:100%; object-fit:cover; pointer-events:none;">' +
+          '<span class="a-tag ' + tagClass + '" style="position:absolute; bottom:3px; left:3px; font-size:0.6rem; padding:2px 5px; pointer-events:none;">' + tagText + '</span>' +
+          (idx === 0 ? '<span class="a-tag a-tag--main" style="position:absolute; top:3px; left:3px; font-size:0.55rem; padding:1px 4px; pointer-events:none;">★ Main</span>' : '') +
+        '</div>' +
+        '<select class="a-photo-tag-select" onchange="window.setPhotoTag(' + idx + ', this.value)" style="width:88px; font-size:0.68rem; padding:2px 2px; border-radius:6px; border:1px solid var(--a-line); background:var(--a-bg); color:var(--a-ink);">' +
+          '<option value="original" ' + (item.kind === 'original' || item.kind === 'styled' ? 'selected' : '') + '>Whole dress</option>' +
+          '<option value="detail" ' + (item.kind === 'detail' ? 'selected' : '') + '>Detail (print or neckline)</option>' +
+          '<option value="extra" ' + (item.kind === 'extra' ? 'selected' : '') + '>Other</option>' +
+        '</select>';
+
+      // Drag and drop reordering
+      thumb.addEventListener('dragstart', function(e) {
+        e.dataTransfer.setData('text/plain', idx);
+        thumb.style.opacity = '0.4';
+      });
+      thumb.addEventListener('dragend', function() {
+        thumb.style.opacity = '1';
+      });
+      thumb.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        const imgBox = thumb.querySelector('div');
+        if (imgBox) imgBox.style.borderColor = 'var(--a-accent)';
+      });
+      thumb.addEventListener('dragleave', function() {
+        const imgBox = thumb.querySelector('div');
+        if (imgBox) imgBox.style.borderColor = idx === 0 ? 'var(--a-accent)' : 'var(--a-line)';
+      });
+      thumb.addEventListener('drop', function(e) {
+        e.preventDefault();
+        const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+        const toIdx = idx;
+        if (!isNaN(fromIdx) && fromIdx !== toIdx) {
+          const moved = galleryItems.splice(fromIdx, 1)[0];
+          galleryItems.splice(toIdx, 0, moved);
+          updateThumbnailsStrip();
+        }
+      });
+
+      strip.appendChild(thumb);
+    });
+  }
+
+  window.setPhotoTag = function(idx, newKind) {
+    if (!galleryItems[idx]) return;
+    if (newKind === 'original' && galleryItems[idx].kind === 'styled') {
+      // keep styled as whole dress
+    } else {
+      galleryItems[idx].kind = newKind;
+    }
+    sortGalleryKeepWholeDressFirst();
+    updateThumbnailsStrip();
+  };
+
+  // Intercept form submit to serialize images JSON
+  if (form) {
+    form.addEventListener('submit', function() {
+      if (galleryItems.length > 0) {
+        hiddenJson.value = JSON.stringify(galleryItems);
+      }
+    });
+  }
+})();
+</script>
 

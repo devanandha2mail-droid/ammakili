@@ -154,21 +154,23 @@ exports.postSyncWishlist = async (req, res) => {
     const customer = await Customer.findById(req.user._id);
     if (!customer) return res.status(401).json({ error: 'Unauthorized' });
 
-    // Combine database wishlist IDs and browser IDs (unique set)
-    const existingSet = new Set(customer.wishlist.map(id => id.toString()));
-    items.forEach(id => {
-      if (id && typeof id === 'string' && id.length === 24) {
-        existingSet.add(id);
-      }
-    });
+    const mongoose = require('mongoose');
+    const validObjectIds = items.filter(id => mongoose.Types.ObjectId.isValid(id));
+    const slugs = items.filter(id => typeof id === 'string' && !mongoose.Types.ObjectId.isValid(id));
 
     // Validate that these products still exist and are active
     const validProducts = await Product.find({
-      _id: { $in: Array.from(existingSet) },
+      $or: [
+        { _id: { $in: validObjectIds } },
+        { slug: { $in: slugs } }
+      ],
       active: true
     }).select('_id');
 
-    customer.wishlist = validProducts.map(p => p._id);
+    const existingSet = new Set(customer.wishlist.map(id => id.toString()));
+    validProducts.forEach(p => existingSet.add(p._id.toString()));
+
+    customer.wishlist = Array.from(existingSet);
     await customer.save();
 
     res.json({

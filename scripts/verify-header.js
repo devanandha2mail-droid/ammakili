@@ -40,19 +40,21 @@ async function verify() {
 
   // Check language switch
   const mlRes = await fetch('http://localhost:3000/lang/ml', { redirect: 'manual' });
-  const cookie = mlRes.headers.get('set-cookie');
-  console.log('lang/ml set-cookie:', cookie);
-  if (cookie) {
-    const mlPageRes = await fetch('http://localhost:3000/', { headers: { Cookie: cookie.split(';')[0] } });
+  const rawSetCookie = mlRes.headers.get('set-cookie') || '';
+  console.log('lang/ml set-cookie:', rawSetCookie);
+  const langMatch = rawSetCookie.match(/nest_lang=([^;]+)/);
+  if (langMatch) {
+    const mlPageRes = await fetch('http://localhost:3000/', { headers: { Cookie: `nest_lang=${langMatch[1]}` } });
     const mlHtml = await mlPageRes.text();
     console.log('ML page shows EN tool:', mlHtml.includes('href="/lang/en" lang="en" hreflang="en">EN</a>'));
   }
 
   // Check logged-in customer in header
   const loginRes = await fetch('http://localhost:3000/auth/google/test-login?email=athira@example.com&name=Athira+Menon', { redirect: 'manual' });
-  const authCookie = loginRes.headers.get('set-cookie');
-  if (authCookie) {
-    const authHomeRes = await fetch('http://localhost:3000/', { headers: { Cookie: authCookie.split(';')[0] } });
+  const authRawCookie = loginRes.headers.get('set-cookie') || '';
+  const sidMatch = authRawCookie.match(/connect\.sid=([^;]+)/);
+  if (sidMatch) {
+    const authHomeRes = await fetch('http://localhost:3000/', { headers: { Cookie: `connect.sid=${sidMatch[1]}` } });
     const authHtml = await authHomeRes.text();
     console.log('Customer name in account dropdown:', authHtml.includes('Athira Menon'));
     console.log('My account link in dropdown:', authHtml.includes('href="/account">My account</a>'));

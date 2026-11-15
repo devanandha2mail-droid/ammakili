@@ -1,47 +1,126 @@
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px;">
   <div>
-    <h1 style="font-size:2.2rem; margin:0;">Dashboard</h1>
-    <p style="color:var(--admin-muted); margin:4px 0 0;">Overview of current nighty sales, fulfillment status, and inventory alerts.</p>
+    <h1>Dashboard</h1>
+    <p style="margin:4px 0 0;">Overview of current nighty sales, fulfillment status, and inventory alerts.</p>
   </div>
   <div>
-    <a href="/admin/products/add" class="btn small">+ Add Nighty</a>
+    <a href="/admin/products/add" class="a-btn">+ Add Nighty</a>
   </div>
 </div>
+
+<% if (typeof sampleProductsCount !== 'undefined' && sampleProductsCount > 0) { %>
+  <div class="a-alert a-alert--warn" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span aria-hidden="true" style="font-size:1.1rem;">ℹ️</span>
+      <span style="font-weight:500;">Sample designs. Replace with real photos before launch.</span>
+    </div>
+    <a href="/admin/products" class="a-btn a-btn--ghost a-btn--sm">Manage Products</a>
+  </div>
+<% } %>
 
 <!-- Key Performance Metrics -->
-<div class="stats-grid">
-  <div class="stat-card">
-    <h3>Today's Orders</h3>
-    <div class="num"><%= stats.todayOrdersCount %></div>
+<div class="a-stats">
+  <div class="a-stat">
+    <span>Today's Orders</span>
+    <b><%= stats.todayOrdersCount %></b>
   </div>
 
-  <div class="stat-card">
-    <h3>Revenue (This Week)</h3>
-    <div class="num">₹<%= stats.revenueWeek.toLocaleString('en-IN') %></div>
+  <div class="a-stat">
+    <span>Revenue (This Week)</span>
+    <b>₹<%= stats.revenueWeek.toLocaleString('en-IN') %></b>
   </div>
 
-  <div class="stat-card">
-    <h3>Revenue (This Month)</h3>
-    <div class="num">₹<%= stats.revenueMonth.toLocaleString('en-IN') %></div>
+  <div class="a-stat">
+    <span>Revenue (This Month)</span>
+    <b>₹<%= stats.revenueMonth.toLocaleString('en-IN') %></b>
   </div>
 
-  <div class="stat-card">
-    <h3>Orders To Pack</h3>
-    <div class="num" style="color:var(--admin-c2);"><%= stats.ordersToPackCount %></div>
+  <div class="a-stat">
+    <span>Orders To Pack</span>
+    <b style="color:var(--a-warn);"><%= stats.ordersToPackCount %></b>
   </div>
 
-  <div class="stat-card">
-    <h3>Low Stock Items</h3>
-    <div class="num" style="color:#b91c1c;"><%= stats.lowStockCount %></div>
+  <div class="a-stat">
+    <span>Low Stock Items</span>
+    <b style="color:var(--a-bad);"><%= stats.lowStockCount %></b>
   </div>
 </div>
+
+<!-- Photo Styling Status Block -->
+<% if (typeof stylistStats !== 'undefined') { %>
+  <div class="a-card" style="margin-bottom:28px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h2 style="font-size:1.35rem; margin:0;">Photo Styling</h2>
+        <p style="margin:2px 0 0; font-size:0.85rem; color:var(--a-muted);">Background cutout and presentation engine for dress photography.</p>
+      </div>
+      <span class="a-pill <%= stylistStats.available ? 'a-pill--ok' : 'a-pill--warn' %>">
+        <%= stylistStats.available ? '● Service Online' : '○ Service Offline' %>
+      </span>
+    </div>
+
+    <div class="a-stats" style="margin-bottom:0; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));">
+      <div class="a-stat" style="padding:16px;">
+        <span>Jobs Waiting</span>
+        <b style="font-size:1.8rem;"><%= stylistStats.queued %></b>
+      </div>
+      <div class="a-stat" style="padding:16px;">
+        <span>Processing</span>
+        <b style="font-size:1.8rem; color:var(--a-info);"><%= stylistStats.processing %></b>
+      </div>
+      <div class="a-stat" style="padding:16px;">
+        <span>Failed Jobs</span>
+        <b style="font-size:1.8rem; color:<%= stylistStats.failed > 0 ? 'var(--a-bad)' : 'var(--a-ink)' %>;"><%= stylistStats.failed %></b>
+      </div>
+      <div class="a-stat" style="padding:16px;">
+        <span>Average Time</span>
+        <b style="font-size:1.8rem;"><%= stylistStats.avgSeconds %>s</b>
+      </div>
+    </div>
+
+    <% if (typeof failedStylistJobs !== 'undefined' && failedStylistJobs.length > 0) { %>
+      <div style="margin-top:20px; border-top:1px solid var(--a-line); padding-top:16px;">
+        <h3 style="font-size:1rem; color:var(--a-bad); margin-bottom:10px;">Failed Jobs Needing Attention</h3>
+        <div class="a-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Job ID</th>
+                <th>Original Photo</th>
+                <th>Error</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% failedStylistJobs.forEach(function(fj) { %>
+                <tr>
+                  <td><code><%= String(fj._id).slice(-8) %></code></td>
+                  <td>
+                    <img src="<%= fj.originalUrl %>" alt="Original" style="width:40px; height:50px; object-fit:cover; border-radius:6px;">
+                  </td>
+                  <td style="color:var(--a-bad); font-size:0.85rem;"><%= fj.error || 'Failed' %></td>
+                  <td>
+                    <form method="POST" action="/admin/stylist/retry/<%= fj._id %>" style="display:inline;">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button type="submit" class="a-btn a-btn--sm a-btn--ghost">Retry</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% } %>
+  </div>
+<% } %>
 
 <!-- Low Stock Alerts -->
 <% if (lowStockProducts.length > 0) { %>
-  <div class="admin-card" style="border-left:4px solid #b91c1c;">
-    <h2 style="font-size:1.4rem; margin-bottom:12px; color:#b91c1c;">⚠️ Low Stock Inventory Warnings (Threshold: <%= settings.lowStockThreshold || 3 %>)</h2>
-    <div style="overflow-x:auto;">
-      <table class="admin-table">
+  <div class="a-card" style="margin-bottom:28px; border-left:4px solid var(--a-bad);">
+    <h2 style="font-size:1.4rem; margin-bottom:12px; color:var(--a-bad);">⚠️ Low Stock Inventory Warnings (Threshold: <%= settings.lowStockThreshold || 3 %>)</h2>
+    <div class="a-table-wrap">
+      <table>
         <thead>
           <tr>
             <th>Product</th>
@@ -57,13 +136,13 @@
               <td><%= p.style %></td>
               <td>
                 <% p.sizes.filter(s => s.stock <= (settings.lowStockThreshold || 3)).forEach(function(s) { %>
-                  <span style="display:inline-block; margin-right:8px; padding:2px 8px; border-radius:4px; background:#fee2e2; color:#991b1b; font-size:0.8rem;">
+                  <span style="display:inline-block; margin-right:8px; padding:2px 8px; border-radius:4px; background:rgba(245,138,151,.15); color:var(--a-bad); font-size:0.8rem; font-weight:500;">
                     <%= s.size %>: <strong><%= s.stock %> left</strong>
                   </span>
                 <% }); %>
               </td>
               <td>
-                <a href="/admin/products/edit/<%= p._id %>" class="btn small ghost" style="padding:4px 12px; font-size:0.75rem;">Restock</a>
+                <a href="/admin/products/edit/<%= p._id %>" class="a-btn a-btn--ghost a-btn--sm">Restock</a>
               </td>
             </tr>
           <% }); %>
@@ -74,17 +153,17 @@
 <% } %>
 
 <!-- Recent Orders Table -->
-<div class="admin-card">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+<div class="a-card">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
     <h2 style="font-size:1.4rem; margin:0;">Recent Orders</h2>
-    <a href="/admin/orders" class="tlink" style="margin-left:0; font-size:0.8rem;">View All Orders →</a>
+    <a href="/admin/orders" class="a-back" style="margin:0;">View All Orders →</a>
   </div>
 
   <% if (recentOrders.length === 0) { %>
-    <p style="color:var(--admin-muted); padding:20px 0;">No orders recorded yet.</p>
+    <p style="padding:20px 0; text-align:center;">No orders recorded yet.</p>
   <% } else { %>
-    <div style="overflow-x:auto;">
-      <table class="admin-table">
+    <div class="a-table-wrap">
+      <table>
         <thead>
           <tr>
             <th>Order ID</th>
@@ -98,17 +177,25 @@
         </thead>
         <tbody>
           <% recentOrders.forEach(function(o) { %>
+            <% 
+              let pillClass = 'a-pill';
+              if (o.status === 'paid' || o.status === 'delivered') pillClass += ' a-pill--ok';
+              else if (o.status === 'pending_payment') pillClass += ' a-pill--warn';
+              else if (o.status === 'packed') pillClass += ' a-pill--info';
+              else if (o.status === 'shipped') pillClass += ' a-pill--vio';
+              else if (o.status === 'failed' || o.status === 'cancelled') pillClass += ' a-pill--bad';
+            %>
             <tr>
-              <td><strong><a href="/admin/orders/<%= o._id %>" style="color:var(--admin-c1);"><%= o.orderId %></a></strong></td>
+              <td><strong><a href="/admin/orders/<%= o._id %>" style="color:var(--a-accent);"><%= o.orderId %></a></strong></td>
               <td><%= new Date(o.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short' }) %></td>
               <td><%= o.customer.name %> (<%= o.customer.phone %>)</td>
               <td><%= o.items.reduce((s, i) => s + i.quantity, 0) %> nighties</td>
               <td><strong>₹<%= o.total.toLocaleString('en-IN') %></strong></td>
               <td>
-                <span class="tag-badge status-<%= o.status %>"><%= o.status.replace('_', ' ') %></span>
+                <span class="<%= pillClass %>"><%= o.status.replace('_', ' ') %></span>
               </td>
               <td>
-                <a href="/admin/orders/<%= o._id %>" class="btn small ghost" style="padding:4px 12px; font-size:0.75rem;">Inspect</a>
+                <a href="/admin/orders/<%= o._id %>" class="a-btn a-btn--ghost a-btn--sm">Inspect</a>
               </td>
             </tr>
           <% }); %>
@@ -117,4 +204,3 @@
     </div>
   <% } %>
 </div>
-

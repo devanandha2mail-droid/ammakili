@@ -1,0 +1,66 @@
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:14px;">
+  <div>
+    <h1 style="font-size:2rem; margin:0; font-family:var(--a-serif); color:var(--a-ink);">System Diagnostics & Client IP</h1>
+    <p style="color:var(--a-muted); margin:4px 0 0;">Verify reverse proxy trust configuration, client IP resolution, and rate limiter keys.</p>
+  </div>
+</div>
+
+<div class="a-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:20px; margin-bottom:28px;">
+  <!-- Client IP Card -->
+  <div class="a-card" style="padding:24px;">
+    <h3 style="font-size:1.1rem; margin-top:0; color:var(--a-ink); margin-bottom:16px;">Detected Client IP</h3>
+    <div style="background:var(--a-bg); padding:16px; border-radius:10px; border:1px solid var(--a-border); font-family:monospace; font-size:1.3rem; font-weight:700; color:var(--a-accent); margin-bottom:14px;">
+      <%= clientIp %>
+    </div>
+    <p style="font-size:0.88rem; color:var(--a-muted); margin:0;">
+      This is the client address evaluated by Express (<code>req.ip</code>) after traversing trusted proxy hops.
+    </p>
+  </div>
+
+  <!-- Rate Limit Key Card -->
+  <div class="a-card" style="padding:24px;">
+    <h3 style="font-size:1.1rem; margin-top:0; color:var(--a-ink); margin-bottom:16px;">Rate Limiter Key (/64 Subnet)</h3>
+    <div style="background:var(--a-bg); padding:16px; border-radius:10px; border:1px solid var(--a-border); font-family:monospace; font-size:1.1rem; font-weight:600; color:var(--a-ink); margin-bottom:14px; word-break:break-all;">
+      <%= rateLimitKey %>
+    </div>
+    <p style="font-size:0.88rem; color:var(--a-muted); margin:0;">
+      IPv6 addresses are grouped by /64 prefix to prevent quota evasion across multiple SLAAC addresses.
+    </p>
+  </div>
+
+  <!-- Raw Headers Card -->
+  <div class="a-card" style="padding:24px;">
+    <h3 style="font-size:1.1rem; margin-top:0; color:var(--a-ink); margin-bottom:16px;">X-Forwarded-For Header</h3>
+    <div style="background:var(--a-bg); padding:16px; border-radius:10px; border:1px solid var(--a-border); font-family:monospace; font-size:0.95rem; color:var(--a-ink); margin-bottom:14px; word-break:break-all;">
+      <%= forwardedFor %>
+    </div>
+    <p style="font-size:0.88rem; color:var(--a-muted); margin:0;">
+      Raw proxy chain forwarded by load balancers / reverse proxies.
+    </p>
+  </div>
+
+  <!-- Proxy Configuration Card -->
+  <div class="a-card" style="padding:24px;">
+    <h3 style="font-size:1.1rem; margin-top:0; color:var(--a-ink); margin-bottom:16px;">Trust Proxy Configuration</h3>
+    <div style="display:flex; flex-direction:column; gap:10px; font-size:0.92rem;">
+      <div><strong>Configured Setting:</strong> <code><%= trustProxySetting %></code></div>
+      <div><strong>TRUST_PROXY_HOPS Env:</strong> <code><%= trustProxyHopsEnv %></code></div>
+    </div>
+    <p style="font-size:0.85rem; color:var(--a-muted); margin-top:14px;">
+      1 hop = standard host proxy (Nginx / Caddy / Dokku).<br>
+      2 hops = Cloudflare / AWS CloudFront in front of host proxy.
+    </p>
+  </div>
+</div>
+
+<!-- Deployment Verification Guide -->
+<div class="a-card" style="padding:24px;">
+  <h3 style="font-size:1.15rem; margin-top:0; color:var(--a-ink); margin-bottom:12px;">📱 Pre-Launch Verification Checklist</h3>
+  <ol style="font-size:0.92rem; line-height:1.6; color:var(--a-ink); padding-left:20px; margin:0;">
+    <li>Open this page (<code>/admin/diagnostics</code>) on your smartphone connected via cellular mobile data (4G/5G). Note the <strong>Detected Client IP</strong>.</li>
+    <li>Open this page from a desktop or laptop connected to your home or office Wi-Fi broadband network.</li>
+    <li><strong>Verify:</strong> The two IPs MUST be distinct and correspond to your real external public IP addresses (e.g. check against <a href="https://icanhazip.com" target="_blank" rel="noopener">icanhazip.com</a>).</li>
+    <li><strong>Warning:</strong> If the Detected Client IP shows <code>127.0.0.1</code>, your host reverse proxy IP, or stays identical across both networks, adjust <code>TRUST_PROXY_HOPS</code> before launching!</li>
+  </ol>
+</div>
+
