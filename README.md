@@ -99,9 +99,8 @@ CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 
-# Seed Admin Credentials
-ADMIN_EMAIL=admin@nestammakkili.com
-ADMIN_PASSWORD=AdminNest2026!
+# Admin Owner Google Account (Allowlisted Owner - zero passwords stored)
+ADMIN_OWNER_EMAIL=your-owner-email@gmail.com
 
 # Business Contact (Without '+' or spaces, with country code)
 WHATSAPP_NUMBER=919876543210

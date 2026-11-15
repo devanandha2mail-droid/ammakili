@@ -1,18 +1,18 @@
 const mongoose = require('mongoose');
-const Admin = require('../src/models/Admin');
+const AdminUser = require('../src/models/AdminUser');
 const Order = require('../src/models/Order');
 
 async function testAdminFlow() {
   await mongoose.connect('mongodb://127.0.0.1:27017/nest_ammakkili');
 
-  // 1. Test Admin Login POST
-  console.log('[Admin Test] Attempting login with seeded credentials...');
-  const loginRes = await fetch('http://localhost:3000/admin/login', {
+  // 1. Test Admin Login via Test Harness
+  console.log('[Admin Test] Attempting test login...');
+  const loginRes = await fetch('http://localhost:3000/__test/admin-login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       email: 'admin@nestammakkili.com',
-      password: 'AdminNest2026!'
+      role: 'owner'
     }),
     redirect: 'manual'
   });

@@ -88,6 +88,11 @@ The following files are verified to be demo artifacts, placeholders, temporary r
 | :--- | :--- | :--- |
 | `express-validator` | Unused dependency | Flagged by `depcheck` & `knip`; zero references found via `git grep "express-validator"`. (Replaced by `zod` for type-safe schema validation). |
 
+### 2.5 Deprecated Password-Based Auth Models
+| File Path | Reason for Removal | Proof Unused / Obsolete |
+| :--- | :--- | :--- |
+| `src/models/Admin.js` | Legacy password-based Admin model (`passwordHash`, `bcrypt`) | Fully replaced by `src/models/AdminUser.js` supporting Google OAuth allowlist. Zero references remaining in codebase. |
+
 ---
 
 ## 3. Code & Schema Refactoring Plan

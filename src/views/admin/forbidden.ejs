@@ -1,0 +1,14 @@
+<div class="a-card" style="max-width:540px; margin:40px auto; text-align:center; padding:36px 24px;">
+  <div style="margin-bottom:16px; display:inline-block; padding:12px; border-radius:50%; background:rgba(234, 179, 8, 0.15); box-shadow:0 0 0 2px rgba(234, 179, 8, 0.4);">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+  </div>
+  <h2 style="font-size:1.6rem; margin-bottom:8px;"><%= typeof title !== 'undefined' ? title : 'Access Restricted' %></h2>
+  <p style="color:var(--a-muted); margin-bottom:24px; line-height:1.5;">
+    <%= typeof message !== 'undefined' ? message : 'This operation requires Owner permissions. Please contact the store owner.' %>
+  </p>
+  <a href="/admin" class="a-btn">← Back to Dashboard</a>
+</div>
+

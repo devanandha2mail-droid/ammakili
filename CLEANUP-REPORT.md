@@ -41,8 +41,9 @@ In accordance with the Ground Rules and Section 1 specification, the codebase wa
   - Removed `report-home.json` and `report-product.json`.
   - Removed `scripts/test-order-flow.js`.
   - Moved developer test/verify scripts from `scripts/` to `tests/scripts/` so production builds contain only deployment/operational scripts (`seed.js`, `reset-for-launch.js`, `download-fonts.js`, migrations).
-- **Unused Dependencies:**
+- **Unused Dependencies & Legacy Models:**
   - Uninstalled `express-validator` (verified zero references across the codebase).
+  - Deleted legacy `src/models/Admin.js` (password-based authentication model, replaced by `src/models/AdminUser.js` for Google OAuth allowlist).
 
 ### 1.3 Production Container Isolation (`.gitignore` & `.dockerignore`)
 - Configured `.gitignore` and `.dockerignore` to strictly exclude:

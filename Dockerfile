@@ -24,3 +24,4 @@ COPY --chown=node:node scripts ./scripts
 
 EXPOSE 3000
 CMD ["node", "src/server.js"]
+

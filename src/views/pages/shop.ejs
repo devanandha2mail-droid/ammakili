@@ -84,11 +84,31 @@
     data-total-pages="<%= totalPages %>"
     data-current-page="<%= currentPage %>"
   >
-    <% if (products.length === 0) { %>
-      <div class="shop-empty-state">
-        <p class="shop-empty-text"><%= t('shop.noResults') %></p>
-        <a href="/shop" class="btn small"><%= t('shop.clearFilter') %></a>
-      </div>
+    <% 
+      const activeSearch = (typeof searchQuery !== 'undefined' && searchQuery) || (typeof q !== 'undefined' && q);
+      if (products.length === 0) { 
+    %>
+      <% if (activeSearch || currentStyle) { %>
+        <div class="shop-empty-state">
+          <p class="shop-empty-text"><%= t('shop.noResults') %></p>
+          <a href="/shop" class="btn small"><%= t('shop.clearFilter') %></a>
+        </div>
+      <% } else { %>
+        <div class="shop-empty-state" style="padding:60px 20px; text-align:center; grid-column: 1 / -1;">
+          <h2 style="font-family:var(--serif); font-size:1.8rem; font-style:italic; color:var(--ink); margin-bottom:12px;">
+            <%= lang === 'ml' ? 'പുതിയ ഡിസൈനുകൾ ഉടൻ ലഭ്യമാകും' : 'New designs are on the way' %>
+          </h2>
+          <p style="color:var(--muted); max-width:480px; margin:0 auto 24px; font-size:0.95rem; line-height:1.5;">
+            <%= lang === 'ml' 
+              ? 'ഞങ്ങളുടെ പുതിയ കളക്ഷൻ തയാറായി വരുന്നു. ഏറ്റവും പുതിയ വിവരങ്ങൾക്കായി ഞങ്ങളുടെ വാട്സാപ്പിലോ യൂട്യൂബിലോ ബന്ധപ്പെടുക.'
+              : 'We are currently preparing our next collection of breathable, softly considered nightwear.' %>
+          </p>
+          <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+            <a href="https://www.youtube.com/@nestammakkili" target="_blank" rel="noopener" class="btn small">Watch on YouTube</a>
+            <a href="https://wa.me/<%= whatsappNumber %>" target="_blank" rel="noopener" class="btn small btn-outline">Chat on WhatsApp</a>
+          </div>
+        </div>
+      <% } %>
     <% } else { %>
       <% products.forEach(function(p) { %>
         <%- include('../partials/product-card', { p: p, lang: lang }) %>

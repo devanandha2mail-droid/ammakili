@@ -4,11 +4,66 @@ const crypto = require('crypto');
 const Customer = require('../../src/models/Customer');
 const { safeReturnUrl } = require('../../src/middleware/customerAuth');
 
+function makeFakeIdToken({ email, email_verified = true, sub = 'google_sub_12345', iat = Math.floor(Date.now() / 1000) }) {
+  const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT' })).toString('base64');
+  const payload = Buffer.from(JSON.stringify({
+    iss: 'https://accounts.google.com',
+    sub,
+    email,
+    email_verified,
+    iat,
+    exp: iat + 3600
+  })).toString('base64');
+  return `${header}.${payload}.fake_signature`;
+}
+
 /**
  * Test Harness Setup
  * Exclusively loaded when NODE_ENV === 'test'
  */
 module.exports = function setupTestHarness(app) {
+  // Test-only Mock Google OAuth Token Route
+  app.post('/__test/mock-google-token', (req, res) => {
+    const code = req.body.code || '';
+    if (code.includes('code_unverified')) {
+      return res.json({
+        access_token: 'fake_access_token',
+        id_token: makeFakeIdToken({
+          email: 'owner@nestammakkili.com',
+          email_verified: false,
+          sub: 'sub_unverified_123'
+        })
+      });
+    }
+    if (code.includes('code_stranger')) {
+      return res.json({
+        access_token: 'fake_access_token',
+        id_token: makeFakeIdToken({
+          email: 'stranger@gmail.com',
+          email_verified: true,
+          sub: 'sub_stranger_999'
+        })
+      });
+    }
+    if (code.includes('code_hijack')) {
+      return res.json({
+        access_token: 'fake_access_token',
+        id_token: makeFakeIdToken({
+          email: 'owner@nestammakkili.com',
+          email_verified: true,
+          sub: 'hijacked_different_sub_9999'
+        })
+      });
+    }
+    return res.json({
+      access_token: 'fake_access_token',
+      id_token: makeFakeIdToken({
+        email: 'owner@nestammakkili.com',
+        email_verified: true,
+        sub: 'legitimate_google_sub_1001'
+      })
+    });
+  });
   const mockModalHtml = fs.readFileSync(path.join(__dirname, 'mockModal.ejs'), 'utf8');
   const mockModalScript = fs.readFileSync(path.join(__dirname, 'mockModalScript.ejs'), 'utf8');
 
@@ -71,6 +126,50 @@ module.exports = function setupTestHarness(app) {
         next(err);
       }
     });
+
+    // Test-only Admin Login Route: strictly available only when ALLOW_TEST_LOGIN=true
+    const handleTestAdminLogin = async (req, res, next) => {
+      try {
+        const email = (req.body?.email || req.query?.email || 'admin@nestammakkili.com').toLowerCase().trim();
+        const role = req.body?.role || req.query?.role || 'owner';
+        const AdminUser = require('../../src/models/AdminUser');
+        let admin = await AdminUser.findOne({ email });
+        if (!admin) {
+          admin = await AdminUser.create({
+            email,
+            role,
+            active: true,
+            confirmed2SV: {
+              confirmed: true,
+              confirmedAt: new Date(),
+              confirmedBy: 'test-harness'
+            },
+            createdBy: 'test-harness'
+          });
+        }
+        const now = Date.now();
+        req.session.adminId = admin._id;
+        req.session.adminEmail = admin.email;
+        req.session.adminRole = admin.role;
+        const authTime = req.body?.authTime || req.query?.authTime;
+        req.session.adminAuthTime = authTime ? Number(authTime) : now;
+        req.session.adminSessionCreatedAt = now;
+        req.session.adminLastActiveAt = now;
+
+        req.session.save((err) => {
+          if (err) return next(err);
+          if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+            return res.json({ success: true, admin: { id: admin._id, email: admin.email, role: admin.role } });
+          }
+          res.redirect('/admin');
+        });
+      } catch (err) {
+        next(err);
+      }
+    };
+
+    app.get(['/admin/test-login', '/__test/admin-login'], handleTestAdminLogin);
+    app.post(['/admin/test-login', '/__test/admin-login'], handleTestAdminLogin);
   }
 
   // Test-only Signature Route: strictly available only when ALLOW_TEST_HARNESS=true

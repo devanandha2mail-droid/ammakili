@@ -111,30 +111,65 @@ app.set('view engine', 'ejs');
 app.use(expressLayouts);
 app.set('layout', 'layouts/main');
 
-// 7. Session Configuration with MongoStore
+// 7. Segregated Session Configurations with MongoStore (Customer vs Admin)
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/nest_ammakkili';
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'nest_session_secret_local_2026',
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: MONGODB_URI,
-      collectionName: 'sessions',
-      ttl: 14 * 24 * 60 * 60 // 14 days
-    }),
-    cookie: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 14 * 24 * 60 * 60 * 1000
-    }
-  })
-);
+const isProd = process.env.NODE_ENV === 'production';
 
-// 8. Passport Authentication (Customer Google Sign-in)
-app.use(passport.initialize());
-app.use(passport.session());
+const customerSessionMiddleware = session({
+  name: isProd ? '__Host-nest_sess' : 'nest_sess',
+  secret: process.env.SESSION_SECRET || 'nest_customer_session_secret_local',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: MONGODB_URI,
+    collectionName: 'sessions',
+    ttl: 14 * 24 * 60 * 60 // 14 days
+  }),
+  cookie: {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: 14 * 24 * 60 * 60 * 1000
+  }
+});
+
+const adminSessionMiddleware = session({
+  name: isProd ? '__Host-nest_admin_sess' : 'nest_admin_sess',
+  secret: process.env.SESSION_SECRET || 'nest_admin_session_secret_local',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: MONGODB_URI,
+    collectionName: 'admin_sessions',
+    ttl: 8 * 60 * 60 // 8 hours absolute
+  }),
+  cookie: {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: 30 * 60 * 1000 // 30 mins rolling idle
+  }
+});
+
+app.set('adminSessionMiddleware', adminSessionMiddleware);
+
+app.use((req, res, next) => {
+  if (req.path === '/admin' || req.path.startsWith('/admin/')) {
+    return adminSessionMiddleware(req, res, next);
+  }
+  return customerSessionMiddleware(req, res, next);
+});
+
+// 8. Passport Authentication (Customer Google Sign-in on non-admin routes only)
+app.use((req, res, next) => {
+  if (req.path.startsWith('/admin')) {
+    return next();
+  }
+  passport.initialize()(req, res, (err) => {
+    if (err) return next(err);
+    passport.session()(req, res, next);
+  });
+});
 app.use(customerLocalsMiddleware);
 
 // 9. Internationalization (i18n)
@@ -262,6 +297,16 @@ const handleLangSwitch = (req, res) => {
 app.get('/set-lang/:lang', handleLangSwitch);
 app.get('/lang/:lang', handleLangSwitch);
 
+// Test harness integration: strictly loaded conditionally only in test environment
+if (process.env.NODE_ENV === 'test') {
+  try {
+    const setupTestHarness = require('../tests/harness');
+    setupTestHarness(app);
+  } catch (err) {
+    // Harness omitted in production builds
+  }
+}
+
 // Import and mount routers
 const storefrontRouter = require('./routes/storefront');
 const authRouter = require('./routes/auth');
@@ -280,16 +325,6 @@ app.use('/cart', cartRouter);
 app.use('/checkout', checkoutRouter);
 app.use('/webhooks', webhookRouter);
 app.use('/admin', adminRouter);
-
-// Test harness integration: strictly loaded conditionally only in test environment
-if (process.env.NODE_ENV === 'test') {
-  try {
-    const setupTestHarness = require('../tests/harness');
-    setupTestHarness(app);
-  } catch (err) {
-    // Harness omitted in production builds
-  }
-}
 
 // 404 Handler
 app.use((req, res, next) => {

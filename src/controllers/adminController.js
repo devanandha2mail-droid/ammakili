@@ -1,10 +1,9 @@
-const bcrypt = require('bcryptjs');
 const slugify = require('slugify');
 const fs = require('fs');
 const path = require('path');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
-const Admin = require('../models/Admin');
+const AdminUser = require('../models/AdminUser');
 const Customer = require('../models/Customer');
 const Settings = require('../models/Settings');
 const Banner = require('../models/Banner');
@@ -13,65 +12,6 @@ const photoStylist = require('../services/photoStylist');
 const photoJobWorker = require('../services/photoJobWorker');
 const stylistUpload = require('../services/stylistUpload');
 const { processUploadedFiles } = require('../services/upload');
-
-// Admin Login GET
-exports.getLogin = (req, res) => {
-  res.render('admin/login', {
-    layout: false,
-    title: 'Admin Login',
-    error: null
-  });
-};
-
-// Admin Login POST
-exports.postLogin = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).render('admin/login', {
-        layout: false,
-        title: 'Admin Login',
-        error: 'Please enter both email and password.'
-      });
-    }
-
-    const admin = await Admin.findOne({ email: email.trim().toLowerCase() });
-    if (!admin) {
-      return res.status(401).render('admin/login', {
-        layout: false,
-        title: 'Admin Login',
-        error: 'Invalid email or password.'
-      });
-    }
-
-    const isMatch = await admin.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).render('admin/login', {
-        layout: false,
-        title: 'Admin Login',
-        error: 'Invalid email or password.'
-      });
-    }
-
-    // Set session
-    req.session.adminId = admin._id;
-    res.redirect('/admin');
-  } catch (err) {
-    console.error('Login error:', err);
-    res.render('admin/login', {
-      layout: false,
-      title: 'Admin Login',
-      error: 'An unexpected error occurred.'
-    });
-  }
-};
-
-// Admin Logout
-exports.logout = (req, res) => {
-  req.session.destroy(() => {
-    res.redirect('/admin/login');
-  });
-};
 
 // Admin Dashboard
 exports.getDashboard = async (req, res, next) => {
@@ -93,7 +33,8 @@ exports.getDashboard = async (req, res, next) => {
       ordersToPackCount,
       lowStockProducts,
       recentOrders,
-      sampleProductsCount
+      activeProducts,
+      activeAdmins
     ] = await Promise.all([
       // Today orders
       Order.countDocuments({ createdAt: { $gte: startOfToday } }),
@@ -115,11 +56,102 @@ exports.getDashboard = async (req, res, next) => {
         'sizes.stock': { $lte: lowStockThreshold }
       }),
       // Recent 8 orders
-      Order.find().sort({ createdAt: -1 }).limit(8)
+      Order.find().sort({ createdAt: -1 }).limit(8),
+      // Active products for Launch Checklist
+      Product.find({ active: true }).select('photos'),
+      // Active admins for 2SV checklist
+      AdminUser.find({ active: true })
     ]);
 
     const revenueWeek = weekOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     const revenueMonth = monthOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+    // Compute Live Launch Checklist
+    const prodsWithTwoPhotos = activeProducts.filter(p => p.photos && p.photos.length >= 2);
+    const hasFourProds = activeProducts.length >= 4 && prodsWithTwoPhotos.length >= 4;
+
+    const hasBizDetails = !!(
+      settings.legalBusinessName &&
+      settings.tradeName &&
+      settings.registeredAddress &&
+      settings.operatingAddress &&
+      settings.contactEmail &&
+      settings.contactPhone &&
+      settings.businessHours
+    );
+    const hasGrievance = !!(
+      settings.grievanceOfficer?.name &&
+      settings.grievanceOfficer?.email &&
+      settings.grievanceOfficer?.phone
+    );
+    const settingsComplete = hasBizDetails && hasGrievance;
+
+    const isLiveKey = Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_ID.startsWith('rzp_live_'));
+    const reconRecent = Boolean(
+      settings.lastReconciliationAt && (now - new Date(settings.lastReconciliationAt).getTime() < 24 * 60 * 60 * 1000)
+    );
+    const backupSet = Boolean(settings.lastBackupAt);
+    const confirmed2SVCount = activeAdmins.filter(a => a.confirmed2SV && a.confirmed2SV.confirmed).length;
+    const all2SVConfirmed = activeAdmins.length > 0 && confirmed2SVCount === activeAdmins.length;
+
+    const launchChecklist = [
+      {
+        id: 'products',
+        ok: hasFourProds,
+        title: 'At least 4 active products with ≥2 photos each',
+        detail: `${prodsWithTwoPhotos.length}/${activeProducts.length} qualifying products`,
+        link: '/admin/products'
+      },
+      {
+        id: 'settings',
+        ok: settingsComplete,
+        title: 'All business details & grievance officer info filled',
+        detail: settingsComplete ? 'Complete' : 'Incomplete business profile',
+        link: '/admin/settings'
+      },
+      {
+        id: 'legal',
+        ok: Boolean(settings.legalPagesConfirmed),
+        title: 'Legal policy pages confirmed by client',
+        detail: settings.legalPagesConfirmed ? 'Confirmed' : 'Pending client approval',
+        link: '/admin/settings'
+      },
+      {
+        id: 'whatsapp',
+        ok: Boolean(settings.whatsappNumber && settings.whatsappNumber.length >= 10),
+        title: 'Support WhatsApp number configured',
+        detail: settings.whatsappNumber || 'Not set',
+        link: '/admin/settings'
+      },
+      {
+        id: 'payments',
+        ok: isLiveKey,
+        title: 'Payment gateway configured in Live mode',
+        detail: isLiveKey ? 'Live mode active' : (process.env.RAZORPAY_KEY_ID?.startsWith('rzp_test_') ? 'Test mode (rzp_test_...)' : 'Keys not configured'),
+        link: '/admin/settings'
+      },
+      {
+        id: 'reconciliation',
+        ok: reconRecent,
+        title: 'Webhook reconciliation ran within last 24 hours',
+        detail: settings.lastReconciliationAt ? `Last run: ${new Date(settings.lastReconciliationAt).toLocaleString('en-IN')}` : 'Never executed',
+        link: '/admin/orders'
+      },
+      {
+        id: 'backup',
+        ok: backupSet,
+        title: 'Database backup verified',
+        detail: settings.lastBackupAt ? `Last backup: ${new Date(settings.lastBackupAt).toLocaleString('en-IN')}` : 'No backup recorded',
+        link: '/admin/settings'
+      },
+      {
+        id: 'twoStep',
+        ok: all2SVConfirmed,
+        title: 'Google 2-Step Verification confirmed for all admins',
+        detail: `${confirmed2SVCount}/${activeAdmins.length} confirmed`,
+        link: '/admin/users'
+      }
+    ];
 
     const stylistStats = await photoJobWorker.getStylistStats();
     const failedStylistJobs = await PhotoJob.find({ status: 'failed' }).sort({ finishedAt: -1 }).limit(10);
@@ -136,8 +168,8 @@ exports.getDashboard = async (req, res, next) => {
       },
       lowStockProducts,
       recentOrders,
-      sampleProductsCount,
       settings,
+      launchChecklist,
       stylistStats,
       failedStylistJobs
     });

@@ -44,11 +44,11 @@ function validateEnvironment() {
       process.exit(1);
     }
 
-    // ADMIN_PASSWORD validation (>= 12 chars and not default)
-    const adminPassword = process.env.ADMIN_PASSWORD || '';
-    const defaultPasswords = ['admin', 'admin123', 'password', 'changeme', 'secret', '123456789012'];
-    if (!adminPassword || adminPassword.length < 12 || defaultPasswords.includes(adminPassword.toLowerCase())) {
-      console.error('FATAL: In production, ADMIN_PASSWORD must be at least 12 characters long and not a default value.');
+    // ADMIN_OWNER_EMAIL validation (must be a valid email format)
+    const adminOwnerEmail = (process.env.ADMIN_OWNER_EMAIL || '').trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!adminOwnerEmail || !emailRegex.test(adminOwnerEmail)) {
+      console.error('FATAL: In production, ADMIN_OWNER_EMAIL must be configured with a valid email address.');
       process.exit(1);
     }
 

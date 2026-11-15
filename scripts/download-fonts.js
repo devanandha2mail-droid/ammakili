@@ -86,3 +86,4 @@ download().catch(err => {
   console.error('Font download error:', err);
   process.exit(1);
 });
+

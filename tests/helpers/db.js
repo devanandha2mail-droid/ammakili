@@ -11,7 +11,7 @@ const Order = require('../../src/models/Order');
 const Customer = require('../../src/models/Customer');
 const Settings = require('../../src/models/Settings');
 const Banner = require('../../src/models/Banner');
-const Admin = require('../../src/models/Admin');
+const AdminUser = require('../../src/models/AdminUser');
 
 const TEST_DB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/nest_test';
 
@@ -43,17 +43,21 @@ async function resetAndSeedDatabase() {
     Customer.deleteMany({}),
     Settings.deleteMany({}),
     Banner.deleteMany({}),
-    Admin.deleteMany({})
+    AdminUser.deleteMany({})
   ]);
 
-  // 1. Seed Admin
-  const adminEmail = (process.env.ADMIN_EMAIL || 'admin@nestammakkili.com').toLowerCase();
-  const adminPass = process.env.ADMIN_PASSWORD || 'AdminNest2026!';
-  const passwordHash = await bcrypt.hash(adminPass, 10);
-  await Admin.create({
+  // 1. Seed AdminUser
+  const adminEmail = (process.env.ADMIN_OWNER_EMAIL || process.env.ADMIN_EMAIL || 'admin@nestammakkili.com').toLowerCase();
+  await AdminUser.create({
     email: adminEmail,
-    passwordHash,
-    role: 'admin'
+    role: 'owner',
+    active: true,
+    confirmed2SV: {
+      confirmed: true,
+      confirmedAt: new Date(),
+      confirmedBy: 'test-seed'
+    },
+    createdBy: 'test-seed'
   });
 
   // 2. Seed Settings
@@ -106,8 +110,7 @@ async function resetAndSeedDatabase() {
   }
 
   return {
-    adminEmail,
-    adminPass
+    adminEmail
   };
 }
 
@@ -127,5 +130,5 @@ module.exports = {
   Customer,
   Settings,
   Banner,
-  Admin
+  AdminUser
 };

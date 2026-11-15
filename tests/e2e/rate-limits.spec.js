@@ -66,30 +66,22 @@ test.describe('Rate Limiting Enforcement & Proxy Security Verification', () => {
     await disconnectTestDB();
   });
 
-  test('1. POST /admin/login rate limiter: returns 429 on the 6th failed attempt (limit: 5)', async ({}, testInfo) => {
+  test('1. GET /admin/auth/google rate limiter: returns 429 on the 6th attempt (limit: 5)', async ({}, testInfo) => {
     const api = await playwrightRequest.newContext({ baseURL: serverBaseURL });
     const clientIp = testInfo.project.name === 'mobile' ? '10.99.1.11' : '10.99.1.1';
 
-    // First 5 invalid login requests are handled by authentication logic (not 429)
+    // First 5 authentication initiation requests succeed (redirect to Google OAuth)
     for (let i = 1; i <= 5; i++) {
-      const res = await api.post('/admin/login', {
+      const res = await api.get('/admin/auth/google', {
         headers: { 'x-forwarded-for': clientIp },
-        form: {
-          email: 'admin@nestammakkili.com',
-          password: 'WrongPassword' + i
-        },
         maxRedirects: 0
       });
       expect(res.status(), `Attempt ${i} should not be 429`).not.toBe(429);
     }
 
-    // 6th attempt must be rejected by adminLoginLimiter with 429
-    const limitedRes = await api.post('/admin/login', {
+    // 6th attempt must be rejected by adminAuthLimiter with 429
+    const limitedRes = await api.get('/admin/auth/google', {
       headers: { 'x-forwarded-for': clientIp },
-      form: {
-        email: 'admin@nestammakkili.com',
-        password: 'WrongPassword6'
-      },
       maxRedirects: 0
     });
 
@@ -251,17 +243,13 @@ test.describe('Rate Limiting Enforcement & Proxy Security Verification', () => {
     // If a client sends "spoofed_ip, real_client_ip", Express evaluates real_client_ip (the rightmost hop).
     const realClientHop = testInfo.project.name === 'mobile' ? '10.99.50.2' : '10.99.50.1';
 
-    // Run 5 failed login attempts with spoofed prefixes prepended to realClientHop
+    // Run 5 login attempts with spoofed prefixes prepended to realClientHop
     for (let i = 1; i <= 5; i++) {
       const spoofedPrefix = `1.2.3.${i}`;
       const api = await playwrightRequest.newContext({ baseURL: serverBaseURL });
-      const res = await api.post('/admin/login', {
+      const res = await api.get('/admin/auth/google', {
         headers: {
           'x-forwarded-for': `${spoofedPrefix}, ${realClientHop}`
-        },
-        form: {
-          email: 'admin@nestammakkili.com',
-          password: 'BadPassword' + i
         },
         maxRedirects: 0
       });
@@ -271,13 +259,9 @@ test.describe('Rate Limiting Enforcement & Proxy Security Verification', () => {
 
     // Attempt 6 with yet another spoofed prefix: because trust proxy is 1, Express correctly identifies realClientHop
     const api6 = await playwrightRequest.newContext({ baseURL: serverBaseURL });
-    const limitedRes = await api6.post('/admin/login', {
+    const limitedRes = await api6.get('/admin/auth/google', {
       headers: {
         'x-forwarded-for': `99.88.77.66, ${realClientHop}`
-      },
-      form: {
-        email: 'admin@nestammakkili.com',
-        password: 'BadPassword6'
       },
       maxRedirects: 0
     });
@@ -305,31 +289,23 @@ test.describe('Rate Limiting Enforcement & Proxy Security Verification', () => {
     try {
       const api = await playwrightRequest.newContext({ baseURL: directBaseURL });
 
-      // Send 5 failed login requests, each with a different spoofed X-Forwarded-For header
+      // Send 5 login requests, each with a different spoofed X-Forwarded-For header
       for (let i = 1; i <= 5; i++) {
-        const res = await api.post('/admin/login', {
+        const res = await api.get('/admin/auth/google', {
           headers: {
             'x-forwarded-for': `198.51.100.${i}`
-          },
-          form: {
-            email: 'admin@nestammakkili.com',
-            password: 'BadPassword' + i
           },
           maxRedirects: 0
         });
         expect(res.status()).not.toBe(429);
       }
 
-      // 6th failed request with yet another different X-Forwarded-For header:
+      // 6th request with yet another different X-Forwarded-For header:
       // Because TRUST_PROXY_HOPS is 0, Express ignores X-Forwarded-For and uses the socket IP (127.0.0.1).
       // The rate limiter therefore blocks the 6th attempt with 429!
-      const limitedRes = await api.post('/admin/login', {
+      const limitedRes = await api.get('/admin/auth/google', {
         headers: {
           'x-forwarded-for': '203.0.113.99'
-        },
-        form: {
-          email: 'admin@nestammakkili.com',
-          password: 'BadPassword6'
         },
         maxRedirects: 0
       });

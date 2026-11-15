@@ -15,8 +15,8 @@ const GUEST_COOKIE_OPTIONS = {
 
 function getSessionIdentifier(req) {
   // If user is authenticated in session (admin or customer), use user ID or session ID
-  if (req.session && (req.session.admin || req.session.passport?.user)) {
-    return String(req.session.admin?.id || req.session.passport?.user || req.session.id);
+  if (req.session && (req.session.adminId || req.session.admin || req.session.passport?.user)) {
+    return String(req.session.adminId || req.session.admin?.id || req.session.passport?.user || req.session.id);
   }
 
   // For anonymous visitors, use signed guest cookie or in-flight generated guest ID
@@ -76,7 +76,7 @@ const csrfTokenMiddleware = (req, res, next) => {
   }
 
   try {
-    const hasAuthSession = req.session && (req.session.admin || req.session.passport?.user);
+    const hasAuthSession = req.session && (req.session.adminId || req.session.admin || req.session.passport?.user);
     const existingGuest = req.signedCookies ? req.signedCookies[GUEST_COOKIE_NAME] : null;
 
     if (!hasAuthSession && !existingGuest) {

@@ -26,6 +26,9 @@
       <a href="/admin/orders" <%= (typeof path !== 'undefined' && path.startsWith('/admin/orders')) ? 'aria-current="page"' : '' %>>Orders</a>
       <a href="/admin/customers" <%= (typeof path !== 'undefined' && path.startsWith('/admin/customers')) ? 'aria-current="page"' : '' %>>Customers</a>
       <a href="/admin/banners" <%= (typeof path !== 'undefined' && path.startsWith('/admin/banners')) ? 'aria-current="page"' : '' %>>Banners</a>
+      <% if (typeof admin !== 'undefined' && admin && admin.role === 'owner') { %>
+        <a href="/admin/users" <%= (typeof path !== 'undefined' && path.startsWith('/admin/users')) ? 'aria-current="page"' : '' %>>Team</a>
+      <% } %>
       <a href="/admin/settings" <%= (typeof path !== 'undefined' && path.startsWith('/admin/settings')) ? 'aria-current="page"' : '' %>>Settings</a>
       <a href="/admin/diagnostics" <%= (typeof path !== 'undefined' && path.startsWith('/admin/diagnostics')) ? 'aria-current="page"' : '' %>>Diagnostics</a>
       <a href="/" target="_blank" rel="noopener" style="opacity:0.75;">View Shop ↗</a>

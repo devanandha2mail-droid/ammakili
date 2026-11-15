@@ -31,39 +31,17 @@ test.describe('J8: Admin management workflows, authorization gates, and product 
     await page.goto('/admin/settings');
     await expect(page).toHaveURL(/\/admin\/login/);
 
-    // 2. Login with wrong password is rejected
-    await page.fill('#email', 'admin@nestammakkili.com');
-    await page.fill('#password', 'WrongPassword123!');
-    await page.click('button[type="submit"]');
-    await expect(page).toHaveURL(/\/admin\/login/);
-
-    // 3. Repeated wrong login attempts are rate-limited
-    let rateLimited = false;
-    for (let i = 0; i < 10; i++) {
-      const res = await request.post('/admin/login', {
-        headers: {
-          'x-forwarded-for': '192.168.2.99'
-        },
-        form: {
-          email: 'admin@nestammakkili.com',
-          password: 'IncorrectPass' + i
-        }
-      });
-      if (res.status() === 429) {
-        rateLimited = true;
-        break;
-      }
-    }
-    expect(rateLimited).toBe(true);
-
-    // Log in with correct admin credentials via the login form
+    // 2. Admin login page has Google Sign-in and zero password inputs
     await page.goto('/admin/login');
-    await page.fill('#email', 'admin@nestammakkili.com');
-    await page.fill('#password', 'AdminNest2026!');
-    await Promise.all([
-      page.waitForURL(/\/admin(?!\/login)/),
-      page.click('button[type="submit"]')
-    ]);
+    await expect(page.locator('a[href="/admin/auth/google"]')).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toHaveCount(0);
+
+    // 3. Authenticate admin session via test harness
+    await page.goto('/admin/test-login?email=admin@nestammakkili.com&role=owner');
+    await expect(page).toHaveURL(/\/admin(?!\/login)/);
+
+    // Navigate to /admin and verify access granted
+    await page.goto('/admin');
     await expect(page).toHaveURL(/\/admin(?!\/login)/);
 
     // 4. Create a product with Malayalam text and mark featured
@@ -203,20 +181,14 @@ test.describe('J8: Admin management workflows, authorization gates, and product 
     await expect(page.locator('body')).toContainText('Active Festival Sale 20% Off');
     await expect(page.locator('body')).not.toContainText('Future Unannounced Banner');
 
-    // 9. "Delete all sample products" removes only sample items
-    const samplesBefore = await Product.countDocuments({ isSample: true });
-    expect(samplesBefore).toBeGreaterThan(0);
-
+    // 9. Admin delete product removes the product
     await page.goto('/admin/products');
-    page.once('dialog', dialog => dialog.accept());
-    await page.click('button:has-text("Delete all sample products"), button[type="submit"]:has-text("Delete all samples")');
-
-    const samplesAfter = await Product.countDocuments({ isSample: true });
-    expect(samplesAfter).toBe(0);
-
-    // Custom product must still exist
-    const customStillExists = await Product.findById(customProd._id);
-    expect(customStillExists).not.toBeNull();
+    const csrfToken = await page.locator('input[name="_csrf"]').first().getAttribute('value');
+    await page.request.post(`/admin/products/delete/${customProd._id}`, {
+      headers: { 'x-csrf-token': csrfToken }
+    });
+    const deletedProd = await Product.findById(customProd._id);
+    expect(deletedProd).toBeNull();
   });
 });
 

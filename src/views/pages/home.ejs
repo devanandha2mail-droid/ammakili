@@ -1,3 +1,57 @@
+<% if (!products || products.length === 0) { %>
+<!-- Polished Opening Soon State -->
+<div class="wrap opening-soon-wrap" style="text-align:center; padding:70px 20px 50px; max-width:760px; margin:0 auto;">
+  <div style="margin-bottom:24px;">
+    <img src="/img/brand/logo-full-512.png" alt="Nest by Ammakkili" width="220" height="220" style="max-width:100%; height:auto; border-radius:18px;">
+  </div>
+  <h1 style="font-family:var(--serif); font-size:clamp(2rem, 5vw, 3rem); font-style:italic; color:var(--ink); margin-bottom:16px;">
+    <%= lang === 'ml' ? 'നെസ്റ്റ് ബൈ അമ്മക്കിളി' : 'Nest by Ammakkili' %>
+  </h1>
+  <p style="font-size:clamp(1.1rem, 2.5vw, 1.35rem); color:var(--muted); line-height:1.6; margin-bottom:32px;">
+    <%= lang === 'ml' 
+      ? 'സുഖകരവും ഗുണമേന്മയുള്ളതുമായ കോട്ടൺ നൈറ്റികൾ. ഞങ്ങളുടെ പുതിയ കളക്ഷൻ ഉടൻ ആരംഭിക്കുന്നു.' 
+      : 'Softly considered, breathable nighties crafted for restful comfort. Opening soon.' %>
+  </p>
+  <div style="display:flex; justify-content:center; gap:16px; flex-wrap:wrap; margin-bottom:48px;">
+    <a class="btn" href="https://www.youtube.com/@nestammakkili" target="_blank" rel="noopener noreferrer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px;" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+      <%= lang === 'ml' ? 'യൂട്യൂബിൽ കാണുക' : 'Watch on YouTube' %>
+    </a>
+    <a class="btn btn-outline" href="https://wa.me/<%= whatsappNumber %>" target="_blank" rel="noopener noreferrer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px;" aria-hidden="true"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.312.045-.694.074-2.147-.527-1.734-.718-2.853-2.484-2.94-2.6-.088-.115-.705-.939-.705-1.792 0-.852.447-1.272.607-1.446.16-.175.348-.219.464-.219.116 0 .232.001.333.006.107.005.25-.041.391.297.145.348.494 1.204.537 1.292.043.088.072.19.014.305-.058.115-.088.19-.174.29-.088.102-.185.228-.264.306-.088.087-.18.182-.077.359.102.175.454.749.974 1.212.67.596 1.235.78 1.41.867.174.088.276.073.378-.044.102-.116.435-.508.551-.682.116-.174.232-.145.39-.087.16.058 1.016.479 1.19.566.174.087.29.13.333.203.043.073.043.42-.101.825z"/></svg>
+      <%= lang === 'ml' ? 'വാട്സാപ്പിൽ ബന്ധപ്പെടുക' : 'Chat on WhatsApp' %>
+    </a>
+  </div>
+</div>
+
+<!-- Trust Strip -->
+<div class="trust-strip">
+  <div class="wrap trust-grid">
+    <div class="trust-item">
+      <svg class="trust-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <span><%= lang === 'ml' ? 'പ്രീപെയ്ഡും സുരക്ഷിതവും' : 'Prepaid and secure' %></span>
+    </div>
+    <div class="trust-item">
+      <svg class="trust-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21.3 8.7 8.7 21.3a3 3 0 0 1-4.2-4.2L17.1 4.5a3 3 0 0 1 4.2 4.2z"></path>
+        <line x1="7.5" y1="10.5" x2="10.5" y2="7.5"></line>
+        <line x1="10.5" y1="13.5" x2="13.5" y2="10.5"></line>
+        <line x1="13.5" y1="16.5" x2="16.5" y2="13.5"></line>
+      </svg>
+      <span><%= lang === 'ml' ? 'വ്യക്തമായ സൈസ് ഗൈഡ്' : 'Clear size guide' %></span>
+    </div>
+    <div class="trust-item">
+      <svg class="trust-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+      </svg>
+      <span><%= lang === 'ml' ? 'വാട്സാപ്പ് സപ്പോർട്ട്' : 'WhatsApp support' %></span>
+    </div>
+  </div>
+</div>
+<% } else { %>
 <%
   const heroProducts = (typeof featuredProducts !== 'undefined' && featuredProducts && featuredProducts.length > 0)
     ? featuredProducts
@@ -204,4 +258,5 @@
   <a class="btn" href="https://www.youtube.com/@nestammakkili" target="_blank" rel="noopener"><%= t('home.ytBtn') %></a>
 </div>
 
+<% } %>
 <script src="/js/hero.js" defer></script>

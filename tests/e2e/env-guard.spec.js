@@ -41,7 +41,7 @@ test.describe('Startup Guard (src/utils/envGuard.js) Rules Verification', () => 
     process.env.RAZORPAY_KEY_ID = 'rzp_live_realLiveKey12345';
     process.env.SESSION_SECRET = 'a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0';
     process.env.COOKIE_SECRET = 'a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0';
-    process.env.ADMIN_PASSWORD = 'SuperSecurePass2026!Complex';
+    process.env.ADMIN_OWNER_EMAIL = 'devanandha2mail@gmail.com';
     process.env.STYLIST_KEY = 'stylist_prod_key_77889900';
     process.env.RAZORPAY_WEBHOOK_SECRET = 'rzp_webhook_secret_live_778899';
     process.env.SITE_URL = 'https://nestammakkili.com';
@@ -74,16 +74,16 @@ test.describe('Startup Guard (src/utils/envGuard.js) Rules Verification', () => 
     expect(capturedErrors.some(e => e.includes('COOKIE_SECRET'))).toBe(true);
   });
 
-  test('Rule 2c: In production, exits if ADMIN_PASSWORD is shorter than 12 characters or default', () => {
+  test('Rule 2c: In production, exits if ADMIN_OWNER_EMAIL is missing or invalid email format', () => {
     setupValidProductionEnv();
-    process.env.ADMIN_PASSWORD = 'admin123';
+    delete process.env.ADMIN_OWNER_EMAIL;
     expect(() => validateEnvironment()).toThrow('EXIT_1');
-    expect(capturedErrors.some(e => e.includes('ADMIN_PASSWORD'))).toBe(true);
+    expect(capturedErrors.some(e => e.includes('ADMIN_OWNER_EMAIL'))).toBe(true);
 
     setupValidProductionEnv();
-    process.env.ADMIN_PASSWORD = 'password';
+    process.env.ADMIN_OWNER_EMAIL = 'not-an-email';
     expect(() => validateEnvironment()).toThrow('EXIT_1');
-    expect(capturedErrors.some(e => e.includes('ADMIN_PASSWORD'))).toBe(true);
+    expect(capturedErrors.some(e => e.includes('ADMIN_OWNER_EMAIL'))).toBe(true);
   });
 
   test('Rule 2d: In production, exits if STYLIST_KEY is empty', () => {

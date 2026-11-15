@@ -156,12 +156,12 @@ async function testCustomerFlow() {
 
   // 9. Test Admin Customers List
   // Log in as admin to verify read-only customer list
-  const adminLoginRes = await fetch('http://localhost:3000/admin/login', {
+  const adminLoginRes = await fetch('http://localhost:3000/__test/admin-login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       email: 'admin@nestammakkili.com',
-      password: 'AdminNest2026!'
+      role: 'owner'
     }),
     redirect: 'manual'
   });

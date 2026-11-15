@@ -1,0 +1,157 @@
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:16px;">
+  <div>
+    <h1>Admin Team &amp; Access Control</h1>
+    <p style="margin:4px 0 0; color:var(--a-muted);">Google OAuth allowlist, role-based privileges, and 2-Step Verification compliance.</p>
+  </div>
+  <div style="display:flex; gap:12px;">
+    <a href="/admin/audit-logs" class="a-btn a-btn--subtle">View Audit Logs →</a>
+  </div>
+</div>
+
+<% if (typeof alert !== 'undefined' && alert) { %>
+  <div class="a-alert a-alert--<%= alert.type === 'ok' ? 'ok' : 'bad' %>" style="margin-bottom:24px;">
+    <%= alert.msg %>
+  </div>
+<% } %>
+
+<!-- 2SV Guidance Card -->
+<div class="a-card" style="margin-bottom:28px; border-left:4px solid var(--a-info);">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+    <div>
+      <h3 style="margin:0 0 6px; font-size:1.15rem; color:var(--a-info);">Mandatory 2-Step Verification Policy</h3>
+      <p style="margin:0; font-size:0.9rem; color:var(--a-muted); max-width:680px; line-height:1.5;">
+        Turn on Google 2-Step Verification (a passkey or authenticator app is best, not SMS) for every admin Gmail.
+        As store owner, verify that each team member has active 2SV on their Google Account, then mark them as confirmed below.
+      </p>
+    </div>
+    <a href="https://myaccount.google.com/signinoptions/two-step-verification" target="_blank" rel="noopener noreferrer" class="a-btn a-btn--subtle" style="white-space:nowrap;">
+      Google 2SV Settings ↗
+    </a>
+  </div>
+</div>
+
+<!-- Add New Admin Card -->
+<div class="a-card" style="margin-bottom:28px;">
+  <h2 style="font-size:1.25rem; margin:0 0 16px;">Grant New Admin Access</h2>
+  <form method="POST" action="/admin/users/add" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)) 160px; gap:16px; align-items:end;">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    
+    <div class="a-field" style="margin-bottom:0;">
+      <label for="newUserEmail">Google Email (Gmail / Google Workspace)</label>
+      <input id="newUserEmail" name="email" type="email" required placeholder="colleague@gmail.com">
+    </div>
+
+    <div class="a-field" style="margin-bottom:0;">
+      <label for="newUserRole">Role &amp; Permissions</label>
+      <select id="newUserRole" name="role">
+        <option value="staff">Staff (Products, Orders, Photos)</option>
+        <option value="owner">Owner (Full Store &amp; Admin Privileges)</option>
+      </select>
+    </div>
+
+    <div>
+      <button type="submit" class="a-btn" style="width:100%;">+ Add User</button>
+    </div>
+  </form>
+  <p style="font-size:0.8rem; color:var(--a-muted); margin:10px 0 0;">
+    New admins must sign in using the Google account matching this exact email. Passwords are never accepted.
+  </p>
+</div>
+
+<!-- Current Admin Allowlist Table -->
+<div class="a-card">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+    <h2 style="font-size:1.25rem; margin:0;">Active Admin Allowlist (<%= users.length %>)</h2>
+    <form method="POST" action="/admin/sign-out-everywhere" style="margin:0;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button type="submit" class="a-btn a-btn--subtle" style="font-size:0.85rem;" onclick="return confirm('Sign out from all active sessions on this account?');">
+        Sign Out Everywhere
+      </button>
+    </form>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table class="a-table" style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Google ID Link</th>
+          <th>2-Step Verification</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(function(u) { %>
+          <tr>
+            <td>
+              <strong style="color:var(--a-fg);"><%= u.email %></strong>
+              <% if (currentUser && String(currentUser._id) === String(u._id)) { %>
+                <span class="a-pill a-pill--ok" style="font-size:0.7rem; margin-left:6px;">You</span>
+              <% } %>
+            </td>
+            <td>
+              <form method="POST" action="/admin/users/toggle-role/<%= u._id %>" style="margin:0; display:inline-block;">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <select name="role" onchange="this.form.submit()" style="padding:4px 8px; font-size:0.85rem; border-radius:6px; background:var(--a-bg); color:var(--a-fg); border:1px solid var(--a-border);">
+                  <option value="owner" <%= u.role === 'owner' ? 'selected' : '' %>>Owner</option>
+                  <option value="staff" <%= u.role === 'staff' ? 'selected' : '' %>>Staff</option>
+                </select>
+              </form>
+            </td>
+            <td>
+              <span class="a-pill <%= u.active ? 'a-pill--ok' : 'a-pill--bad' %>">
+                <%= u.active ? 'Active' : 'Deactivated' %>
+              </span>
+            </td>
+            <td>
+              <% if (u.googleSub) { %>
+                <span style="color:var(--a-ok); font-size:0.85rem;" title="Bound to Google Sub: <%= u.googleSub %>">✓ Bound</span>
+              <% } else { %>
+                <span style="color:var(--a-muted); font-size:0.85rem;">Pending first login</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (u.confirmed2SV && u.confirmed2SV.confirmed) { %>
+                <div style="font-size:0.85rem; margin-bottom:4px;">
+                  <span class="a-pill a-pill--ok">✓ 2SV Confirmed</span>
+                </div>
+                <form method="POST" action="/admin/users/confirm-2sv/<%= u._id %>" style="margin:0; display:inline;">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="confirmed" value="false">
+                  <button type="submit" class="a-link" style="font-size:0.75rem; color:var(--a-muted); background:none; border:none; padding:0; cursor:pointer;">
+                    Unmark
+                  </button>
+                </form>
+              <% } else { %>
+                <form method="POST" action="/admin/users/confirm-2sv/<%= u._id %>" style="margin:0; display:inline;">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="confirmed" value="true">
+                  <button type="submit" class="a-btn a-btn--subtle" style="font-size:0.8rem; padding:4px 8px;">
+                    Mark 2SV Confirmed
+                  </button>
+                </form>
+              <% } %>
+            </td>
+            <td>
+              <form method="POST" action="/admin/users/toggle-active/<%= u._id %>" style="margin:0; display:inline;">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <% if (u.active) { %>
+                  <button type="submit" class="a-btn a-btn--bad" style="font-size:0.8rem; padding:4px 8px;" onclick="return confirm('Deactivate access for <%= u.email %>?');">
+                    Deactivate
+                  </button>
+                <% } else { %>
+                  <button type="submit" class="a-btn a-btn--ok" style="font-size:0.8rem; padding:4px 8px;">
+                    Reactivate
+                  </button>
+                <% } %>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
