@@ -8,6 +8,26 @@ const { logAdminAction } = require('../services/auditLogger');
  * Zero password authentication.
  */
 
+// Helper to sanitize returnTo path ensuring it is strictly a relative /admin path on this site
+function sanitizeReturnTo(url) {
+  if (!url || typeof url !== 'string') return '/admin';
+  const trimmed = url.trim();
+  // Reject protocol-relative (//evil.com), absolute URLs with schemes, backslashes, or control characters
+  if (
+    trimmed.startsWith('/') &&
+    !trimmed.startsWith('//') &&
+    !trimmed.includes('://') &&
+    !trimmed.includes('\\') &&
+    !trimmed.includes('\r') &&
+    !trimmed.includes('\n')
+  ) {
+    if (trimmed === '/admin' || trimmed.startsWith('/admin/')) {
+      return trimmed;
+    }
+  }
+  return '/admin';
+}
+
 // Helper to construct callback URL
 function getCallbackUrl(req) {
   if (process.env.GOOGLE_ADMIN_CALLBACK_URL) {
@@ -47,12 +67,15 @@ exports.getLogin = (req, res) => {
 exports.startGoogleAuth = (req, res) => {
   const state = crypto.randomBytes(32).toString('hex');
   const nonce = crypto.randomBytes(32).toString('hex');
+  const codeVerifier = crypto.randomBytes(32).toString('base64url');
+  const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
 
   req.session.adminOAuthState = state;
   req.session.adminOAuthNonce = nonce;
+  req.session.adminOAuthCodeVerifier = codeVerifier;
 
-  if (req.query.returnTo && req.query.returnTo.startsWith('/admin')) {
-    req.session.adminReturnTo = req.query.returnTo;
+  if (req.query.returnTo) {
+    req.session.adminReturnTo = sanitizeReturnTo(req.query.returnTo);
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID || 'dummy_client_id';
@@ -65,7 +88,9 @@ exports.startGoogleAuth = (req, res) => {
     `response_type=code&` +
     `scope=${encodeURIComponent('openid email profile')}&` +
     `state=${state}&` +
-    `nonce=${nonce}${promptParam}`;
+    `nonce=${nonce}&` +
+    `code_challenge=${codeChallenge}&` +
+    `code_challenge_method=S256${promptParam}`;
 
   res.redirect(authUrl);
 };
@@ -74,10 +99,14 @@ exports.startGoogleAuth = (req, res) => {
 exports.handleGoogleCallback = async (req, res, next) => {
   const { code, state, error } = req.query;
   const expectedState = req.session ? req.session.adminOAuthState : null;
+  const expectedNonce = req.session ? req.session.adminOAuthNonce : null;
+  const codeVerifier = req.session ? req.session.adminOAuthCodeVerifier : null;
 
-  // Clear state immediately to prevent replay
+  // Clear state, nonce, and code verifier immediately to prevent replay
   if (req.session) {
     req.session.adminOAuthState = null;
+    req.session.adminOAuthNonce = null;
+    req.session.adminOAuthCodeVerifier = null;
   }
 
   // 1. Verify state parameter
@@ -96,17 +125,22 @@ exports.handleGoogleCallback = async (req, res, next) => {
     const callbackUrl = getCallbackUrl(req);
     const tokenEndpoint = process.env.GOOGLE_TOKEN_URL || 'https://oauth2.googleapis.com/token';
 
+    const tokenParams = {
+      code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: callbackUrl,
+      grant_type: 'authorization_code'
+    };
+    if (codeVerifier) {
+      tokenParams.code_verifier = codeVerifier;
+    }
+
     // 2. Exchange authorization code for tokens
     const tokenRes = await fetch(tokenEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        code,
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: callbackUrl,
-        grant_type: 'authorization_code'
-      })
+      body: new URLSearchParams(tokenParams)
     });
 
     if (!tokenRes.ok) {
@@ -137,6 +171,14 @@ exports.handleGoogleCallback = async (req, res, next) => {
         email = payload.email;
         emailVerified = payload.email_verified === true || payload.email_verified === 'true';
         sub = payload.sub;
+        if (payload.nonce && expectedNonce && payload.nonce !== expectedNonce) {
+          await logAdminAction({
+            req,
+            action: 'ADMIN_OAUTH_NONCE_MISMATCH',
+            details: { expectedNonce, payloadNonce: payload.nonce }
+          });
+          return res.status(403).render('admin/unauthorized', { layout: false, title: 'Not Authorised' });
+        }
         if (payload.auth_time) authTime = payload.auth_time * 1000;
         else if (payload.iat) authTime = payload.iat * 1000;
       } catch (jwtErr) {
@@ -229,9 +271,9 @@ exports.handleGoogleCallback = async (req, res, next) => {
         details: { role: adminUser.role }
       });
 
-      const returnTo = req.session.adminReturnTo || '/admin';
+      const returnTo = sanitizeReturnTo(req.session.adminReturnTo);
       delete req.session.adminReturnTo;
-      res.redirect(returnTo.startsWith('/admin') ? returnTo : '/admin');
+      res.redirect(returnTo);
     });
 
   } catch (err) {

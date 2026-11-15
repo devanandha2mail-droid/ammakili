@@ -33,3 +33,4 @@ async function ensureInitialOwner() {
 }
 
 module.exports = { ensureInitialOwner };
+

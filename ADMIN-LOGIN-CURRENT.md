@@ -74,3 +74,4 @@ Session segregation is implemented in `src/app.js`:
 - **No email addresses are hard-coded in application source code.**
 - `src/utils/envGuard.js` validates that in production mode (`NODE_ENV === 'production'`), `ADMIN_OWNER_EMAIL` is defined and matches a valid email format (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`); if absent or invalid, the application fails startup immediately with a fatal error.
 - Initial owner creation currently takes place during launch initialization (`scripts/reset-for-launch.js`) or test setup (`tests/helpers/db.js`), reading directly from `process.env.ADMIN_OWNER_EMAIL`.
+
