@@ -45,6 +45,16 @@ module.exports = function setupTestHarness(app) {
         })
       });
     }
+    if (code.includes('code_inactive')) {
+      return res.json({
+        access_token: 'fake_access_token',
+        id_token: makeFakeIdToken({
+          email: 'inactive@nestammakkili.com',
+          email_verified: true,
+          sub: 'sub_inactive_555'
+        })
+      });
+    }
     if (code.includes('code_hijack')) {
       return res.json({
         access_token: 'fake_access_token',
@@ -153,8 +163,10 @@ module.exports = function setupTestHarness(app) {
         req.session.adminRole = admin.role;
         const authTime = req.body?.authTime || req.query?.authTime;
         req.session.adminAuthTime = authTime ? Number(authTime) : now;
-        req.session.adminSessionCreatedAt = now;
-        req.session.adminLastActiveAt = now;
+        const createdAt = req.body?.createdAt || req.query?.createdAt;
+        req.session.adminSessionCreatedAt = createdAt ? Number(createdAt) : now;
+        const lastActiveAt = req.body?.lastActiveAt || req.query?.lastActiveAt;
+        req.session.adminLastActiveAt = lastActiveAt ? Number(lastActiveAt) : now;
 
         req.session.save((err) => {
           if (err) return next(err);

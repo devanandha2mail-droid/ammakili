@@ -252,6 +252,8 @@ exports.handleGoogleCallback = async (req, res, next) => {
       await adminUser.save();
     }
 
+    const returnTo = sanitizeReturnTo(req.session.adminReturnTo);
+
     // 6. Regenerate session ID and establish authenticated admin session
     req.session.regenerate(async (err) => {
       if (err) return next(err);
@@ -273,8 +275,6 @@ exports.handleGoogleCallback = async (req, res, next) => {
         details: { role: adminUser.role }
       });
 
-      const returnTo = sanitizeReturnTo(req.session.adminReturnTo);
-      delete req.session.adminReturnTo;
       res.redirect(returnTo);
     });
 

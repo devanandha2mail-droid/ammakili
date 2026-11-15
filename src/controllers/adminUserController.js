@@ -16,6 +16,7 @@ exports.getUsers = async (req, res, next) => {
     if (success === 'added') alert = { type: 'ok', msg: 'Admin user added successfully.' };
     else if (error === 'cannot_deactivate_last_owner') alert = { type: 'bad', msg: 'Cannot deactivate the last active owner account.' };
     else if (error === 'cannot_demote_last_owner') alert = { type: 'bad', msg: 'Cannot demote the last active owner account.' };
+    else if (error === 'cannot_delete_last_owner') alert = { type: 'bad', msg: 'Cannot remove the last active owner account.' };
     else if (error === 'exists') alert = { type: 'bad', msg: 'An admin user with this email already exists.' };
     else if (error === 'invalid_email') alert = { type: 'bad', msg: 'Please enter a valid email address.' };
 
@@ -189,7 +190,7 @@ exports.postDeleteUser = async (req, res, next) => {
     if (targetUser.role === 'owner') {
       const activeOwnerCount = await AdminUser.countDocuments({ role: 'owner', active: true });
       if (activeOwnerCount <= 1) {
-        return res.redirect('/admin/users?error=cannot_deactivate_last_owner');
+        return res.redirect('/admin/users?error=cannot_delete_last_owner');
       }
     }
 

@@ -87,6 +87,13 @@ test.describe('Production Safety & Session Integrity Verification', () => {
     await apiContext.dispose();
   });
 
+  test('2b. /admin/test-login returns 404 in production environment', async () => {
+    const apiContext = await playwrightRequest.newContext({ baseURL: prodBaseURL });
+    const res = await apiContext.get('/admin/test-login?email=owner@nestammakkili.com&role=owner');
+    expect(res.status()).toBe(404);
+    await apiContext.dispose();
+  });
+
   test('3. Bad payment signature on POST /checkout/verify returns 400 and preserves pending order and stock', async () => {
     const apiContext = await playwrightRequest.newContext({ baseURL: prodBaseURL });
 
@@ -379,6 +386,28 @@ test.describe('Production Safety & Session Integrity Verification', () => {
 
     expect(cspViolations.length).toBe(0);
     await context.close();
+  });
+
+  test('9. Admin session cookie flags in production: __Host- prefix, Secure, HttpOnly, SameSite=Lax, and no Domain', async () => {
+    const apiContext = await playwrightRequest.newContext({ baseURL: prodBaseURL });
+    const res = await apiContext.get('/admin/auth/google', {
+      headers: { 'x-forwarded-proto': 'https' },
+      maxRedirects: 0
+    });
+    const setCookie = res.headers()['set-cookie'] || '';
+
+    // Must be prefixed with __Host-
+    expect(setCookie).toContain('__Host-nest_admin_sess=');
+    // Must be HttpOnly
+    expect(setCookie.toLowerCase()).toContain('httponly');
+    // Must be Secure
+    expect(setCookie.toLowerCase()).toContain('secure');
+    // Must be SameSite=Lax
+    expect(setCookie.toLowerCase()).toContain('samesite=lax');
+    // Must NOT have Domain attribute per __Host- cookie specification
+    expect(setCookie.toLowerCase()).not.toContain('domain=');
+
+    await apiContext.dispose();
   });
 });
 

@@ -317,4 +317,24 @@ test.describe('Rate Limiting Enforcement & Proxy Security Verification', () => {
       delete process.env.TRUST_PROXY_HOPS;
     }
   });
+
+  test('8. Admin OAuth callback rate limiter: returns 429 after 5 requests from the same IP (limit: 5)', async ({}, testInfo) => {
+    const clientIp = testInfo.project.name === 'mobile' ? '10.99.70.2' : '10.99.70.1';
+    for (let i = 1; i <= 5; i++) {
+      const api = await playwrightRequest.newContext({ baseURL: serverBaseURL });
+      const res = await api.get('/admin/auth/google/callback?code=fake&state=fake', {
+        headers: { 'x-forwarded-for': clientIp },
+        maxRedirects: 0
+      });
+      expect(res.status()).not.toBe(429);
+      await api.dispose();
+    }
+    const api6 = await playwrightRequest.newContext({ baseURL: serverBaseURL });
+    const limitedRes = await api6.get('/admin/auth/google/callback?code=fake&state=fake', {
+      headers: { 'x-forwarded-for': clientIp },
+      maxRedirects: 0
+    });
+    expect(limitedRes.status()).toBe(429);
+    await api6.dispose();
+  });
 });
