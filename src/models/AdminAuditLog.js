@@ -30,6 +30,10 @@ const adminAuditLogSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  userAgent: {
+    type: String,
+    default: ''
+  },
   requestId: {
     type: String,
     default: ''

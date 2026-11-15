@@ -208,14 +208,40 @@ exports.postDeleteUser = async (req, res, next) => {
   }
 };
 
-// 6. GET /admin/audit-logs
+// 7. GET /admin/audit-logs (Owner Only, with search and filters)
 exports.getAuditLogs = async (req, res, next) => {
   try {
-    const logs = await AdminAuditLog.find().sort({ createdAt: -1 }).limit(100);
+    const { q, action, adminEmail } = req.query;
+    const filter = {};
+
+    if (q && q.trim()) {
+      const escaped = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'i');
+      filter.$or = [
+        { target: regex },
+        { adminEmail: regex },
+        { requestId: regex },
+        { action: regex }
+      ];
+    }
+
+    if (action && action.trim()) {
+      filter.action = action.trim();
+    }
+
+    if (adminEmail && adminEmail.trim()) {
+      filter.adminEmail = adminEmail.trim().toLowerCase();
+    }
+
+    const logs = await AdminAuditLog.find(filter).sort({ createdAt: -1 }).limit(200);
+    const distinctActions = await AdminAuditLog.distinct('action');
+
     res.render('admin/audit-logs', {
       layout: 'layouts/admin',
       title: 'Admin Audit Logs (12-Month Retention)',
-      logs
+      logs,
+      query: { q: q || '', action: action || '', adminEmail: adminEmail || '' },
+      distinctActions
     });
   } catch (err) {
     next(err);

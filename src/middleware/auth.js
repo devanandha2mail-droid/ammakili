@@ -18,6 +18,7 @@ const requireAdmin = async (req, res, next) => {
 
   // 1. Check 30-minute idle timeout
   if (req.session.adminLastActiveAt && (now - req.session.adminLastActiveAt > IDLE_TIMEOUT_MS)) {
+    await logAdminAction({ req, action: 'ADMIN_SESSION_IDLE_TIMEOUT' });
     req.session.destroy(() => {
       res.redirect('/admin/login?reason=idle_timeout');
     });
@@ -26,6 +27,7 @@ const requireAdmin = async (req, res, next) => {
 
   // 2. Check 8-hour absolute session lifetime
   if (req.session.adminSessionCreatedAt && (now - req.session.adminSessionCreatedAt > ABSOLUTE_TIMEOUT_MS)) {
+    await logAdminAction({ req, action: 'ADMIN_SESSION_EXPIRED' });
     req.session.destroy(() => {
       res.redirect('/admin/login?reason=session_expired');
     });

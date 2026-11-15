@@ -12,6 +12,7 @@ const photoStylist = require('../services/photoStylist');
 const photoJobWorker = require('../services/photoJobWorker');
 const stylistUpload = require('../services/stylistUpload');
 const { processUploadedFiles } = require('../services/upload');
+const { logAdminAction } = require('../services/auditLogger');
 
 // Admin Dashboard
 exports.getDashboard = async (req, res, next) => {
@@ -312,6 +313,13 @@ exports.postAddProduct = async (req, res, next) => {
       await PhotoJob.updateMany({ draftId }, { $set: { productId: newProduct._id } });
     }
 
+    await logAdminAction({
+      req,
+      action: 'PRODUCT_CREATED',
+      target: newProduct.slug,
+      details: { name: newProduct.name.en, price: newProduct.price, sizes: newProduct.sizes }
+    });
+
     res.redirect('/admin/products');
   } catch (err) {
     next(err);
@@ -422,6 +430,18 @@ exports.postEditProduct = async (req, res, next) => {
     product.active = Boolean(active);
 
     await product.save();
+
+    await logAdminAction({
+      req,
+      action: 'PRODUCT_UPDATED',
+      target: product.slug,
+      details: {
+        price: product.price,
+        sizes: product.sizes,
+        active: product.active
+      }
+    });
+
     res.redirect('/admin/products');
   } catch (err) {
     next(err);
@@ -454,6 +474,13 @@ exports.deleteProduct = async (req, res, next) => {
       }
 
       await Product.findByIdAndDelete(req.params.id);
+
+      await logAdminAction({
+        req,
+        action: 'PRODUCT_DELETED',
+        target: product.slug,
+        details: { name: product.name.en, id: product._id }
+      });
     }
     res.redirect('/admin/products');
   } catch (err) {
@@ -548,6 +575,14 @@ exports.postUpdateOrderStatus = async (req, res, next) => {
     if (adminNotes !== undefined) order.adminNotes = adminNotes.trim();
 
     await order.save();
+
+    await logAdminAction({
+      req,
+      action: 'ORDER_STATUS_UPDATED',
+      target: order.readableId || String(order._id),
+      details: { status: order.status, courier, trackingId }
+    });
+
     res.redirect(`/admin/orders/${order._id}`);
   } catch (err) {
     next(err);
@@ -590,6 +625,13 @@ exports.postRetryRefund = async (req, res, next) => {
     order.payment.status = 'refunded';
     order.adminNotes = (order.adminNotes ? order.adminNotes + '\n' : '') + `Refund manually retried and processed. Refund ID: ${refundRes.id}`;
     await order.save();
+
+    await logAdminAction({
+      req,
+      action: 'ADMIN_REFUND_ISSUED',
+      target: order.readableId || String(order._id),
+      details: { refundId: refundRes.id, amount: order.total }
+    });
 
     res.redirect(`/admin/orders/${order._id}?success=refund_retried`);
   } catch (err) {

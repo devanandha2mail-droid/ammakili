@@ -8,6 +8,32 @@
   </div>
 </div>
 
+<!-- Search & Filters -->
+<div class="a-card" style="margin-bottom:20px; padding:16px 20px;">
+  <form method="GET" action="/admin/audit-logs" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+    <div style="flex:1; min-width:200px;">
+      <input type="text" name="q" value="<%= query.q || '' %>" placeholder="Search target, email, action, request ID..." style="width:100%; padding:8px 12px; font-size:0.85rem; border-radius:6px; background:var(--a-bg); color:var(--a-fg); border:1px solid var(--a-border);">
+    </div>
+    <div style="min-width:160px;">
+      <select name="action" style="width:100%; padding:8px 12px; font-size:0.85rem; border-radius:6px; background:var(--a-bg); color:var(--a-fg); border:1px solid var(--a-border);">
+        <option value="">All Actions</option>
+        <% (distinctActions || []).forEach(function(act) { %>
+          <option value="<%= act %>" <%= query.action === act ? 'selected' : '' %>><%= act %></option>
+        <% }); %>
+      </select>
+    </div>
+    <div style="min-width:180px;">
+      <input type="text" name="adminEmail" value="<%= query.adminEmail || '' %>" placeholder="Filter by admin email..." style="width:100%; padding:8px 12px; font-size:0.85rem; border-radius:6px; background:var(--a-bg); color:var(--a-fg); border:1px solid var(--a-border);">
+    </div>
+    <div>
+      <button type="submit" class="a-btn" style="padding:8px 16px; font-size:0.85rem;">Filter</button>
+      <% if (query.q || query.action || query.adminEmail) { %>
+        <a href="/admin/audit-logs" class="a-btn a-btn--subtle" style="padding:8px 14px; font-size:0.85rem; margin-left:6px;">Reset</a>
+      <% } %>
+    </div>
+  </form>
+</div>
+
 <div class="a-card">
   <div style="overflow-x:auto;">
     <table class="a-table" style="width:100%; border-collapse:collapse;">
@@ -18,6 +44,7 @@
           <th>Action</th>
           <th>Target</th>
           <th>IP Address</th>
+          <th>User Agent</th>
           <th>Request ID</th>
           <th>Details</th>
         </tr>
@@ -25,7 +52,7 @@
       <tbody>
         <% if (!logs || logs.length === 0) { %>
           <tr>
-            <td colspan="7" style="text-align:center; padding:32px; color:var(--a-muted);">No audit events recorded yet.</td>
+            <td colspan="8" style="text-align:center; padding:32px; color:var(--a-muted);">No audit events matching criteria.</td>
           </tr>
         <% } else { %>
           <% logs.forEach(function(l) { %>
@@ -33,12 +60,15 @@
               <td style="white-space:nowrap; font-size:0.85rem;"><%= new Date(l.createdAt).toLocaleString('en-IN') %></td>
               <td><strong><%= l.adminEmail %></strong></td>
               <td>
-                <span class="a-pill <%= l.action.includes('FAIL') || l.action.includes('DENIED') || l.action.includes('DEACTIVATED') ? 'a-pill--bad' : 'a-pill--ok' %>" style="font-size:0.75rem;">
+                <span class="a-pill <%= l.action.includes('FAIL') || l.action.includes('REFUSED') || l.action.includes('DENIED') || l.action.includes('DEACTIVATED') || l.action.includes('REMOVED') ? 'a-pill--bad' : 'a-pill--ok' %>" style="font-size:0.75rem;">
                   <%= l.action %>
                 </span>
               </td>
               <td style="font-size:0.85rem;"><%= l.target || '—' %></td>
               <td style="font-size:0.8rem; font-family:monospace;"><%= l.ip || '—' %></td>
+              <td style="font-size:0.75rem; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="<%= l.userAgent || '' %>">
+                <%= (l.userAgent || '—').slice(0, 30) %>
+              </td>
               <td style="font-size:0.8rem; font-family:monospace;"><%= (l.requestId || '').slice(0, 8) || '—' %></td>
               <td style="font-size:0.8rem; max-width:240px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="<%= JSON.stringify(l.details) %>">
                 <%= JSON.stringify(l.details) %>
