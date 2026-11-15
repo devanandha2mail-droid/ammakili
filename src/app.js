@@ -388,7 +388,7 @@ if (process.env.NODE_ENV === 'test') {
 } else {
   // In production builds, explicitly ensure test-only login endpoints return 404
   app.use((req, res, next) => {
-    if (req.path === '/admin/test-login' || req.path === '/__test' || req.path.startsWith('/__test/')) {
+    if (req.path === '/admin/test-login') {
       return res.status(404).send('Not Found');
     }
     next();

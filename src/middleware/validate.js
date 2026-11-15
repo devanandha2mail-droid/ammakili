@@ -10,7 +10,16 @@ function validateBody(schema) {
         path: i.path.join('.'),
         message: i.message
       }));
-      if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json')) || req.path.startsWith('/checkout') || req.path.startsWith('/cart')) {
+      const url = req.originalUrl || req.url || '';
+      const isJson = req.xhr ||
+        (req.headers.accept && req.headers.accept.includes('application/json')) ||
+        (req.headers['content-type'] && req.headers['content-type'].includes('application/json')) ||
+        url.startsWith('/checkout') ||
+        url.startsWith('/cart') ||
+        req.path.startsWith('/checkout') ||
+        req.path.startsWith('/cart');
+
+      if (isJson) {
         return res.status(400).json({
           error: {
             code: 'VALIDATION_ERROR',
