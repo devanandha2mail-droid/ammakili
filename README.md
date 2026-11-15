@@ -164,9 +164,11 @@ npm run dev
 
 Visit the online shop: [http://localhost:3000](http://localhost:3000)  
 Visit the admin console: [http://localhost:3000/admin](http://localhost:3000/admin)  
-Default Admin Login:
-- **Email:** `admin@nestammakkili.com`
-- **Password:** `AdminNest2026!`
+
+### Admin Authentication:
+- Admin access is strictly authenticated via **Google Sign-In with an allowlist** (`AdminUser` collection). There are zero passwords, password fields, or password-hashing mechanisms.
+- The initial owner is automatically provisioned on first startup from `ADMIN_OWNER_EMAIL`.
+- Unlisted Google accounts receive a generic 403 "Not Authorised" response with zero information leakage.
 
 ---
 
@@ -199,8 +201,10 @@ To allow customers to sign in with their Google accounts:
    - Navigate to **APIs & Services > Credentials > Create Credentials > OAuth client ID**.
    - Choose Application type: **Web application**.
    - Under **Authorised redirect URIs**, add:
-     - For local development: `http://localhost:3000/auth/google/callback`
-     - For production: `https://your-domain.com/auth/google/callback`
+     - For customer local development: `http://localhost:3000/auth/google/callback`
+     - For customer production: `https://nestammakkili.com/auth/google/callback`
+     - For admin local development: `http://localhost:3000/admin/auth/google/callback`
+     - For admin production: `https://nestammakkili.com/admin/auth/google/callback`
    - Click **Create** and copy your **Client ID** and **Client Secret**.
 4. **Update `.env`:**
    ```env
@@ -209,6 +213,63 @@ To allow customers to sign in with their Google accounts:
    GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
    REQUIRE_LOGIN_AT_CHECKOUT=false
    ```
+
+---
+
+## 🔐 Admin Authentication, Google Allowlist & Team Management
+
+Admin access to Nest by Ammakkili is strictly protected via **Google Sign-In with an allowlist** (`AdminUser` collection). There are zero passwords, password fields, or password-hashing mechanisms.
+
+### 1. Setting the Initial Owner (`ADMIN_OWNER_EMAIL`)
+- In your `.env`, define the store owner's Google account:
+  ```env
+  ADMIN_OWNER_EMAIL=your.owner.email@gmail.com
+  ```
+- On server startup, if no owner exists in MongoDB, the system automatically provisions an active `owner` account with this email.
+- In production, `src/utils/envGuard.js` verifies that `ADMIN_OWNER_EMAIL` is set and is a valid email; the server will halt on boot if missing or invalid.
+- **Never hardcode emails in source code.**
+
+### 2. Configuring Google OAuth Client for Admin Sign-In
+In your Google Cloud Console OAuth 2.0 Client credentials:
+- Add the dedicated admin callback endpoints to **Authorised redirect URIs**:
+  - **Local Development:** `http://localhost:3000/admin/auth/google/callback`
+  - **Production:** `https://nestammakkili.com/admin/auth/google/callback`
+- The admin flow enforces PKCE (SHA-256 code challenge/verifier), OpenID Connect `nonce` verification, state clearing on consumption, and automatic redirect URI resolution.
+
+### 3. Adding and Managing Administrators
+- Log in to `/admin` as an Owner and navigate to **Admin Team** (`/admin/users`).
+- Enter the new administrator's Gmail or Google Workspace email, select their role (`staff` or `owner`), and click **Grant Access**.
+- **Role Privileges:**
+  - `owner`: Full privileges (product management, orders, customer exports, refunds, store settings, legal confirmations, admin team management, audit logs).
+  - `staff`: Operational duties (products, photos, orders, fulfillment). Blocked with 403 on Settings, business details, refunds, customer exports, and admin team management.
+- **Sensitive Action Gating (5-Minute Fresh Auth):**
+  - Adding/modifying/removing admins, changing store/legal settings, or issuing refunds requires a fresh Google sign-in within the last 5 minutes.
+  - If the last sign-in is older than 5 minutes, the admin is automatically redirected to Google's account chooser (`prompt=select_account`) and returned seamlessly to the action upon verification.
+- **Safety Invariant:**
+  - The last active owner can **never** be deleted, deactivated, or demoted to staff.
+  - Deactivated admins lose access immediately on their next HTTP request.
+
+### 4. Break-Glass Emergency CLI Commands
+If all owners lose Google OAuth access, administrative access can be audited and managed directly via terminal commands (requires SSH/server shell access):
+- **List all admins:**
+  ```bash
+  npm run admin:list
+  ```
+- **Grant or promote an admin:**
+  ```bash
+  npm run admin:grant -- colleague@gmail.com owner
+  npm run admin:grant -- staffmember@gmail.com staff
+  ```
+- **Revoke an admin immediately:**
+  ```bash
+  npm run admin:revoke -- email@gmail.com
+  ```
+All CLI actions are recorded in the audit log collection (`admin_audit_logs`) with terminal context and timestamps.
+
+### 5. Google 2-Step Verification (2SV) Compliance
+- Google OAuth does not expose an API for third parties to inspect 2SV configuration on individual accounts.
+- Owners must verify with each administrator that Google 2-Step Verification (passkeys or authenticator apps, avoiding SMS) is active, and record the manual confirmation tick in `/admin/users`.
+- The Launch Checklist on `/admin` requires 100% of active admins to have confirmed 2SV before turning green.
 
 ---
 

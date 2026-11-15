@@ -48,13 +48,32 @@ If you discover a security vulnerability or potential exposure within Nest by Am
 ## 3. Technical Security Architecture & Controls
 
 ### 3.1 Zero-Password Admin Authentication & Allowlist
-- **Google OAuth 2.0 Only:** No password credentials, hash tables, or password-reset flows exist for admin users.
-- **Strict Allowlist Enforcement:** Sign-in is restricted to explicitly authorized emails stored in the `AdminUser` collection (`admin_users`).
-- **Cryptographic Subject (`sub`) Pinning:** The Google `sub` identifier is permanently pinned on initial login; account swapping or replaying tokens with differing identities is rejected with 403.
-- **Role-Based Access Control (RBAC):** Privileges are partitioned into `owner` and `staff`. Critical administrative actions (managing admins, modifying legal business settings) require `owner` privileges.
-- **5-Minute Freshness Re-Authentication:** High-risk actions (adding/deleting admins, updating business/legal configurations) require that the admin has authenticated within the last 5 minutes.
-- **Immediate Invalidation:** Deactivating an admin user revokes access immediately on their next HTTP request.
-- **Separate Admin Cookie:** Admin sessions are partitioned onto `__Host-nest_admin_sess` with a 30-minute rolling idle timeout and an 8-hour absolute maximum lifetime, isolated from customer storefront sessions.
+
+The administrative console (`/admin`) operates exclusively on **Google Sign-In with a database-backed allowlist** (`AdminUser` collection). There are zero passwords, password fields, credential hash stores, or password-reset flows.
+
+#### Controls Implemented:
+1. **Google OAuth 2.0 with PKCE & Nonce:** The authorization exchange enforces SHA-256 code challenge/verifier (PKCE), OpenID Connect `nonce` verification, single-use state tokens, and strict IP rate limiting (5 attempts per 15 minutes).
+2. **Strict Allowlist & Uniform 403 Response:** Only emails present in `AdminUser` with `active: true` and Google-verified email status (`email_verified: true`) are permitted. Unlisted emails and deactivated admins receive an identical generic 403 "Not Authorised" page with matching timing, preventing allowlist enumeration.
+3. **Cryptographic Subject (`sub`) Binding:** On first login, the admin's unique Google account subject (`sub`) is permanently stored. Subsequent logins must match the bound `sub`; attempts to authenticate using a different Google account under the same email are rejected.
+4. **Session Regeneration & Isolation:** Upon successful OAuth callback, `req.session.regenerate()` assigns a fresh session ID. Admin sessions (`__Host-nest_admin_sess`, stored in `admin_sessions`) are completely separated from customer storefront sessions (`__Host-nest_sess`, stored in `sessions`). Customer credentials cannot access `/admin`.
+5. **Timeouts & Revocation:** Admin sessions enforce a 30-minute rolling idle timeout and an 8-hour absolute maximum lifetime. Logging out destroys the server session; "Sign out everywhere" purges all active sessions in MongoDB and invalidates any session created prior to `sessionValidAfter`. Deactivated admins are booted on their next HTTP request.
+6. **Role-Based Access Control (RBAC):** Privileges are partitioned into `owner` and `staff`. Staff members can manage products, photos, and orders, but are blocked from store settings, business/legal details, refunds, customer exports, and admin user management.
+7. **Immutable Last Owner Invariant:** The database enforces that the last active `owner` cannot be deleted, deactivated, or demoted to staff.
+8. **Sensitive Action Gating (5-Minute Fresh Auth):** High-risk actions (adding/deleting admins, updating store/legal settings, issuing refunds) require an authentication event within the past 5 minutes. Older sessions are redirected to Google's account chooser (`prompt=select_account`).
+9. **Open Redirect Mitigation:** The post-login `returnTo` redirect path is sanitized strictly against an internal whitelist; external domains (`https://evil.example`) and protocol-relative URLs (`//evil.example`) are discarded in favor of `/admin`.
+10. **Cache-Control & Headers:** Every `/admin` route transmits `Cache-Control: no-store, no-cache, must-revalidate, private` to prevent sensitive admin panels from being stored in intermediate or browser caches.
+
+#### What These Controls Protect Against:
+- **Credential Stuffing & Password Leaks:** Eliminating passwords prevents brute force, dictionary attacks, rainbow table matching, and compromise via third-party database leaks.
+- **Replay Attacks:** Single-use state and code verifiers prevent intercepted authorization codes from being reused.
+- **Token Tampering & Identity Spoofing:** Google `sub` binding prevents token substitution or rogue account re-registration.
+- **Session Fixation & Hijacking:** Session regeneration on authentication, strict `__Host-` cookies (`HttpOnly; Secure; SameSite=Lax; Path=/` without `Domain`), idle/absolute timeouts, and `no-store` headers protect against session theft.
+- **Privilege Escalation & Insecure Direct Object References (IDOR):** Strict middleware checks verify role and active status on every request, preventing staff from performing owner actions.
+- **Session Confusion:** Distinct session cookies, separate database collections, and explicit session flags prevent customer sessions from masquerading as admin sessions.
+
+#### Known Limitations & Trust Assumptions:
+- **5-Minute Fresh Auth vs Hardware Keys:** The 5-minute Google account chooser prompt is designed for usability and administrative ergonomics without requiring custom 2FA infrastructure. However, it is weaker than requiring a hardware security key (FIDO2/WebAuthn) or dedicated time-based one-time password (TOTP) code on every sensitive operation. If an unauthorized person gains physical access to an unlocked administrator computer with an active Google session, the account chooser could be satisfied.
+- **Reliance on Google 2-Step Verification:** Real, robust defense-in-depth relies on each administrator enabling **Google 2-Step Verification (2SV)** (preferably passkeys, Titan/YubiKey security keys, or authenticator apps, while avoiding SMS) on their Google account. Because third-party web apps cannot programmatically audit 2SV status through standard OAuth scopes, store owners must manually verify and confirm 2SV compliance for all administrators.
 
 ### 3.2 Input Validation & Injection Prevention
 - **Strict Zod Schemas:** All mutating endpoints (`/checkout/create`, `/checkout/verify`, `/checkout/cancel`, `/cart/validate`, `/track-order`, `/contact`) enforce strict Zod schemas.
