@@ -135,18 +135,28 @@
               <% } %>
             </td>
             <td>
-              <form method="POST" action="/admin/users/toggle-active/<%= u._id %>" style="margin:0; display:inline;">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <% if (u.active) { %>
-                  <button type="submit" class="a-btn a-btn--bad" style="font-size:0.8rem; padding:4px 8px;" onclick="return confirm('Deactivate access for <%= u.email %>?');">
-                    Deactivate
-                  </button>
-                <% } else { %>
-                  <button type="submit" class="a-btn a-btn--ok" style="font-size:0.8rem; padding:4px 8px;">
-                    Reactivate
-                  </button>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <form method="POST" action="/admin/users/toggle-active/<%= u._id %>" style="margin:0; display:inline;">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <% if (u.active) { %>
+                    <button type="submit" class="a-btn a-btn--bad" style="font-size:0.8rem; padding:4px 8px;" onclick="return confirm('Deactivate access for <%= u.email %>?');">
+                      Deactivate
+                    </button>
+                  <% } else { %>
+                    <button type="submit" class="a-btn a-btn--ok" style="font-size:0.8rem; padding:4px 8px;">
+                      Reactivate
+                    </button>
+                  <% } %>
+                </form>
+                <% if (!u.active || u.role !== 'owner') { %>
+                  <form method="POST" action="/admin/users/delete/<%= u._id %>" style="margin:0; display:inline;">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="a-btn a-btn--subtle" style="font-size:0.8rem; padding:4px 8px; color:var(--a-bad);" onclick="return confirm('Permanently remove admin <%= u.email %>?');">
+                      Remove
+                    </button>
+                  </form>
                 <% } %>
-              </form>
+              </div>
             </td>
           </tr>
         <% }); %>

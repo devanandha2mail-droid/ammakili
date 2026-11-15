@@ -68,6 +68,7 @@ router.get('/users', requireOwner, adminUserController.getUsers);
 router.post('/users/add', requireOwner, requireFreshAuth, adminUserController.postAddUser);
 router.post('/users/toggle-active/:id', requireOwner, requireFreshAuth, adminUserController.postToggleActive);
 router.post('/users/toggle-role/:id', requireOwner, requireFreshAuth, adminUserController.postToggleRole);
+router.post('/users/delete/:id', requireOwner, requireFreshAuth, adminUserController.postDeleteUser);
 router.post('/users/confirm-2sv/:id', requireOwner, adminUserController.postConfirm2SV);
 
 // Audit Logs (Owner Only)

@@ -159,6 +159,8 @@ exports.postConfirm2SV = async (req, res, next) => {
       confirmedAt: isConfirmed ? new Date() : null,
       confirmedBy: isConfirmed ? req.admin.email : null
     };
+    targetUser.twoStepConfirmedAt = isConfirmed ? new Date() : null;
+    targetUser.twoStepConfirmedBy = isConfirmed ? req.admin.email : null;
     await targetUser.save();
 
     await logAdminAction({
@@ -166,6 +168,38 @@ exports.postConfirm2SV = async (req, res, next) => {
       action: 'ADMIN_2SV_CONFIRMATION_UPDATED',
       target: targetUser.email,
       details: { confirmed: isConfirmed }
+    });
+
+    res.redirect('/admin/users');
+  } catch (err) {
+    next(err);
+  }
+};
+
+// 6. POST /admin/users/delete/:id
+exports.postDeleteUser = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const targetUser = await AdminUser.findById(id);
+    if (!targetUser) {
+      return res.redirect('/admin/users');
+    }
+
+    // Safety rule: Last active owner cannot be removed
+    if (targetUser.role === 'owner') {
+      const activeOwnerCount = await AdminUser.countDocuments({ role: 'owner', active: true });
+      if (activeOwnerCount <= 1) {
+        return res.redirect('/admin/users?error=cannot_deactivate_last_owner');
+      }
+    }
+
+    await AdminUser.findByIdAndDelete(id);
+
+    await logAdminAction({
+      req,
+      action: 'ADMIN_USER_REMOVED',
+      target: targetUser.email,
+      details: { role: targetUser.role, id: targetUser._id }
     });
 
     res.redirect('/admin/users');
