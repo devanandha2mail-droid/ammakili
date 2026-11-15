@@ -1,4 +1,6 @@
 <div class="wrap pg narrow">
+  <%- include('../partials/legal-template-warning') %>
+
   <!-- Brand Medallion in Glass Frame -->
   <div style="text-align:center; margin-bottom:36px;">
     <div class="item" style="display:inline-block; padding:24px; border-radius:36px; background:var(--glass2); box-shadow:var(--sh);">
@@ -10,7 +12,7 @@
           sizes="260px" 
           width="260" 
           height="260" 
-          alt="Nest by Ammakkili logo"
+          alt="<%= settings.tradeName %> logo"
           style="display:block; max-width:100%; height:auto; filter:drop-shadow(0 8px 18px rgba(137, 34, 69, 0.25));"
         >
       </picture>
@@ -28,13 +30,14 @@
     <p style="color:var(--muted); font-size:0.95rem; margin-bottom:16px;">
       Explore nighty drapes, neckline tailoring, and vibrant prints on our official YouTube channel:
     </p>
-    <a href="https://www.youtube.com/@nestammakkili" target="_blank" rel="noopener" class="btn small">
+    <a href="<%= settings.social?.youtube || 'https://www.youtube.com/@nestammakkili' %>" target="_blank" rel="noopener" class="btn small">
       Visit @nestammakkili on YouTube
     </a>
   </div>
 
-  <p style="margin-top:32px;">
+  <p style="margin-top:32px; margin-bottom:32px;">
     <a class="btn" href="/shop"><%= t('about.cta') %></a>
   </p>
-</div>
 
+  <%- include('../partials/legal-contact-card') %>
+</div>

@@ -1,6 +1,6 @@
 <div style="margin-bottom:24px;">
   <h1 style="font-size:2rem; margin:0; font-family:var(--a-serif); color:var(--a-ink);">Store Settings</h1>
-  <p style="color:var(--a-muted); margin:4px 0 0;">Configure global fulfillment charges, WhatsApp contact, inventory thresholds, and announcement text.</p>
+  <p style="color:var(--a-muted); margin:4px 0 0;">Configure business legal details, consumer protection grievance contact, fulfillment parameters, and legal page compliance.</p>
 </div>
 
 <% if (saved) { %>
@@ -9,54 +9,200 @@
   </div>
 <% } %>
 
+<% if (typeof req !== 'undefined' && req.query && req.query.error === 'invalid_gstin') { %>
+  <div class="a-alert a-alert--error" style="margin-bottom:24px;">
+    ✕ Invalid GSTIN format. An Indian GSTIN must be exactly 15 characters (e.g. 32AAAAA0000A1Z5).
+  </div>
+<% } %>
+
+<% if (!settings.legalPagesConfirmed) { %>
+  <div class="a-alert a-alert--warn" style="margin-bottom:24px; border-left:4px solid #f59e0b; background:#fffbeb; padding:16px; border-radius:6px;">
+    <strong style="color:#b45309; display:block; margin-bottom:4px;">⚠️ Action Required: Legal Pages Confirmation</strong>
+    <p style="color:#92400e; margin:0; font-size:0.92rem;">
+      Template text: replace with the client's approved wording before real sales begin.
+      Once all business details, addresses, and policies have been verified by the business owner or legal counsel, check the confirmation box below to certify production readiness.
+    </p>
+  </div>
+<% } else { %>
+  <div class="a-alert a-alert--ok" style="margin-bottom:24px; border-left:4px solid #10b981; background:#ecfdf5; padding:16px; border-radius:6px;">
+    <strong style="color:#047857; display:block; margin-bottom:4px;">✓ Legal Pages & Business Details Confirmed</strong>
+    <p style="color:#065f46; margin:0; font-size:0.88rem;">
+      Confirmed by <strong><%= settings.legalPagesConfirmedBy || 'Owner' %></strong> on <%= settings.legalPagesConfirmedAt ? new Date(settings.legalPagesConfirmedAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : 'Launch' %>.
+    </p>
+  </div>
+<% } %>
+
 <form method="POST" action="/admin/settings" class="a-card a-form">
   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
-  <div class="a-grid-2">
-    <!-- Flat Shipping Charge -->
-    <div class="a-field">
-      <label for="shippingCharge">Flat Shipping Charge (₹ INR) *</label>
-      <input id="shippingCharge" name="shippingCharge" type="number" min="0" step="1" required value="<%= settings.shippingCharge %>">
-      <small style="color:var(--a-muted); font-size:0.8rem; display:block; margin-top:6px;">Applied to all checkout orders automatically (Default: ₹60).</small>
+  <!-- Section 1: Business Identification -->
+  <div style="margin-bottom:32px; border-bottom:1px solid var(--a-border); padding-bottom:24px;">
+    <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--a-ink); font-weight:600;">1. Business Identification & Registration</h3>
+    <p style="color:var(--a-muted); font-size:0.88rem; margin:0 0 16px;">Required by the Consumer Protection (E-Commerce) Rules and Razorpay compliance.</p>
+
+    <div class="a-grid-2">
+      <div class="a-field">
+        <label for="legalBusinessName">Legal Business Name *</label>
+        <input id="legalBusinessName" name="legalBusinessName" required value="<%= settings.legalBusinessName || '' %>" placeholder="e.g. Nest by Ammakkili Apparel">
+      </div>
+      <div class="a-field">
+        <label for="tradeName">Trade Name (Brand Name) *</label>
+        <input id="tradeName" name="tradeName" required value="<%= settings.tradeName || 'Nest by Ammakkili' %>" placeholder="Nest by Ammakkili">
+      </div>
     </div>
 
-    <!-- WhatsApp Support Number -->
-    <div class="a-field">
-      <label for="whatsappNumber">WhatsApp Support Number *</label>
-      <input id="whatsappNumber" name="whatsappNumber" required value="<%= settings.whatsappNumber %>" placeholder="e.g. 919876543210">
-      <small style="color:var(--a-muted); font-size:0.8rem; display:block; margin-top:6px;">With country code, no + or spaces (e.g. 919876543210).</small>
+    <div class="a-grid-2" style="margin-top:12px;">
+      <div class="a-field">
+        <label for="registeredAddress">Registered Address *</label>
+        <textarea id="registeredAddress" name="registeredAddress" rows="3" required placeholder="Full registered legal office address"><%= settings.registeredAddress || '' %></textarea>
+      </div>
+      <div class="a-field">
+        <label for="operatingAddress">Operating / Fulfillment Address *</label>
+        <textarea id="operatingAddress" name="operatingAddress" rows="3" required placeholder="Workshop or dispatch warehouse address"><%= settings.operatingAddress || '' %></textarea>
+      </div>
+    </div>
+
+    <div class="a-grid-3" style="margin-top:12px;">
+      <div class="a-field">
+        <label for="contactEmail">Official Contact Email *</label>
+        <input id="contactEmail" name="contactEmail" type="email" required value="<%= settings.contactEmail || '' %>" placeholder="care@nestammakkili.com">
+      </div>
+      <div class="a-field">
+        <label for="contactPhone">Contact Phone Number *</label>
+        <input id="contactPhone" name="contactPhone" required value="<%= settings.contactPhone || '' %>" placeholder="+91 98460 12345">
+      </div>
+      <div class="a-field">
+        <label for="whatsappNumber">WhatsApp Support Number *</label>
+        <input id="whatsappNumber" name="whatsappNumber" required value="<%= settings.whatsappNumber %>" placeholder="919846012345">
+      </div>
+    </div>
+
+    <div class="a-grid-2" style="margin-top:12px;">
+      <div class="a-field">
+        <label for="gstin">GSTIN (Goods and Services Tax ID)</label>
+        <input id="gstin" name="gstin" value="<%= settings.gstin || '' %>" placeholder="e.g. 32AAAAA0000A1Z5 (optional if not registered)">
+        <small style="color:var(--a-muted); font-size:0.8rem; display:block; margin-top:4px;">15-character alphanumeric GSTIN format.</small>
+      </div>
+      <div class="a-field">
+        <label for="businessHours">Business Hours *</label>
+        <input id="businessHours" name="businessHours" required value="<%= settings.businessHours || 'Monday to Saturday, 9:00 AM – 6:00 PM IST' %>">
+      </div>
     </div>
   </div>
 
-  <div class="a-grid-2">
-    <!-- Low Stock Alert Threshold -->
-    <div class="a-field">
-      <label for="lowStockThreshold">Low-Stock Alert Threshold *</label>
-      <input id="lowStockThreshold" name="lowStockThreshold" type="number" min="1" required value="<%= settings.lowStockThreshold || 3 %>">
-      <small style="color:var(--a-muted); font-size:0.8rem; display:block; margin-top:6px;">Units remaining to trigger dashboard low-stock warning.</small>
+  <!-- Section 2: Grievance Redressal Officer -->
+  <div style="margin-bottom:32px; border-bottom:1px solid var(--a-border); padding-bottom:24px;">
+    <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--a-ink); font-weight:600;">2. Grievance Redressal Officer</h3>
+    <p style="color:var(--a-muted); font-size:0.88rem; margin:0 0 16px;">Mandatory under Consumer Protection (E-Commerce) Rules, 2020. Displayed publicly on legal pages.</p>
+
+    <div class="a-grid-2">
+      <div class="a-field">
+        <label for="grievanceOfficerName">Officer Name *</label>
+        <input id="grievanceOfficerName" name="grievanceOfficerName" required value="<%= settings.grievanceOfficer?.name || '' %>" placeholder="Officer full name">
+      </div>
+      <div class="a-field">
+        <label for="grievanceOfficerDesignation">Designation *</label>
+        <input id="grievanceOfficerDesignation" name="grievanceOfficerDesignation" required value="<%= settings.grievanceOfficer?.designation || 'Grievance Redressal Officer' %>">
+      </div>
     </div>
 
-    <!-- YouTube Channel Link -->
-    <div class="a-field">
-      <label for="youtube">YouTube Channel Link</label>
-      <input id="youtube" name="youtube" value="<%= settings.social?.youtube || 'https://www.youtube.com/@nestammakkili' %>">
+    <div class="a-grid-2" style="margin-top:12px;">
+      <div class="a-field">
+        <label for="grievanceOfficerEmail">Officer Dedicated Email *</label>
+        <input id="grievanceOfficerEmail" name="grievanceOfficerEmail" type="email" required value="<%= settings.grievanceOfficer?.email || '' %>" placeholder="grievance@nestammakkili.com">
+      </div>
+      <div class="a-field">
+        <label for="grievanceOfficerPhone">Officer Dedicated Phone *</label>
+        <input id="grievanceOfficerPhone" name="grievanceOfficerPhone" required value="<%= settings.grievanceOfficer?.phone || '' %>" placeholder="+91 98460 12345">
+      </div>
     </div>
   </div>
 
-  <!-- Announcement Bar English -->
-  <div class="a-field">
-    <label for="announcement_en">Announcement Bar (English)</label>
-    <textarea id="announcement_en" name="announcement_en" rows="2"><%= settings.announcementText?.en || '' %></textarea>
+  <!-- Section 3: Shipping, Delivery & Refunds -->
+  <div style="margin-bottom:32px; border-bottom:1px solid var(--a-border); padding-bottom:24px;">
+    <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--a-ink); font-weight:600;">3. Fulfillment & Refunds Parameters</h3>
+    <p style="color:var(--a-muted); font-size:0.88rem; margin:0 0 16px;">These parameters are stated in customer checkout summaries and policy pages.</p>
+
+    <div class="a-grid-4">
+      <div class="a-field">
+        <label for="shippingCharge">Flat Shipping (₹ INR) *</label>
+        <input id="shippingCharge" name="shippingCharge" type="number" min="0" step="1" required value="<%= settings.shippingCharge %>">
+        <small style="color:var(--a-muted); font-size:0.8rem; display:block; margin-top:4px;">Default: ₹60.</small>
+      </div>
+      <div class="a-field">
+        <label for="minDeliveryDays">Min Delivery Days *</label>
+        <input id="minDeliveryDays" name="minDeliveryDays" type="number" min="1" required value="<%= settings.minDeliveryDays || 3 %>">
+        <small style="color:var(--a-muted); font-size:0.8rem; display:block; margin-top:4px;">Default: 3 days.</small>
+      </div>
+      <div class="a-field">
+        <label for="maxDeliveryDays">Max Delivery Days *</label>
+        <input id="maxDeliveryDays" name="maxDeliveryDays" type="number" min="1" required value="<%= settings.maxDeliveryDays || 7 %>">
+        <small style="color:var(--a-muted); font-size:0.8rem; display:block; margin-top:4px;">Default: 7 days.</small>
+      </div>
+      <div class="a-field">
+        <label for="refundTimelineDays">Refund Days (Business) *</label>
+        <input id="refundTimelineDays" name="refundTimelineDays" type="number" min="1" required value="<%= settings.refundTimelineDays || 7 %>">
+        <small style="color:var(--a-muted); font-size:0.8rem; display:block; margin-top:4px;">Default: 7 business days.</small>
+      </div>
+    </div>
+
+    <div class="a-grid-2" style="margin-top:12px;">
+      <div class="a-field">
+        <label for="lowStockThreshold">Low-Stock Alert Threshold *</label>
+        <input id="lowStockThreshold" name="lowStockThreshold" type="number" min="1" required value="<%= settings.lowStockThreshold || 3 %>">
+        <small style="color:var(--a-muted); font-size:0.8rem; display:block; margin-top:4px;">Units remaining to trigger dashboard low-stock warning.</small>
+      </div>
+      <div class="a-field">
+        <label for="youtube">YouTube Channel Link</label>
+        <input id="youtube" name="youtube" value="<%= settings.social?.youtube || 'https://www.youtube.com/@nestammakkili' %>">
+      </div>
+    </div>
   </div>
 
-  <!-- Announcement Bar Malayalam -->
-  <div class="a-field">
-    <label for="announcement_ml">Announcement Bar (Malayalam)</label>
-    <textarea id="announcement_ml" name="announcement_ml" rows="2"><%= settings.announcementText?.ml || '' %></textarea>
+  <!-- Section 4: Storefront Announcement -->
+  <div style="margin-bottom:32px; border-bottom:1px solid var(--a-border); padding-bottom:24px;">
+    <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--a-ink); font-weight:600;">4. Storefront Announcement Bar</h3>
+    
+    <div class="a-field" style="margin-bottom:12px;">
+      <label for="announcement_en">Announcement Bar (English)</label>
+      <textarea id="announcement_en" name="announcement_en" rows="2"><%= settings.announcementText?.en || '' %></textarea>
+    </div>
+
+    <div class="a-field">
+      <label for="announcement_ml">Announcement Bar (Malayalam)</label>
+      <textarea id="announcement_ml" name="announcement_ml" rows="2"><%= settings.announcementText?.ml || '' %></textarea>
+    </div>
+  </div>
+
+  <!-- Section 5: Legal Confirmation & Review -->
+  <div style="margin-bottom:24px;">
+    <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--a-ink); font-weight:600;">5. Legal Compliance & Confirmation</h3>
+    <p style="color:var(--a-muted); font-size:0.88rem; margin:0 0 16px;">
+      Review the published legal pages before certifying:
+      <a href="/about" target="_blank" style="margin-right:8px; text-decoration:underline;">About</a> •
+      <a href="/contact" target="_blank" style="margin-right:8px; text-decoration:underline;">Contact</a> •
+      <a href="/pricing" target="_blank" style="margin-right:8px; text-decoration:underline;">Pricing</a> •
+      <a href="/shipping" target="_blank" style="margin-right:8px; text-decoration:underline;">Shipping</a> •
+      <a href="/terms" target="_blank" style="margin-right:8px; text-decoration:underline;">Terms</a> •
+      <a href="/privacy" target="_blank" style="margin-right:8px; text-decoration:underline;">Privacy</a> •
+      <a href="/refund-policy" target="_blank" style="margin-right:8px; text-decoration:underline;">Refund Policy</a> •
+      <a href="/grievance" target="_blank" style="text-decoration:underline;">Grievance</a>
+    </p>
+
+    <div style="background:var(--a-bg); padding:16px; border-radius:6px; border:1px solid var(--a-border);">
+      <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
+        <input type="checkbox" name="legalPagesConfirmed" value="true" <%= settings.legalPagesConfirmed ? 'checked' : '' %> style="width:20px; height:20px; margin-top:2px;">
+        <div>
+          <strong style="color:var(--a-ink); display:block; font-size:0.95rem;">I confirm these details and legal pages are accurate for our business.</strong>
+          <span style="color:var(--a-muted); font-size:0.85rem; display:block; margin-top:2px;">
+            By checking this box, you confirm that legal business identification, registered office, grievance officer contact, refund policy, and terms have been reviewed and approved for live operation.
+          </span>
+        </div>
+      </label>
+    </div>
   </div>
 
   <div style="margin-top:28px;">
-    <button type="submit" class="a-btn">Save Settings</button>
+    <button type="submit" class="a-btn">Save Settings & Confirm</button>
   </div>
 </form>
-

@@ -1,0 +1,10 @@
+<% if (locals.isAdmin && !settings.legalPagesConfirmed) { %>
+  <div class="admin-template-warning" style="background:#fff3cd; color:#856404; padding:12px 18px; border-radius:8px; margin-bottom:24px; font-weight:500; border:1px solid #ffeeba; display:flex; align-items:center; gap:10px;" role="status">
+    <span aria-hidden="true" style="font-size:1.2rem;">⚠️</span>
+    <div>
+      <strong>Admin Preview Notice:</strong> Template text: replace with the client's approved wording before real sales begin.
+      <small style="display:block; margin-top:2px; font-weight:normal;">Confirm accuracy in <a href="/admin/settings" style="text-decoration:underline; color:#533f03;">Admin Store Settings</a> to certify production readiness.</small>
+    </div>
+  </div>
+<% } %>
+

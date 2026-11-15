@@ -1,0 +1,44 @@
+<div class="wrap pg narrow">
+  <%- include('../partials/legal-template-warning') %>
+
+  <hr class="rule" style="margin-left:0;">
+  <h2><%= t('privacy.title') %></h2>
+  <p class="lead" style="max-width:none;"><%= t('privacy.lead') %></p>
+
+  <div style="margin-top:28px; display:flex; flex-direction:column; gap:20px;">
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('privacy.collectionTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('privacy.collectionText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('privacy.purposeTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('privacy.purposeText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('privacy.sharingTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('privacy.sharingText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('privacy.retentionTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;">
+        <%= t('privacy.retentionText') %> Standard retention period for transaction books is <%= settings.orderRetentionYears || 8 %> years.
+      </p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('privacy.cookiesTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('privacy.cookiesText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('privacy.rightsTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('privacy.rightsText') %></p>
+    </div>
+  </div>
+
+  <%- include('../partials/legal-contact-card') %>
+</div>
+

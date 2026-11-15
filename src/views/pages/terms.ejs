@@ -1,0 +1,42 @@
+<div class="wrap pg narrow">
+  <%- include('../partials/legal-template-warning') %>
+
+  <hr class="rule" style="margin-left:0;">
+  <h2><%= t('terms.title') %></h2>
+  <p class="lead" style="max-width:none;"><%= t('terms.lead') %></p>
+
+  <div style="margin-top:28px; display:flex; flex-direction:column; gap:20px;">
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('terms.agreementTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('terms.agreementText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('terms.ordersTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('terms.ordersText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('terms.prepaidTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('terms.prepaidText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('terms.useTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('terms.useText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('terms.liabilityTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('terms.liabilityText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('terms.jurisdictionTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('terms.jurisdictionText') %></p>
+    </div>
+  </div>
+
+  <%- include('../partials/legal-contact-card') %>
+</div>
+

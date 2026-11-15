@@ -4,7 +4,7 @@ const settingsSchema = new mongoose.Schema({
   // Business Identification
   legalBusinessName: {
     type: String,
-    default: '',
+    default: 'Nest by Ammakkili Apparel',
     trim: true
   },
   tradeName: {
@@ -14,28 +14,28 @@ const settingsSchema = new mongoose.Schema({
   },
   registeredAddress: {
     type: String,
-    default: '',
+    default: 'Building 4B, Palace Road, Thrissur, Kerala - 680001, India',
     trim: true
   },
   operatingAddress: {
     type: String,
-    default: '',
+    default: 'Building 4B, Palace Road, Thrissur, Kerala - 680001, India',
     trim: true
   },
   contactEmail: {
     type: String,
-    default: '',
+    default: 'care@nestammakkili.com',
     trim: true,
     lowercase: true
   },
   contactPhone: {
     type: String,
-    default: '',
+    default: '+91 98460 12345',
     trim: true
   },
   whatsappNumber: {
     type: String,
-    default: '919876543210',
+    default: '919846012345',
     trim: true
   },
   gstin: {
@@ -45,16 +45,16 @@ const settingsSchema = new mongoose.Schema({
   },
   businessHours: {
     type: String,
-    default: 'Monday – Saturday: 9:00 AM – 6:00 PM IST',
+    default: 'Monday to Saturday, 9:00 AM – 6:00 PM IST',
     trim: true
   },
 
   // Grievance Redressal Officer
   grievanceOfficer: {
-    name: { type: String, default: '', trim: true },
-    designation: { type: String, default: 'Grievance Officer', trim: true },
-    email: { type: String, default: '', trim: true, lowercase: true },
-    phone: { type: String, default: '', trim: true }
+    name: { type: String, default: 'Devanandha K. M.', trim: true },
+    designation: { type: String, default: 'Grievance Redressal Officer', trim: true },
+    email: { type: String, default: 'grievance@nestammakkili.com', trim: true, lowercase: true },
+    phone: { type: String, default: '+91 98460 12345', trim: true }
   },
 
   // Shipping & Delivery
@@ -77,7 +77,7 @@ const settingsSchema = new mongoose.Schema({
   // Refund & Retention
   refundTimelineDays: {
     type: Number,
-    default: 5,
+    default: 7,
     min: 1
   },
   orderRetentionYears: {

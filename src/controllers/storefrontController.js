@@ -235,7 +235,55 @@ exports.getContact = (req, res) => {
   });
 };
 
-// Shop Policies
+// Pricing Policy
+exports.getPricing = (req, res) => {
+  res.render('pages/pricing', {
+    title: res.locals.t('pricing.title'),
+    metaDesc: res.locals.t('pricing.lead')
+  });
+};
+
+// Shipping Policy
+exports.getShipping = (req, res) => {
+  res.render('pages/shipping', {
+    title: res.locals.t('shipping.title'),
+    metaDesc: res.locals.t('shipping.lead')
+  });
+};
+
+// Terms and Conditions
+exports.getTerms = (req, res) => {
+  res.render('pages/terms', {
+    title: res.locals.t('terms.title'),
+    metaDesc: res.locals.t('terms.lead')
+  });
+};
+
+// Privacy Policy
+exports.getPrivacy = (req, res) => {
+  res.render('pages/privacy', {
+    title: res.locals.t('privacy.title'),
+    metaDesc: res.locals.t('privacy.lead')
+  });
+};
+
+// Refund & Cancellation Policy
+exports.getRefundPolicy = (req, res) => {
+  res.render('pages/refund-policy', {
+    title: res.locals.t('refundPolicy.title'),
+    metaDesc: res.locals.t('refundPolicy.lead')
+  });
+};
+
+// Grievance Redressal
+exports.getGrievance = (req, res) => {
+  res.render('pages/grievance', {
+    title: res.locals.t('grievance.title'),
+    metaDesc: res.locals.t('grievance.lead')
+  });
+};
+
+// Shop Policies (Redirect / Alias to Refund Policy or Hub)
 exports.getPolicies = (req, res) => {
   res.render('pages/policies', {
     title: res.locals.t('policies.title'),

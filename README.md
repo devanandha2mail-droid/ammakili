@@ -4,6 +4,16 @@ A production-ready e-commerce platform and management panel tailored for **Nest 
 
 ---
 
+## ⚖️ Legal Policies & Compliance Notice
+
+> [!IMPORTANT]
+> **LEGAL NOTICE FOR CLIENT & OPERATORS:**
+> All public legal documents and storefront policy pages (`/about`, `/contact`, `/pricing`, `/shipping`, `/terms`, `/privacy`, `/refund-policy`, `/grievance`) are structured templates designed to meet Indian Consumer Protection (E-Commerce) Rules, 2020, Information Technology Act, 2000, and Razorpay onboarding standards.
+> 
+> **These policies are templates and must be reviewed and approved by the client's legal or tax advisor prior to real customer sales.** Once verified and confirmed in the Admin Store Settings (`/admin/settings`), the owner can check the legal confirmation checkbox to certify production readiness.
+
+---
+
 ## 🌸 Key Features & Business Rules
 
 1. **Intimate Wear Business Rules:**

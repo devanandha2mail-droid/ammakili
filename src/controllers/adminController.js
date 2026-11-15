@@ -805,24 +805,99 @@ exports.getSettings = async (req, res, next) => {
 exports.postSettings = async (req, res, next) => {
   try {
     const {
-      shippingCharge,
+      legalBusinessName,
+      tradeName,
+      registeredAddress,
+      operatingAddress,
+      contactEmail,
+      contactPhone,
       whatsappNumber,
+      gstin,
+      businessHours,
+      grievanceOfficerName,
+      grievanceOfficerDesignation,
+      grievanceOfficerEmail,
+      grievanceOfficerPhone,
+      shippingCharge,
+      minDeliveryDays,
+      maxDeliveryDays,
+      refundTimelineDays,
       announcement_en,
       announcement_ml,
       lowStockThreshold,
-      youtube
+      youtube,
+      legalPagesConfirmed
     } = req.body;
 
+    let gstinVal = (gstin || '').trim().toUpperCase();
+    if (gstinVal) {
+      const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+      if (!gstinRegex.test(gstinVal)) {
+        return res.redirect('/admin/settings?error=invalid_gstin');
+      }
+    }
+
     const settings = await Settings.getSettings();
-    settings.shippingCharge = Math.max(0, parseFloat(shippingCharge) || 60);
-    settings.whatsappNumber = (whatsappNumber || '').replace(/\D/g, '') || '919876543210';
-    settings.announcementText.en = (announcement_en || '').trim();
-    settings.announcementText.ml = (announcement_ml || '').trim();
-    settings.lowStockThreshold = Math.max(1, parseInt(lowStockThreshold, 10) || 3);
+
+    // Business Identification
+    if (legalBusinessName !== undefined) settings.legalBusinessName = legalBusinessName.trim();
+    if (tradeName !== undefined) settings.tradeName = tradeName.trim() || 'Nest by Ammakkili';
+    if (registeredAddress !== undefined) settings.registeredAddress = registeredAddress.trim();
+    if (operatingAddress !== undefined) settings.operatingAddress = operatingAddress.trim();
+    if (contactEmail !== undefined) settings.contactEmail = contactEmail.trim().toLowerCase();
+    if (contactPhone !== undefined) settings.contactPhone = contactPhone.trim();
+    if (whatsappNumber !== undefined) settings.whatsappNumber = (whatsappNumber || '').replace(/\D/g, '') || '919846012345';
+    settings.gstin = gstinVal;
+    if (businessHours !== undefined) settings.businessHours = businessHours.trim();
+
+    // Grievance Officer
+    if (!settings.grievanceOfficer) settings.grievanceOfficer = {};
+    if (grievanceOfficerName !== undefined) settings.grievanceOfficer.name = grievanceOfficerName.trim();
+    if (grievanceOfficerDesignation !== undefined) settings.grievanceOfficer.designation = grievanceOfficerDesignation.trim();
+    if (grievanceOfficerEmail !== undefined) settings.grievanceOfficer.email = grievanceOfficerEmail.trim().toLowerCase();
+    if (grievanceOfficerPhone !== undefined) settings.grievanceOfficer.phone = grievanceOfficerPhone.trim();
+
+    // Shipping & Delivery
+    if (shippingCharge !== undefined) settings.shippingCharge = Math.max(0, parseFloat(shippingCharge) || 60);
+    if (minDeliveryDays !== undefined) settings.minDeliveryDays = Math.max(1, parseInt(minDeliveryDays, 10) || 3);
+    if (maxDeliveryDays !== undefined) settings.maxDeliveryDays = Math.max(settings.minDeliveryDays, parseInt(maxDeliveryDays, 10) || 7);
+    if (refundTimelineDays !== undefined) settings.refundTimelineDays = Math.max(1, parseInt(refundTimelineDays, 10) || 7);
+
+    // Announcement and storefront
+    if (announcement_en !== undefined) settings.announcementText.en = (announcement_en || '').trim();
+    if (announcement_ml !== undefined) settings.announcementText.ml = (announcement_ml || '').trim();
+    if (lowStockThreshold !== undefined) settings.lowStockThreshold = Math.max(1, parseInt(lowStockThreshold, 10) || 3);
     if (!settings.social) settings.social = {};
-    settings.social.youtube = (youtube || '').trim();
+    if (youtube !== undefined) settings.social.youtube = (youtube || '').trim();
+
+    // Legal Confirmation Checkbox
+    const isConfirmed = legalPagesConfirmed === 'true' || legalPagesConfirmed === 'on' || legalPagesConfirmed === '1';
+    if (isConfirmed && !settings.legalPagesConfirmed) {
+      settings.legalPagesConfirmed = true;
+      settings.legalPagesConfirmedAt = new Date();
+      settings.legalPagesConfirmedBy = req.admin?.email || req.session?.adminEmail || 'owner';
+    } else if (!isConfirmed && settings.legalPagesConfirmed) {
+      settings.legalPagesConfirmed = false;
+      settings.legalPagesConfirmedAt = null;
+      settings.legalPagesConfirmedBy = null;
+    }
 
     await settings.save();
+
+    try {
+      const { logAdminAction } = require('../services/auditLogger');
+      await logAdminAction({
+        req,
+        action: 'settings_updated',
+        target: 'Settings',
+        details: {
+          legalBusinessName: settings.legalBusinessName,
+          tradeName: settings.tradeName,
+          legalPagesConfirmed: settings.legalPagesConfirmed
+        }
+      });
+    } catch (e) {}
+
     res.redirect('/admin/settings?saved=1');
   } catch (err) {
     next(err);

@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const compression = require('compression');
 const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
+const mongoose = require('mongoose');
 
 const i18nMiddleware = require('./middleware/i18n');
 const { csrfTokenMiddleware, doubleCsrfProtection } = require('./middleware/csrf');
@@ -171,6 +172,34 @@ app.use((req, res, next) => {
   });
 });
 app.use(customerLocalsMiddleware);
+
+// Admin Status Detection for Storefront Previews
+const cookieSignature = require('cookie-signature');
+app.use(async (req, res, next) => {
+  res.locals.isAdmin = false;
+  if (req.session && req.session.adminId) {
+    res.locals.isAdmin = true;
+    return next();
+  }
+  const adminCookieName = isProd ? '__Host-nest_admin_sess' : 'nest_admin_sess';
+  const sessionId = (req.signedCookies && req.signedCookies[adminCookieName]) ||
+    (req.cookies && req.cookies[adminCookieName] && typeof req.cookies[adminCookieName] === 'string' && req.cookies[adminCookieName].startsWith('s:')
+      ? cookieSignature.unsign(req.cookies[adminCookieName].slice(2), process.env.SESSION_SECRET || 'nest_admin_session_secret_local')
+      : null);
+
+  if (sessionId && mongoose.connection.readyState === 1) {
+    try {
+      const sessionDoc = await mongoose.connection.collection('admin_sessions').findOne({ _id: sessionId });
+      if (sessionDoc && sessionDoc.session) {
+        const sessData = typeof sessionDoc.session === 'string' ? JSON.parse(sessionDoc.session) : sessionDoc.session;
+        if (sessData && sessData.adminId) {
+          res.locals.isAdmin = true;
+        }
+      }
+    } catch (e) {}
+  }
+  next();
+});
 
 // 9. Internationalization (i18n)
 app.use(i18nMiddleware);

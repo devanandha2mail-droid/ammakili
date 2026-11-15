@@ -1,0 +1,27 @@
+<div class="legal-contact-card" style="margin-top:36px; padding:24px; background:var(--glass2, #f9fafb); border:1px solid var(--border, #e5e7eb); border-radius:12px;">
+  <h4 style="font-size:1.05rem; margin:0 0 10px; color:var(--ink); font-weight:600;"><%= settings.tradeName || 'Nest by Ammakkili' %></h4>
+  
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:12px; font-size:0.88rem; color:var(--muted, #666);">
+    <div>
+      <span style="display:block; font-weight:500; color:var(--ink);"><%= t('legalCommon.officialSupport') %></span>
+      Email: <a href="mailto:<%= settings.contactEmail || 'care@nestammakkili.com' %>" style="color:var(--primary); text-decoration:underline;"><%= settings.contactEmail || 'care@nestammakkili.com' %></a><br>
+      Phone: <%= settings.contactPhone || '+91 98460 12345' %><br>
+      WhatsApp: <a href="https://wa.me/<%= settings.whatsappNumber || '919846012345' %>" target="_blank" rel="noopener" style="color:var(--primary); text-decoration:underline;">+<%= settings.whatsappNumber || '919846012345' %></a>
+    </div>
+
+    <div>
+      <span style="display:block; font-weight:500; color:var(--ink);"><%= t('legalCommon.grievanceOfficerLabel') %></span>
+      Name: <strong><%= settings.grievanceOfficer?.name || 'Devanandha K. M.' %></strong> (<%= settings.grievanceOfficer?.designation || 'Grievance Redressal Officer' %>)<br>
+      Email: <a href="mailto:<%= settings.grievanceOfficer?.email || settings.contactEmail || 'grievance@nestammakkili.com' %>" style="color:var(--primary); text-decoration:underline;"><%= settings.grievanceOfficer?.email || settings.contactEmail || 'grievance@nestammakkili.com' %></a><br>
+      Phone: <%= settings.grievanceOfficer?.phone || settings.contactPhone || '+91 98460 12345' %>
+    </div>
+  </div>
+
+  <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border, #e5e7eb); font-size:0.82rem; color:var(--muted, #888);">
+    <span><%= t('legalCommon.registeredOffice') %>: <%= settings.registeredAddress || 'Building 4B, Palace Road, Thrissur, Kerala - 680001, India' %></span>
+    <% if (settings.gstin) { %>
+      <span style="margin-left:12px;">• <%= t('legalCommon.gstinLabel') %>: <code><%= settings.gstin %></code></span>
+    <% } %>
+  </div>
+</div>
+

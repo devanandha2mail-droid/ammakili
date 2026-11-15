@@ -31,6 +31,12 @@ router.get('/sitemap.xml', async (req, res, next) => {
       '/how-to-order',
       '/about',
       '/contact',
+      '/pricing',
+      '/shipping',
+      '/terms',
+      '/privacy',
+      '/refund-policy',
+      '/grievance',
       '/policies',
       '/faq'
     ];

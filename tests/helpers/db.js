@@ -62,8 +62,27 @@ async function resetAndSeedDatabase() {
 
   // 2. Seed Settings
   await Settings.create({
+    legalBusinessName: 'Nest by Ammakkili Apparel',
+    tradeName: 'Nest by Ammakkili',
+    registeredAddress: 'Building 4B, Palace Road, Thrissur, Kerala - 680001, India',
+    operatingAddress: 'Building 4B, Palace Road, Thrissur, Kerala - 680001, India',
+    contactEmail: 'care@nestammakkili.com',
+    contactPhone: '+91 98460 12345',
+    whatsappNumber: process.env.WHATSAPP_NUMBER || '919846012345',
+    gstin: '',
+    businessHours: 'Monday to Saturday, 9:00 AM – 6:00 PM IST',
+    grievanceOfficer: {
+      name: 'Devanandha K. M.',
+      designation: 'Grievance Redressal Officer',
+      email: 'grievance@nestammakkili.com',
+      phone: '+91 98460 12345'
+    },
     shippingCharge: 60,
-    whatsappNumber: process.env.WHATSAPP_NUMBER || '919876543210',
+    minDeliveryDays: 3,
+    maxDeliveryDays: 7,
+    refundTimelineDays: 7,
+    orderRetentionYears: 8,
+    legalPagesConfirmed: false,
     announcementText: {
       en: 'Soft, breathable nighties crafted for restful comfort. Prepaid orders only • Flat ₹60 shipping.',
       ml: 'സുഖകരവും ഗുണമേന്മയുള്ളതുമായ നൈറ്റികൾ. പ്രീപെയ്ഡ് ഓർഡറുകൾ മാത്രം • ഷിപ്പിംഗ് ₹60.'

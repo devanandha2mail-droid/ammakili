@@ -1,0 +1,39 @@
+<div class="wrap pg narrow">
+  <%- include('../partials/legal-template-warning') %>
+
+  <hr class="rule" style="margin-left:0;">
+  <h2><%= t('refundPolicy.title') %></h2>
+  <p class="lead" style="max-width:none;"><%= t('refundPolicy.lead') %></p>
+
+  <div style="margin-top:28px; display:flex; flex-direction:column; gap:20px;">
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('refundPolicy.noReturnsTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('refundPolicy.noReturnsText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('refundPolicy.cancellationTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('refundPolicy.cancellationText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('refundPolicy.soldOutTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;">
+        <%= t('refundPolicy.soldOutText') %> Automatic refund process completes within <strong><%= settings.refundTimelineDays || 7 %> business days</strong>.
+      </p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('refundPolicy.refundMethodTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('refundPolicy.refundMethodText') %></p>
+    </div>
+
+    <div class="item" style="padding:20px; border-radius:16px; background:var(--glass2); border:1px solid var(--gb);">
+      <h3 style="font-size:1.15rem; margin:0 0 8px; color:var(--ink); font-weight:600;"><%= t('refundPolicy.supportTitle') %></h3>
+      <p style="margin:0; font-size:0.92rem; color:var(--muted); line-height:1.6;"><%= t('refundPolicy.supportText') %></p>
+    </div>
+  </div>
+
+  <%- include('../partials/legal-contact-card') %>
+</div>
+
