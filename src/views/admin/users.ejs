@@ -21,7 +21,7 @@
       <h3 style="margin:0 0 6px; font-size:1.15rem; color:var(--a-info);">Mandatory 2-Step Verification Policy</h3>
       <p style="margin:0; font-size:0.9rem; color:var(--a-muted); max-width:680px; line-height:1.5;">
         Turn on Google 2-Step Verification (a passkey or authenticator app is best, not SMS) for every admin Gmail.
-        As store owner, verify that each team member has active 2SV on their Google Account, then mark them as confirmed below.
+        Google does not allow third-party applications to query an account's 2-Step Verification status automatically, so owners must verify with each administrator and manually record the confirmation tick below.
       </p>
     </div>
     <a href="https://myaccount.google.com/signinoptions/two-step-verification" target="_blank" rel="noopener noreferrer" class="a-btn a-btn--subtle" style="white-space:nowrap;">
@@ -113,9 +113,13 @@
               <% } %>
             </td>
             <td>
-              <% if (u.confirmed2SV && u.confirmed2SV.confirmed) { %>
+              <% if ((u.confirmed2SV && u.confirmed2SV.confirmed) || u.twoStepConfirmedAt) { %>
                 <div style="font-size:0.85rem; margin-bottom:4px;">
                   <span class="a-pill a-pill--ok">✓ 2SV Confirmed</span>
+                </div>
+                <div style="font-size:0.75rem; color:var(--a-muted); margin-bottom:4px;">
+                  By <%= u.twoStepConfirmedBy || (u.confirmed2SV && u.confirmed2SV.confirmedBy) || 'Owner' %><br>
+                  <%= new Date(u.twoStepConfirmedAt || (u.confirmed2SV && u.confirmed2SV.confirmedAt)).toLocaleDateString() %>
                 </div>
                 <form method="POST" action="/admin/users/confirm-2sv/<%= u._id %>" style="margin:0; display:inline;">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">

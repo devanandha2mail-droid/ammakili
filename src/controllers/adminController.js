@@ -91,7 +91,7 @@ exports.getDashboard = async (req, res, next) => {
       settings.lastReconciliationAt && (now - new Date(settings.lastReconciliationAt).getTime() < 24 * 60 * 60 * 1000)
     );
     const backupSet = Boolean(settings.lastBackupAt);
-    const confirmed2SVCount = activeAdmins.filter(a => a.confirmed2SV && a.confirmed2SV.confirmed).length;
+    const confirmed2SVCount = activeAdmins.filter(a => Boolean((a.confirmed2SV && a.confirmed2SV.confirmed) || a.twoStepConfirmedAt)).length;
     const all2SVConfirmed = activeAdmins.length > 0 && confirmed2SVCount === activeAdmins.length;
 
     const launchChecklist = [
