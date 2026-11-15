@@ -457,7 +457,7 @@
 
 <!-- Embedded JSON-LD schema for Google Rich Results -->
 <script type="application/ld+json" nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
-<%- JSON.stringify(jsonLd) %>
+<%- JSON.stringify(jsonLd).replace(/</g, '\\u003c') %>
 </script>
 
 <script src="/js/product-detail.js" defer></script>

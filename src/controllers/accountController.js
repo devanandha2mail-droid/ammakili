@@ -29,6 +29,47 @@ exports.getAccount = async (req, res, next) => {
   }
 };
 
+// Get Customer Order Detail by ID (IDOR Protected)
+exports.getOrderDetail = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).render('pages/404', {
+        title: 'Order Not Found',
+        metaDesc: 'The requested order could not be found.'
+      });
+    }
+
+    // Strict IDOR Check: order must belong to req.user._id or req.user.email
+    const isOwner = (order.customerId && order.customerId.toString() === req.user._id.toString()) ||
+                    (order.customer && order.customer.email && order.customer.email.toLowerCase() === req.user.email.toLowerCase());
+    if (!isOwner) {
+      return res.status(403).json({
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Access denied: You do not have permission to view this order.'
+        },
+        requestId: req.id
+      });
+    }
+
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+      return res.json({ success: true, order });
+    }
+
+    res.render('pages/track', {
+      title: `Order #${order.orderId}`,
+      metaDesc: 'View order status and details',
+      order,
+      orderId: order.orderId,
+      phone: order.customer?.phone || '',
+      searched: true
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Update Customer Profile (phone)
 exports.postUpdateProfile = async (req, res, next) => {
   try {

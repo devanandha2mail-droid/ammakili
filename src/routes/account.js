@@ -6,6 +6,7 @@ const { requireCustomer } = require('../middleware/customerAuth');
 router.use(requireCustomer);
 
 router.get('/', accountController.getAccount);
+router.get('/orders/:id', accountController.getOrderDetail);
 router.post('/profile', accountController.postUpdateProfile);
 router.post('/address/add', accountController.postAddAddress);
 router.post('/address/edit', accountController.postEditAddress);

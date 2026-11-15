@@ -129,6 +129,38 @@ async function runOrderReconciliation() {
   }
 }
 
+async function runDailyDataRetentionJob() {
+  try {
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    // Remove abandoned unpaid/failed orders older than 30 days
+    const delRes = await Order.deleteMany({
+      status: { $in: ['pending_payment', 'failed'] },
+      createdAt: { $lt: thirtyDaysAgo }
+    });
+    if (delRes.deletedCount > 0) {
+      console.log(`[Data Retention] Purged ${delRes.deletedCount} abandoned/failed orders older than 30 days.`);
+    }
+
+    // Expired sessions cleanup
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState === 1) {
+      const now = new Date();
+      try {
+        await mongoose.connection.collection('sessions').deleteMany({
+          expires: { $lt: now }
+        });
+      } catch (e) {}
+      try {
+        await mongoose.connection.collection('admin_sessions').deleteMany({
+          expires: { $lt: now }
+        });
+      } catch (e) {}
+    }
+  } catch (err) {
+    console.error('[Data Retention Cleanup Error]:', err.message);
+  }
+}
+
 function startOrderCleanupJob() {
   // Run every 1 minute to release expired 15-minute stock reservations promptly
   cron.schedule('* * * * *', releaseExpiredReservationsJob);
@@ -136,11 +168,15 @@ function startOrderCleanupJob() {
   // Run reconciliation every 10 minutes
   cron.schedule('*/10 * * * *', runOrderReconciliation);
 
-  console.log('[Scheduler] Stock cleanup (1m) & Razorpay reconciliation (10m) jobs initialized.');
+  // Run daily data retention cleanup at 03:00 AM
+  cron.schedule('0 3 * * *', runDailyDataRetentionJob);
+
+  console.log('[Scheduler] Stock cleanup (1m), reconciliation (10m), & daily retention (03:00) initialized.');
 }
 
 module.exports = {
   startOrderCleanupJob,
   releaseExpiredReservationsJob,
-  runOrderReconciliation
+  runOrderReconciliation,
+  runDailyDataRetentionJob
 };

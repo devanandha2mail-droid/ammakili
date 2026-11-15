@@ -251,8 +251,8 @@
   const csrfToken = '<%= csrfToken %>';
   const productId = '<%= product ? product._id : "" %>';
   const draftId = '<%= typeof draftId !== "undefined" ? draftId : "" %>';
-  const initialImages = <%- JSON.stringify(product && product.images ? product.images : []) %>;
-  const initialJobs = <%- JSON.stringify(typeof existingJobs !== "undefined" ? existingJobs : []) %>;
+  const initialImages = <%- JSON.stringify(product && product.images ? product.images : []).replace(/</g, '\\u003c') %>;
+  const initialJobs = <%- JSON.stringify(typeof existingJobs !== "undefined" ? existingJobs : []).replace(/</g, '\\u003c') %>;
 
   const dropZone = document.getElementById('stylist-drop-zone');
   const fileInput = document.getElementById('stylist-file-input');

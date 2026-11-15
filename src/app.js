@@ -20,6 +20,24 @@ const Settings = require('./models/Settings');
 const Banner = require('./models/Banner');
 
 const app = express();
+app.disable('x-powered-by');
+
+// Health check endpoints (monitoring & container orchestrators)
+app.get('/healthz', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+app.get('/readyz', async (req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ status: 'unavailable' });
+    }
+    await mongoose.connection.db.admin().ping();
+    res.status(200).json({ status: 'ready' });
+  } catch (err) {
+    res.status(503).json({ status: 'unavailable' });
+  }
+});
 
 // 1. Trust proxy configured via TRUST_PROXY_HOPS env (default 1 hop)
 const trustProxyHops = process.env.TRUST_PROXY_HOPS !== undefined ? parseInt(process.env.TRUST_PROXY_HOPS, 10) : 1;
@@ -38,8 +56,9 @@ app.use(compression());
 
 // 3. Static assets with sensible caching
 app.use(express.static(path.join(__dirname, '../public'), {
-  maxAge: process.env.NODE_ENV === 'production' ? '7d' : '0',
-  etag: true
+  maxAge: process.env.NODE_ENV === 'production' ? '1d' : '0',
+  etag: true,
+  lastModified: true
 }));
 
 // 4. Per-request CSP Nonce Generation for strict script execution
@@ -94,17 +113,49 @@ app.use(
         frameAncestors: ["'none'"]
       }
     },
-    crossOriginEmbedderPolicy: false
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    hsts: process.env.NODE_ENV === 'production' ? {
+      maxAge: 63072000,
+      includeSubDomains: true,
+      preload: true
+    } : false
   })
 );
 
-// 5. Body Parsers
+// 5b. Permissions-Policy, Cache-Control, and Pre-launch X-Robots-Tag
+app.use((req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(self "https://api.razorpay.com")');
+
+  if (
+    req.path === '/admin' || req.path.startsWith('/admin/') ||
+    req.path === '/account' || req.path.startsWith('/account/') ||
+    req.path === '/checkout' || req.path.startsWith('/checkout/')
+  ) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  }
+
+  const siteUrl = process.env.SITE_URL || '';
+  if (process.env.NODE_ENV !== 'production' || !siteUrl.includes('nestammakkili.com')) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  }
+
+  next();
+});
+
+// 6. Body Parsers with 100 KB max limit
 // NOTE: /webhooks/razorpay uses raw body for HMAC signature verification.
-// We configure raw body capture for webhook route first!
-app.use('/webhooks/razorpay', express.raw({ type: 'application/json' }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use('/webhooks/razorpay', express.raw({ type: 'application/json', limit: '100kb' }));
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 app.use(cookieParser(process.env.SESSION_SECRET || 'nest_secret_key_12345'));
+
+// 6b. NoSQL Operator Sanitization & Cross-Site Origin Verification
+const { sanitizeInputMiddleware } = require('./middleware/sanitizeInput');
+const { originCheckMiddleware } = require('./middleware/originCheck');
+app.use(sanitizeInputMiddleware);
+app.use(originCheckMiddleware);
 
 // 6. View Engine Setup
 app.set('views', path.join(__dirname, 'views'));
