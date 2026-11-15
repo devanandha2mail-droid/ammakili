@@ -6,6 +6,7 @@ validateEnvironment();
 const http = require('http');
 const app = require('./app');
 const connectDB = require('./config/db');
+const { ensureInitialOwner } = require('./services/adminInit');
 const { startOrderCleanupJob } = require('./services/orderCleanup');
 const { startWorker, stopWorker } = require('./services/photoJobWorker');
 const { migrateProductImages } = require('./utils/migrateImages');
@@ -17,6 +18,7 @@ async function startServer() {
   try {
     // 1. Connect to Database
     await connectDB();
+    await ensureInitialOwner();
 
     // 2. Run data migrations (migrate string images to object structure)
     await migrateProductImages();

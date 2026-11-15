@@ -2,9 +2,8 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const Product = require('../src/models/Product');
-const Admin = require('../src/models/Admin');
+const AdminUser = require('../src/models/AdminUser');
 const Settings = require('../src/models/Settings');
 const Banner = require('../src/models/Banner');
 
@@ -16,17 +15,15 @@ async function seed() {
     await mongoose.connect(MONGODB_URI);
     console.log('Database connected successfully.');
 
-    // 1. Seed or Update Admin
-    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@nestammakkili.com').toLowerCase();
-    const adminPass = process.env.ADMIN_PASSWORD || 'AdminNest2026!';
-    const passwordHash = await bcrypt.hash(adminPass, 10);
+    // 1. Seed or Update Admin Owner
+    const adminEmail = (process.env.ADMIN_OWNER_EMAIL || process.env.ADMIN_EMAIL || 'admin@nestammakkili.com').toLowerCase().trim();
 
-    await Admin.findOneAndUpdate(
+    await AdminUser.findOneAndUpdate(
       { email: adminEmail },
-      { email: adminEmail, passwordHash, role: 'admin' },
+      { email: adminEmail, role: 'owner', active: true, createdBy: 'system:seed' },
       { upsert: true, returnDocument: 'after' }
     );
-    console.log(`Admin user seeded: ${adminEmail}`);
+    console.log(`Admin owner seeded: ${adminEmail}`);
 
     // 2. Seed Default Settings
     const whatsapp = process.env.WHATSAPP_NUMBER || '919876543210';

@@ -44,6 +44,12 @@ function validateEnvironment() {
       process.exit(1);
     }
 
+    // Forbidden legacy credentials
+    if (process.env.ADMIN_PASSWORD) {
+      console.error('FATAL: ADMIN_PASSWORD is forbidden and no longer supported. Admin access is strictly Google OAuth allowlist.');
+      process.exit(1);
+    }
+
     // ADMIN_OWNER_EMAIL validation (must be a valid email format)
     const adminOwnerEmail = (process.env.ADMIN_OWNER_EMAIL || '').trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

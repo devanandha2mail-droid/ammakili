@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
-const bcrypt = require('bcryptjs');
 
 // Load test env
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env.test') });
