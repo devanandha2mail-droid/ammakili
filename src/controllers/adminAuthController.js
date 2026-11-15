@@ -260,6 +260,8 @@ exports.handleGoogleCallback = async (req, res, next) => {
       req.session.adminId = adminUser._id;
       req.session.adminEmail = adminUser.email;
       req.session.adminRole = adminUser.role;
+      req.session.isAdminSession = true;
+      req.session.isCustomerSession = false;
       req.session.adminAuthTime = now;
       req.session.adminSessionCreatedAt = now;
       req.session.adminLastActiveAt = now;

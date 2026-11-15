@@ -10,7 +10,7 @@ const FRESH_AUTH_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
  * Strict administrative session validation with idle and absolute timeout enforcement.
  */
 const requireAdmin = async (req, res, next) => {
-  if (!req.session || !req.session.adminId) {
+  if (!req.session || !req.session.adminId || req.session.isCustomerSession) {
     return res.redirect('/admin/login');
   }
 
