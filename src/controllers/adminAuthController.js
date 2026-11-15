@@ -296,10 +296,22 @@ exports.logout = async (req, res) => {
 exports.signOutEverywhere = async (req, res) => {
   try {
     if (req.session && req.session.adminId) {
-      await AdminUser.findByIdAndUpdate(req.session.adminId, {
+      const adminId = req.session.adminId;
+      await AdminUser.findByIdAndUpdate(adminId, {
         sessionValidAfter: new Date()
       });
-      await logAdminAction({ req, action: 'ADMIN_SIGN_OUT_EVERYWHERE' });
+      // Purge active sessions from MongoDB admin_sessions collection
+      const mongoose = require('mongoose');
+      if (mongoose.connection && mongoose.connection.readyState === 1) {
+        try {
+          await mongoose.connection.collection('admin_sessions').deleteMany({
+            session: new RegExp(String(adminId))
+          });
+        } catch (delErr) {
+          console.warn('Could not batch delete admin sessions from MongoStore:', delErr.message);
+        }
+      }
+      await logAdminAction({ req, action: 'ADMIN_SIGN_OUT_EVERYWHERE', target: req.session.adminEmail });
     }
   } catch (err) {
     console.error('Error signing out everywhere:', err);
