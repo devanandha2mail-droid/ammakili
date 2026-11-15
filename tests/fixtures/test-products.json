@@ -1,0 +1,218 @@
+[
+  {
+    "slug": "rose-garden-nighty",
+    "name": {
+      "en": "Rose Garden Nighty",
+      "ml": "റോസ് ഗാർഡൻ നൈറ്റി"
+    },
+    "description": {
+      "en": "A soft breathable floral nighty crafted from premium cotton.",
+      "ml": "ശുദ്ധമായ കോട്ടണിൽ നിർമ്മിച്ച മൃദുവായ റോസ് ഗാർഡൻ നൈറ്റി."
+    },
+    "style": "Printed",
+    "price": 599,
+    "images": [
+      "/img/brand/logo-full-512.png"
+    ],
+    "videoUrl": "",
+    "sizes": [
+      { "size": "M", "stock": 8 },
+      { "size": "L", "stock": 8 },
+      { "size": "XL", "stock": 8 },
+      { "size": "XXL", "stock": 8 },
+      { "size": "3XL", "stock": 8 }
+    ],
+    "tag": "New",
+    "featured": true,
+    "active": true
+  },
+  {
+    "slug": "blush-cotton-nighty",
+    "name": {
+      "en": "Blush Cotton Nighty",
+      "ml": "ബ്ലഷ് കോട്ടൺ നൈറ്റി"
+    },
+    "description": {
+      "en": "Classic cotton daily nightwear with breathable texture.",
+      "ml": "സുഖകരമായ കോട്ടൺ ദൈനംദിന നൈറ്റ് വെയർ."
+    },
+    "style": "Cotton",
+    "price": 549,
+    "images": [
+      "/img/brand/logo-full-512.png"
+    ],
+    "videoUrl": "",
+    "sizes": [
+      { "size": "M", "stock": 8 },
+      { "size": "L", "stock": 8 },
+      { "size": "XL", "stock": 8 },
+      { "size": "XXL", "stock": 8 },
+      { "size": "3XL", "stock": 8 }
+    ],
+    "tag": "New",
+    "featured": false,
+    "active": true
+  },
+  {
+    "slug": "velvet-evening-nighty",
+    "name": {
+      "en": "Velvet Evening Nighty",
+      "ml": "വെൽവെറ്റ് ഈവനിംഗ് നൈറ്റി"
+    },
+    "description": {
+      "en": "Luxurious satin nightwear with delicate tailoring.",
+      "ml": "ആഡംബരപൂർണ്ണമായ സാറ്റിൻ നൈറ്റ് വെയർ."
+    },
+    "style": "Satin",
+    "price": 749,
+    "images": [
+      "/img/brand/logo-full-512.png"
+    ],
+    "videoUrl": "",
+    "sizes": [
+      { "size": "M", "stock": 8 },
+      { "size": "L", "stock": 8 },
+      { "size": "XL", "stock": 2 },
+      { "size": "XXL", "stock": 8 },
+      { "size": "3XL", "stock": 8 }
+    ],
+    "tag": "Bestseller",
+    "featured": false,
+    "active": true
+  },
+  {
+    "slug": "petal-print-nighty",
+    "name": {
+      "en": "Petal Print Nighty",
+      "ml": "പെറ്റൽ പ്രിന്റ് നൈറ്റി"
+    },
+    "description": {
+      "en": "Gentle petal floral print on breathable woven fabric.",
+      "ml": "മനോഹരമായ പെറ്റൽ പ്രിന്റ് ചെയ്ത കോട്ടൺ നൈറ്റി."
+    },
+    "style": "Printed",
+    "price": 629,
+    "images": [
+      "/img/brand/logo-full-512.png"
+    ],
+    "videoUrl": "",
+    "sizes": [
+      { "size": "M", "stock": 8 },
+      { "size": "L", "stock": 8 },
+      { "size": "XL", "stock": 8 },
+      { "size": "XXL", "stock": 8 },
+      { "size": "3XL", "stock": 8 }
+    ],
+    "tag": "",
+    "featured": false,
+    "active": true
+  },
+  {
+    "slug": "dusk-floral-nighty",
+    "name": {
+      "en": "Dusk Floral Nighty",
+      "ml": "ഡസ്ക് ഫ്ലോറൽ നൈറ്റി"
+    },
+    "description": {
+      "en": "Deep tones with graceful floral detailing.",
+      "ml": "മനോഹരമായ ഫ്ലോറൽ ഡിസൈൻ നൈറ്റി."
+    },
+    "style": "Cotton",
+    "price": 679,
+    "images": [
+      "/img/brand/logo-full-512.png"
+    ],
+    "videoUrl": "",
+    "sizes": [
+      { "size": "M", "stock": 8 },
+      { "size": "L", "stock": 8 },
+      { "size": "XL", "stock": 8 },
+      { "size": "XXL", "stock": 8 },
+      { "size": "3XL", "stock": 8 }
+    ],
+    "tag": "",
+    "featured": false,
+    "active": true
+  },
+  {
+    "slug": "cloud-soft-nighty",
+    "name": {
+      "en": "Cloud Soft Nighty",
+      "ml": "ക്ലൗഡ് സോഫ്റ്റ് നൈറ്റി"
+    },
+    "description": {
+      "en": "Ultra-soft plain daily nighty designed for relaxed sleep.",
+      "ml": "ഉറക്കത്തിന് ഏറ്റവും അനുയോജ്യമായ അൾട്രാ സോഫ്റ്റ് നൈറ്റി."
+    },
+    "style": "Plain",
+    "price": 499,
+    "images": [
+      "/img/brand/logo-full-512.png"
+    ],
+    "videoUrl": "",
+    "sizes": [
+      { "size": "M", "stock": 8 },
+      { "size": "L", "stock": 8 },
+      { "size": "XL", "stock": 8 },
+      { "size": "XXL", "stock": 8 },
+      { "size": "3XL", "stock": 0 }
+    ],
+    "tag": "",
+    "featured": false,
+    "active": true
+  },
+  {
+    "slug": "plum-stripe-nighty",
+    "name": {
+      "en": "Plum Stripe Nighty",
+      "ml": "പ്ലം സ്ട്രൈപ്പ് നൈറ്റി"
+    },
+    "description": {
+      "en": "Stylish vertical stripe pattern in deep plum color.",
+      "ml": "പ്ലം നിറത്തിലുള്ള സ്ട്രൈപ്പ് ഡിസൈൻ നൈറ്റി."
+    },
+    "style": "Printed",
+    "price": 649,
+    "images": [
+      "/img/brand/logo-full-512.png"
+    ],
+    "videoUrl": "",
+    "sizes": [
+      { "size": "M", "stock": 8 },
+      { "size": "L", "stock": 8 },
+      { "size": "XL", "stock": 8 },
+      { "size": "XXL", "stock": 8 },
+      { "size": "3XL", "stock": 8 }
+    ],
+    "tag": "",
+    "featured": false,
+    "active": true
+  },
+  {
+    "slug": "ivory-lace-nighty",
+    "name": {
+      "en": "Ivory Lace Nighty",
+      "ml": "ഐവറി ലേസ് നൈറ്റി"
+    },
+    "description": {
+      "en": "Delicate lace trim on smooth ivory fabric.",
+      "ml": "ഐവറി സാറ്റിൻ ലേസ് നൈറ്റി."
+    },
+    "style": "Satin",
+    "price": 799,
+    "images": [
+      "/img/brand/logo-full-512.png"
+    ],
+    "videoUrl": "",
+    "sizes": [
+      { "size": "M", "stock": 8 },
+      { "size": "L", "stock": 8 },
+      { "size": "XL", "stock": 8 },
+      { "size": "XXL", "stock": 8 },
+      { "size": "3XL", "stock": 8 }
+    ],
+    "tag": "Bestseller",
+    "featured": false,
+    "active": true
+  }
+]

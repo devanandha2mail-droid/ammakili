@@ -2,9 +2,6 @@
   <a href="/admin/products" class="a-back">← Back to Products</a>
   <div style="display:flex; align-items:center; gap:12px; margin-top:8px; flex-wrap:wrap;">
     <h1 style="font-size:2rem; margin:0; font-family:var(--a-serif); color:var(--a-ink);"><%= product ? 'Edit Nighty: ' + product.name.en : 'Add New Nighty Design' %></h1>
-    <% if (product && product.isSample) { %>
-      <span class="a-sample">Sample Product</span>
-    <% } %>
   </div>
 </div>
 
@@ -173,12 +170,6 @@
         <%= isStylistAvailable ? '● Stylist Ready' : '○ Stylist Offline' %>
       </span>
     </div>
-
-    <% if (product && product.isSample) { %>
-      <div class="a-alert a-alert--warn" style="font-size:0.85rem; margin-bottom:16px;">
-        ℹ️ Currently using placeholder illustration. Uploading real photos will convert this to a live product (unmarking as sample).
-      </div>
-    <% } %>
 
     <!-- Offline Alert Banner -->
     <div id="stylist-offline-banner" class="a-alert a-alert--warn" style="display:<%= !isStylistAvailable ? 'block' : 'none' %>; margin-bottom:18px;">

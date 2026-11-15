@@ -313,7 +313,7 @@ exports.createOrder = async (req, res) => {
         price: dbProduct.price,
         image: typeof dbProduct.getMainImage === 'function'
           ? dbProduct.getMainImage()
-          : (dbProduct.images && dbProduct.images[0] ? (dbProduct.images[0].url || dbProduct.images[0]) : '/img/logo.svg')
+          : (dbProduct.images && dbProduct.images[0] ? (dbProduct.images[0].url || dbProduct.images[0]) : '/img/brand/logo-mark-256.png')
       });
       subtotal += dbProduct.price * qty;
     }

@@ -50,39 +50,8 @@ async function seed() {
     );
     console.log('Settings initialized.');
 
-    // 3. Seed Sample Banner
-    await Banner.deleteMany({});
-    await Banner.create({
-      text: {
-        en: 'New season nightwear collection now available. Watch fabrics & drape on YouTube before ordering.',
-        ml: 'പുതിയ കളക്ഷൻ ഇപ്പോൾ ലഭ്യമാണ്. ഓർഡർ ചെയ്യുന്നതിന് മുൻപ് യൂട്യൂബിൽ കാണുക.'
-      },
-      link: '/shop',
-      active: true,
-      startsAt: new Date(Date.now() - 86400000),
-      endsAt: new Date(Date.now() + 30 * 86400000)
-    });
-    console.log('Banner seeded.');
-
-    // 4. Seed Sample Products from products.sample.json
-    const sampleFilePath = path.join(__dirname, 'products.sample.json');
-    if (!fs.existsSync(sampleFilePath)) {
-      throw new Error(`Sample products file not found at ${sampleFilePath}`);
-    }
-    const sampleProducts = JSON.parse(fs.readFileSync(sampleFilePath, 'utf8'));
-
-    for (const p of sampleProducts) {
-      await Product.findOneAndUpdate(
-        { slug: p.slug },
-        { ...p, isSample: true },
-        { upsert: true, returnDocument: 'after' }
-      );
-    }
-    console.log(`Upserted ${sampleProducts.length} sample products successfully.`);
-
     console.log('--- SEEDING COMPLETE ---');
     console.log(`Admin Login Email: ${adminEmail}`);
-    console.log(`Admin Login Password: ${adminPass}`);
     process.exit(0);
   } catch (err) {
     console.error('Seeding error:', err);

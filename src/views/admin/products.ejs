@@ -3,13 +3,7 @@
     <h1>Products</h1>
     <p style="margin:4px 0 0;">Manage your nighty designs, images, pricing, and stock.</p>
   </div>
-  <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-    <% if (typeof hasSampleProducts !== 'undefined' && hasSampleProducts) { %>
-      <form method="POST" action="/admin/products/delete-samples" onsubmit="return confirm('Delete all sample products? Real products will not be affected.');" style="display:inline;">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button type="submit" class="a-btn a-btn--danger a-btn--sm">Delete all sample products</button>
-      </form>
-    <% } %>
+  <div>
     <a href="/admin/products/add" class="a-btn">+ Add New Nighty</a>
   </div>
 </div>
@@ -59,14 +53,11 @@
           <% products.forEach(function(p) { %>
             <tr>
               <td style="width:60px;">
-                <img src="<%= typeof p.getMainImage === 'function' ? p.getMainImage() : (p.images && p.images[0] ? (p.images[0].url || p.images[0]) : '/img/logo.svg') %>" alt="<%= p.name.en %>" style="width:48px; height:60px; object-fit:cover; border-radius:8px; border:1px solid var(--a-line);">
+                <img src="<%= typeof p.getMainImage === 'function' ? p.getMainImage() : (p.images && p.images[0] ? (p.images[0].url || p.images[0]) : '/img/brand/logo-mark-256.png') %>" alt="<%= p.name.en %>" style="width:48px; height:60px; object-fit:cover; border-radius:8px; border:1px solid var(--a-line);">
               </td>
               <td>
-                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <div>
                   <strong><%= p.name.en %></strong>
-                  <% if (p.isSample) { %>
-                    <span class="a-sample">Sample</span>
-                  <% } %>
                 </div>
                 <% if (p.name.ml) { %>
                   <div style="font-size:0.82rem; color:var(--a-muted);"><%= p.name.ml %></div>

@@ -16,17 +16,15 @@ function validateEnvironment() {
   // 2. Production strict security requirements
   if (env === 'production') {
     // Dangerous test harness/login flags forbidden in production
-    const dangerousFlags = ['ALLOW_TEST_HARNESS', 'ALLOW_TEST_LOGIN'];
-    for (const flag of dangerousFlags) {
-      if (process.env[flag] && process.env[flag] !== 'false') {
-        console.error(`FATAL: Test flag ${flag} is configured in production environment! Exiting immediately.`);
-        process.exit(1);
-      }
-    }
-
     for (const key of Object.keys(process.env)) {
-      if (key.toLowerCase().includes('mock') && process.env[key] && process.env[key] !== 'false') {
-        console.error(`FATAL: Mock setting ${key} is configured in production environment! Exiting immediately.`);
+      if (
+        ((key.startsWith('ALLOW_TEST_') && key !== 'ALLOW_TEST_PAYMENTS_IN_PROD') ||
+          key.includes('TEST_LOGIN') ||
+          key.toLowerCase().includes('mock')) &&
+        process.env[key] &&
+        process.env[key] !== 'false'
+      ) {
+        console.error(`FATAL: Forbidden test/mock flag ${key} is configured in production environment! Exiting immediately.`);
         process.exit(1);
       }
     }

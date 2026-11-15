@@ -116,7 +116,7 @@
   window.createProductCardElement = function (product, lang) {
     var isMl = lang === 'ml';
     var name = typeof product.getName === 'function' ? product.getName(lang) : (isMl && product.name && product.name.ml ? product.name.ml : (product.name && product.name.en ? product.name.en : (product.name || 'Nighty')));
-    var img0 = (product.images && product.images.length > 0) ? product.images[0] : '/img/placeholders/rose-garden-1.svg';
+    var img0 = (product.images && product.images.length > 0) ? product.images[0] : '/img/brand/logo-mark-256.png';
     var img1 = (product.images && product.images.length > 1) ? product.images[1] : null;
 
     var sizes = product.sizes || [];

@@ -5,7 +5,7 @@
   const orderedImages = typeof p.getOrderedImages === 'function' ? p.getOrderedImages() : (p.images || []);
   const img0Obj = orderedImages.length > 0 ? orderedImages[0] : null;
   const img1Obj = orderedImages.length > 1 ? orderedImages[1] : null;
-  const img0 = img0Obj ? (img0Obj.url || img0Obj) : '/img/placeholders/rose-garden-1.svg';
+  const img0 = img0Obj ? (img0Obj.url || img0Obj) : '/img/brand/logo-mark-256.png';
   const img1 = img1Obj ? (img1Obj.url || img1Obj) : null;
   const isSoldOut = !p.sizes || p.sizes.length === 0 || p.sizes.every(s => (s.stock || 0) <= 0);
   const lowStockSize = !isSoldOut && p.sizes && p.sizes.find(s => (s.stock || 0) > 0 && (s.stock || 0) <= 3);

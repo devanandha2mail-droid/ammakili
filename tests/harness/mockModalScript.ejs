@@ -1,0 +1,85 @@
+      var mockModal = document.getElementById('razorpay-mock-modal');
+      window.__mockModal = mockModal;
+      var mockUpiInput = document.getElementById('mock-upi-input');
+      var mockPaySuccessBtn = document.getElementById('mock-pay-success-btn');
+      var mockPayFailBtn = document.getElementById('mock-pay-fail-btn');
+      var mockPayCloseBtn = document.getElementById('mock-pay-close-btn');
+      var mockPayAmount = document.getElementById('mock-pay-amount');
+
+      function handleFailure(reason) {
+        isSubmitting = false;
+        if (mockModal) mockModal.style.display = 'none';
+        var oId = currentOrderData ? currentOrderData.orderId : null;
+        var oTok = currentOrderData ? currentOrderData.orderToken : null;
+        if (oId) {
+          cancelOrderOnServer(oId, oTok, reason || 'Payment failed');
+          submitBtn.disabled = false;
+          btnText.textContent = "Try again";
+          if (window.showToast) {
+            window.showToast('Payment failed: The payment was declined. You can try again.');
+          }
+          showCheckoutError('Payment failed: The payment was declined. You can try again.');
+        } else {
+          submitBtn.disabled = false;
+          btnText.textContent = "Try again";
+        }
+      }
+
+      if (mockPayCloseBtn) {
+        mockPayCloseBtn.addEventListener('click', function() {
+          if (mockModal) mockModal.style.display = 'none';
+          resetSubmitBtn();
+          if (currentOrderData && currentOrderData.orderId && currentOrderData.orderToken) {
+            cancelOrderOnServer(currentOrderData.orderId, currentOrderData.orderToken, 'Modal closed');
+          }
+          if (window.showToast) {
+            window.showToast('Payment window closed. Stock hold released.');
+          }
+        });
+      }
+
+      if (mockPayFailBtn) {
+        mockPayFailBtn.addEventListener('click', function() {
+          handleFailure('Simulate Failure button clicked');
+        });
+      }
+
+      if (mockPaySuccessBtn) {
+        mockPaySuccessBtn.addEventListener('click', function() {
+          var upiVal = (mockUpiInput ? mockUpiInput.value.trim() : '').toLowerCase();
+          if (upiVal.indexOf('fail') !== -1) {
+            handleFailure('UPI payment declined: ' + upiVal);
+          } else {
+            if (mockModal) mockModal.style.display = 'none';
+            if (currentOrderData) {
+              var payId = 'pay_mock_' + currentOrderData.razorpayOrderId + '_' + Date.now();
+              fetch('/__test/compute-signature', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: currentOrderData.razorpayOrderId,
+                  razorpay_payment_id: payId
+                })
+              })
+                .then(function(res) {
+                  if (!res.ok) throw new Error('Signature endpoint returned ' + res.status);
+                  return res.json();
+                })
+                .then(function(sigData) {
+                  if (!sigData || !sigData.signature) {
+                    throw new Error('Test signature not returned');
+                  }
+                  verifyPaymentOnServer(
+                    currentOrderData.orderId,
+                    currentOrderData.razorpayOrderId,
+                    payId,
+                    sigData.signature
+                  );
+                })
+                .catch(function(err) {
+                  alert('Error generating test signature: ' + err.message);
+                });
+            }
+          }
+        });
+      }

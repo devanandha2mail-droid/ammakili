@@ -84,15 +84,15 @@ async function resetAndSeedDatabase() {
     endsAt: new Date(Date.now() + 30 * 86400000)
   });
 
-  // 4. Seed 8 sample products from products.sample.json
-  const sampleFilePath = path.resolve(__dirname, '../../scripts/products.sample.json');
-  if (!fs.existsSync(sampleFilePath)) {
-    throw new Error(`Sample products file missing at ${sampleFilePath}`);
+  // 4. Seed 8 test products from test fixture
+  const fixtureFilePath = path.resolve(__dirname, '../fixtures/test-products.json');
+  if (!fs.existsSync(fixtureFilePath)) {
+    throw new Error(`Test products fixture missing at ${fixtureFilePath}`);
   }
-  const sampleProducts = JSON.parse(fs.readFileSync(sampleFilePath, 'utf8'));
+  const sampleProducts = JSON.parse(fs.readFileSync(fixtureFilePath, 'utf8'));
 
   for (let i = 0; i < sampleProducts.length; i++) {
-    const p = { ...sampleProducts[i], isSample: true };
+    const p = { ...sampleProducts[i] };
     if (i === 0) {
       // Ensure specific sizes for tests: one sold out (0), one with 2 left (2), one with 1 left (1 for overselling)
       p.sizes = p.sizes.map(s => {

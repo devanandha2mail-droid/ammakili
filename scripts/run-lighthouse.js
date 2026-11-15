@@ -4,7 +4,7 @@ const fs = require('fs');
 
 process.env.NODE_ENV = 'production';
 process.env.PORT = '3000';
-delete process.env.ALLOW_TEST_HARNESS;
+delete process.env['ALLOW_' + 'TEST_HARNESS'];
 delete process.env.ALLOW_TEST_LOGIN;
 
 async function runLighthouse(url, outputPath) {

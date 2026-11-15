@@ -127,7 +127,7 @@ exports.getProductDetail = async (req, res, next) => {
     // Build Product Schema JSON-LD for rich snippet SEO
     const firstImage = typeof product.getMainImage === 'function'
       ? product.getMainImage()
-      : (product.images && product.images.length > 0 ? (product.images[0].url || product.images[0]) : '/img/logo.svg');
+      : (product.images && product.images.length > 0 ? (product.images[0].url || product.images[0]) : '/img/brand/logo-mark-256.png');
     const absImage = firstImage.startsWith('http') ? firstImage : `${res.locals.currentUrl.split('/product')[0]}${firstImage}`;
     
     const inStock = product.sizes.some(s => s.stock > 0);
@@ -209,7 +209,7 @@ exports.getWishlistProducts = async (req, res) => {
         slug: p.slug,
         name: p.getName(req.cookies.nest_lang || 'en'),
         price: p.price,
-        image: typeof p.getMainImage === 'function' ? p.getMainImage() : (p.images && p.images[0] ? (p.images[0].url || p.images[0]) : '/img/logo.svg'),
+        image: typeof p.getMainImage === 'function' ? p.getMainImage() : (p.images && p.images[0] ? (p.images[0].url || p.images[0]) : '/img/brand/logo-mark-256.png'),
         style: p.style,
         tag: p.tag
       }))

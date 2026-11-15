@@ -165,32 +165,7 @@
   </div>
 </div>
 
-<% if (process.env.NODE_ENV === 'test' && process.env.ALLOW_TEST_HARNESS === 'true') { %>
-<!-- Interactive Razorpay Test Modal for Developer/Test Mode -->
-<div id="razorpay-mock-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:99999; align-items:center; justify-content:center; padding:16px;">
-  <div style="background:var(--bg, #fff); color:var(--ink, #222); border-radius:14px; max-width:440px; width:100%; padding:24px; box-shadow:0 12px 32px rgba(0,0,0,0.3); border:1px solid var(--gb, #e5e5e5); position:relative;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <h3 style="margin:0; font-size:1.15rem; font-family:var(--serif, serif);">Razorpay Checkout (Test Mode)</h3>
-      <button type="button" id="mock-pay-close-btn" aria-label="Close" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted); line-height:1;">&times;</button>
-    </div>
-    <p style="font-size:0.85rem; color:var(--muted); margin-bottom:14px;">Simulate test payment with Razorpay UPI or test card credentials.</p>
-    <div style="margin-bottom:12px;">
-      <label for="mock-upi-input" style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px;">UPI ID</label>
-      <input type="text" id="mock-upi-input" value="success@razorpay" placeholder="success@razorpay or failure@razorpay" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--gb, #ccc); font-size:0.9rem; background:var(--bg); color:var(--ink);">
-      <small style="font-size:0.75rem; color:var(--muted); display:block; margin-top:4px;">Enter <code>success@razorpay</code> or <code>failure@razorpay</code></small>
-    </div>
-    <div style="margin-bottom:16px;">
-      <label for="mock-card-input" style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px;">Test Card</label>
-      <input type="text" id="mock-card-input" value="4111 1111 1111 1111" readonly style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--gb, #ccc); font-size:0.9rem; background:var(--bg); color:var(--ink); opacity:0.85;">
-    </div>
-    <div id="mock-payment-status" style="display:none; font-size:0.85rem; margin-bottom:12px; font-weight:500;"></div>
-    <div style="display:flex; flex-direction:column; gap:8px;">
-      <button type="button" id="mock-pay-success-btn" class="btn" style="width:100%; justify-content:center;">Pay ₹<span id="mock-pay-amount">0</span> (Test)</button>
-      <button type="button" id="mock-pay-fail-btn" class="btn btn-outline" style="width:100%; justify-content:center; border-color:var(--crimson); color:var(--crimson);">Simulate Failure</button>
-    </div>
-  </div>
-</div>
-<% } %>
+<%- typeof testHarnessModal !== 'undefined' ? testHarnessModal : '' %>
 
 <!-- Razorpay Checkout SDK -->
 <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
@@ -231,8 +206,8 @@
 
       var isSubmitting = false;
 
-      // Safe reference to mockModal in any environment (null if not rendered)
-      var mockModal = document.getElementById('razorpay-mock-modal');
+      // Safe reference to mockModal in test harness environment (null if not injected)
+      var mockModal = window.__mockModal || null;
 
       function showCheckoutError(msg, reqId) {
         var errBox = document.getElementById('checkout-order-error');
@@ -273,91 +248,7 @@
         });
       }
 
-      <% if (process.env.NODE_ENV === 'test' && process.env.ALLOW_TEST_HARNESS === 'true') { %>
-      var mockUpiInput = document.getElementById('mock-upi-input');
-      var mockPaySuccessBtn = document.getElementById('mock-pay-success-btn');
-      var mockPayFailBtn = document.getElementById('mock-pay-fail-btn');
-      var mockPayCloseBtn = document.getElementById('mock-pay-close-btn');
-      var mockPayAmount = document.getElementById('mock-pay-amount');
-
-      function handleFailure(reason) {
-        isSubmitting = false;
-        if (mockModal) mockModal.style.display = 'none';
-        var oId = currentOrderData ? currentOrderData.orderId : null;
-        var oTok = currentOrderData ? currentOrderData.orderToken : null;
-        if (oId) {
-          cancelOrderOnServer(oId, oTok, reason || 'Payment failed');
-          submitBtn.disabled = false;
-          btnText.textContent = "Try again";
-          if (window.showToast) {
-            window.showToast('Payment failed: The payment was declined. You can try again.');
-          }
-          showCheckoutError('Payment failed: The payment was declined. You can try again.');
-        } else {
-          submitBtn.disabled = false;
-          btnText.textContent = "Try again";
-        }
-      }
-
-      if (mockPayCloseBtn) {
-        mockPayCloseBtn.addEventListener('click', function() {
-          if (mockModal) mockModal.style.display = 'none';
-          resetSubmitBtn();
-          if (currentOrderData && currentOrderData.orderId && currentOrderData.orderToken) {
-            cancelOrderOnServer(currentOrderData.orderId, currentOrderData.orderToken, 'Modal closed');
-          }
-          if (window.showToast) {
-            window.showToast('Payment window closed. Stock hold released.');
-          }
-        });
-      }
-
-      if (mockPayFailBtn) {
-        mockPayFailBtn.addEventListener('click', function() {
-          handleFailure('Simulate Failure button clicked');
-        });
-      }
-
-      if (mockPaySuccessBtn) {
-        mockPaySuccessBtn.addEventListener('click', function() {
-          var upiVal = (mockUpiInput ? mockUpiInput.value.trim() : '').toLowerCase();
-          if (upiVal.indexOf('fail') !== -1) {
-            handleFailure('UPI payment declined: ' + upiVal);
-          } else {
-            if (mockModal) mockModal.style.display = 'none';
-            if (currentOrderData) {
-              var payId = 'pay_mock_' + currentOrderData.razorpayOrderId + '_' + Date.now();
-              fetch('/__test/compute-signature', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  razorpay_order_id: currentOrderData.razorpayOrderId,
-                  razorpay_payment_id: payId
-                })
-              })
-                .then(function(res) {
-                  if (!res.ok) throw new Error('Signature endpoint returned ' + res.status);
-                  return res.json();
-                })
-                .then(function(sigData) {
-                  if (!sigData || !sigData.signature) {
-                    throw new Error('Test signature not returned');
-                  }
-                  verifyPaymentOnServer(
-                    currentOrderData.orderId,
-                    currentOrderData.razorpayOrderId,
-                    payId,
-                    sigData.signature
-                  );
-                })
-                .catch(function(err) {
-                  alert('Error generating test signature: ' + err.message);
-                });
-            }
-          }
-        });
-      }
-      <% } %>
+      <%- typeof testHarnessScript !== 'undefined' ? testHarnessScript : '' %>
 
       // Address picker auto-fill
       var addrSelector = document.getElementById('address-selector');
@@ -527,7 +418,7 @@
                 currency: data.currency,
                 name: 'Nest by Ammakkili',
                 description: 'Order ' + data.orderId,
-                image: '/img/logo.svg',
+                image: '/img/brand/logo-mark-256.png',
                 order_id: data.razorpayOrderId,
                 prefill: {
                   name: data.customer.name,

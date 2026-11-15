@@ -7,7 +7,7 @@
   const hasFabricCare = Boolean(pFabric || pCare || pFit);
 
   const orderedImages = typeof product.getOrderedImages === 'function' ? product.getOrderedImages() : (product.images || []);
-  const rawList = orderedImages.length > 0 ? orderedImages : [{ url: '/img/placeholders/rose-garden-1.svg', kind: 'extra' }];
+  const rawList = orderedImages.length > 0 ? orderedImages : [{ url: '/img/brand/logo-mark-256.png', kind: 'extra' }];
   const images = rawList.map(item => typeof item === 'string' ? { url: item, kind: 'extra' } : item);
   const firstImage = images[0].url;
 

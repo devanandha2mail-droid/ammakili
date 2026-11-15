@@ -472,7 +472,7 @@
 
             var img = document.createElement('img');
             img.className = 'mini-cart-thumb';
-            img.src = item.image || '/img/placeholders/rose-garden-1.svg';
+            img.src = item.image || '/img/brand/logo-mark-256.png';
             img.alt = item.name;
             row.appendChild(img);
 

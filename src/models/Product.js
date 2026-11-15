@@ -109,11 +109,6 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
     index: true
-  },
-  isSample: {
-    type: Boolean,
-    default: false,
-    index: true
   }
 }, {
   timestamps: true
@@ -150,7 +145,7 @@ productSchema.methods.getOrderedImages = function() {
 
 productSchema.methods.getMainImage = function() {
   const ordered = this.getOrderedImages();
-  return ordered.length ? ordered[0].url : '/img/logo.svg';
+  return ordered.length ? ordered[0].url : '/img/brand/logo-mark-256.png';
 };
 
 productSchema.methods.getSecondImage = function() {

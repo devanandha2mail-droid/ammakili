@@ -38,7 +38,6 @@ router.get('/', adminController.getDashboard);
 router.get('/products', adminController.getProducts);
 router.get('/products/add', adminController.getAddProduct);
 router.post('/products/add', upload.array('images', 10), adminController.postAddProduct);
-router.post('/products/delete-samples', adminController.deleteSampleProducts);
 router.get('/products/edit/:id', adminController.getEditProduct);
 router.post('/products/edit/:id', upload.array('images', 10), adminController.postEditProduct);
 router.post('/products/delete/:id', adminController.deleteProduct);

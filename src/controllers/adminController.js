@@ -115,9 +115,7 @@ exports.getDashboard = async (req, res, next) => {
         'sizes.stock': { $lte: lowStockThreshold }
       }),
       // Recent 8 orders
-      Order.find().sort({ createdAt: -1 }).limit(8),
-      // Sample products count
-      Product.countDocuments({ isSample: true })
+      Order.find().sort({ createdAt: -1 }).limit(8)
     ]);
 
     const revenueWeek = weekOrders.reduce((sum, o) => sum + (o.total || 0), 0);
@@ -168,14 +166,12 @@ exports.getProducts = async (req, res, next) => {
 
     const products = await Product.find(filter).sort({ createdAt: -1 });
     const styles = await Product.distinct('style');
-    const hasSampleProducts = await Product.exists({ isSample: true });
 
     res.render('admin/products', {
       layout: 'layouts/admin',
       title: 'Manage Products',
       products,
       styles,
-      hasSampleProducts: Boolean(hasSampleProducts),
       q: q || '',
       selectedStyle: style || '',
       selectedStatus: status || ''
@@ -251,9 +247,7 @@ exports.postAddProduct = async (req, res, next) => {
     }
 
     if (!finalImages.length) {
-      finalImages = uploadedUrls.length
-        ? uploadedUrls.map(url => ({ url, kind: 'extra' }))
-        : [{ url: '/img/placeholders/rose-garden-1.svg', kind: 'extra' }];
+      finalImages = uploadedUrls.map(url => ({ url, kind: 'extra' }));
     }
 
     // Generate unique slug
@@ -263,10 +257,6 @@ exports.postAddProduct = async (req, res, next) => {
     while (await Product.findOne({ slug })) {
       slug = `${baseSlug}-${counter++}`;
     }
-
-    const hasRealPhotos = finalImages.some(img =>
-      img.url && !img.url.includes('/placeholders/') && !img.url.includes('/logo.svg')
-    );
 
     const newProduct = await Product.create({
       slug,
@@ -282,8 +272,7 @@ exports.postAddProduct = async (req, res, next) => {
       sizes,
       tag: tag || 'None',
       featured: Boolean(featured),
-      active: active !== 'false',
-      isSample: !hasRealPhotos
+      active: active !== 'false'
     });
 
     // Link any draft jobs to this created product
@@ -378,14 +367,6 @@ exports.postEditProduct = async (req, res, next) => {
       });
     }
 
-    // When the admin uploads real photos to a sample product, set isSample to false
-    const hasRealPhotos = finalImages.some(img =>
-      img.url && !img.url.includes('/placeholders/') && !img.url.includes('/logo.svg')
-    );
-    if (hasRealPhotos && product.isSample) {
-      product.isSample = false;
-    }
-
     // Build sizes array
     const sizes = ['M', 'L', 'XL', 'XXL', '3XL'].map(s => ({
       size: s,
@@ -409,16 +390,6 @@ exports.postEditProduct = async (req, res, next) => {
     product.active = Boolean(active);
 
     await product.save();
-    res.redirect('/admin/products');
-  } catch (err) {
-    next(err);
-  }
-};
-
-// Delete all sample products
-exports.deleteSampleProducts = async (req, res, next) => {
-  try {
-    await Product.deleteMany({ isSample: true });
     res.redirect('/admin/products');
   } catch (err) {
     next(err);

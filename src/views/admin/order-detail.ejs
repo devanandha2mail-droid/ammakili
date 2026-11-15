@@ -40,7 +40,7 @@
       <h2 style="font-size:1.3rem; margin-bottom:14px; font-family:var(--a-serif); color:var(--a-ink);">Ordered Items</h2>
       <% order.items.forEach(function(item) { %>
         <div style="display:flex; gap:14px; align-items:center; border-bottom:1px solid var(--a-line); padding:12px 0;">
-          <img src="<%= item.image || '/img/logo.svg' %>" alt="<%= item.name %>" style="width:56px; height:70px; object-fit:cover; border-radius:8px; border:1px solid var(--a-line);">
+          <img src="<%= item.image || '/img/brand/logo-mark-256.png' %>" alt="<%= item.name %>" style="width:56px; height:70px; object-fit:cover; border-radius:8px; border:1px solid var(--a-line);">
           <div style="flex:1;">
             <strong style="color:var(--a-ink); display:block;"><%= item.name %></strong>
             <small style="color:var(--a-muted); display:block;">Size: <strong style="color:var(--a-ink);"><%= item.size %></strong> · Qty: <strong style="color:var(--a-ink);"><%= item.quantity %></strong></small>

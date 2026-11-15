@@ -27,7 +27,7 @@
         <div class="hero-slides">
           <% heroProducts.forEach(function(fp, idx) { 
             const fpName = fp.getName(lang);
-            const fpImg = typeof fp.getMainImage === 'function' ? fp.getMainImage() : ((fp.images && fp.images.length > 0) ? (fp.images[0].url || fp.images[0]) : '/img/placeholders/rose-garden-1.svg');
+            const fpImg = typeof fp.getMainImage === 'function' ? fp.getMainImage() : ((fp.images && fp.images.length > 0) ? (fp.images[0].url || fp.images[0]) : '/img/brand/logo-mark-256.png');
           %>
             <div 
               class="hero-slide <%= idx === 0 ? 'is-active' : '' %>" 
