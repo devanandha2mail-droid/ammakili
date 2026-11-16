@@ -3,6 +3,7 @@ const path = require('path');
 const multer = require('multer');
 const sharp = require('sharp');
 const PhotoJob = require('../models/PhotoJob');
+const photoStylist = require('./photoStylist');
 
 const STYLIST_UPLOADS_DIR = path.join(__dirname, '../../public/uploads/stylist');
 if (!fs.existsSync(STYLIST_UPLOADS_DIR)) {
@@ -59,7 +60,7 @@ function validateMagicBytes(buffer) {
  * 3. Resizes to max 2000px long side, WebP quality 85
  * 4. Saves original to disk and creates a queued PhotoJob
  */
-async function processStylistUpload(file, { productId = null, draftId = null, mode = 'auto', hanger = 'auto', background = 'pink' } = {}) {
+async function processStylistUpload(file, { productId = null, draftId = null, mode = 'auto', hanger = 'auto', background = 'pink', isStylistAvailable = null } = {}) {
   const format = validateMagicBytes(file.buffer);
   if (format === 'heic') {
     throw new Error('iPhone HEIC format is not supported directly. Please convert or export your photo to JPEG, PNG, or WebP before uploading.');
@@ -67,6 +68,8 @@ async function processStylistUpload(file, { productId = null, draftId = null, mo
   if (!format || !['jpeg', 'png', 'webp'].includes(format)) {
     throw new Error('Only JPEG, PNG, WebP and HEIC images are allowed. The uploaded file content does not match any accepted image format.');
   }
+
+  const isOnline = typeof isStylistAvailable === 'boolean' ? isStylistAvailable : await photoStylist.isAvailable(1000);
 
   const uniqueId = Date.now() + '-' + Math.round(Math.random() * 1e9);
   const origFileName = `orig-${uniqueId}.webp`;
@@ -107,8 +110,13 @@ async function processStylistUpload(file, { productId = null, draftId = null, mo
       hanger: ['auto', 'yes', 'no'].includes(hanger) ? hanger : 'auto',
       background: ['pink', 'cream', 'white'].includes(background) ? background : 'pink'
     },
-    meta: lowResWarning ? { lowResWarning } : {},
-    status: 'queued'
+    meta: {
+      ...(lowResWarning ? { lowResWarning } : {}),
+      ...(isOnline ? {} : { offline: true })
+    },
+    status: isOnline ? 'queued' : 'done',
+    styled_ok: false,
+    finishedAt: isOnline ? null : new Date()
   });
 
   return {
@@ -116,7 +124,8 @@ async function processStylistUpload(file, { productId = null, draftId = null, mo
     originalUrl,
     width: info.width,
     height: info.height,
-    lowResWarning
+    lowResWarning,
+    offline: !isOnline
   };
 }
 

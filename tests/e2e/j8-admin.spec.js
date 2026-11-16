@@ -190,5 +190,49 @@ test.describe('J8: Admin management workflows, authorization gates, and product 
     const deletedProd = await Product.findById(customProd._id);
     expect(deletedProd).toBeNull();
   });
+
+  test('Photo upload on /admin/products/add works when Stylist is offline: saves original, updates gallery, and submits product', async ({ page }) => {
+    // Authenticate admin session
+    await page.goto('/admin/test-login?email=admin@nestammakkili.com&role=owner');
+    await page.goto('/admin/products/add');
+
+    // Stylist offline banner should be visible since port 8001 is offline
+    await expect(page.locator('#stylist-offline-banner')).toBeVisible();
+
+    // Create small dummy JPEG in memory / fixture
+    const sharp = require('sharp');
+    const path = require('path');
+    const fs = require('fs');
+    const testImgPath = path.join(__dirname, '../fixtures/test-upload-dress.jpg');
+    if (!fs.existsSync(path.dirname(testImgPath))) fs.mkdirSync(path.dirname(testImgPath), { recursive: true });
+    await sharp({
+      create: { width: 1200, height: 1600, channels: 3, background: { r: 240, g: 120, b: 120 } }
+    }).jpeg().toFile(testImgPath);
+
+    // Upload via file input
+    const fileInput = page.locator('#stylist-file-input');
+    await fileInput.setInputFiles(testImgPath);
+
+    // Card should appear showing Original Photo (Saved)
+    await expect(page.locator('.a-stylist-card')).toBeVisible({ timeout: 7000 });
+    await expect(page.locator('.a-stylist-card')).toContainText('Original Photo (Saved)');
+
+    // Thumbnail strip should update with the uploaded photo
+    await expect(page.locator('.a-thumb-item')).toHaveCount(1);
+
+    // Fill form details and submit
+    await page.fill('#name_en', 'Offline Upload Nighty');
+    await page.fill('#description_en', 'Soft cotton nighty uploaded while stylist is offline.');
+    await page.fill('#price', '599');
+    await page.fill('input[name="stock_M"]', '5');
+    await page.locator('button[type="submit"]:has-text("Create Nighty")').click({ force: true });
+
+    // Should redirect to /admin/products with the new product listed
+    await expect(page).toHaveURL(/\/admin\/products/);
+    await expect(page.locator('body')).toContainText('Offline Upload Nighty');
+
+    // Clean up created file
+    if (fs.existsSync(testImgPath)) fs.unlinkSync(testImgPath);
+  });
 });
 

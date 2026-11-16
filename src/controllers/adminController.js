@@ -293,8 +293,8 @@ exports.postAddProduct = async (req, res, next) => {
 
     const newProduct = await Product.create({
       slug,
-      name: { en: name_en.trim(), ml: (name_ml || '').trim() },
-      description: { en: description_en.trim(), ml: (description_ml || '').trim() },
+      name: { en: (name_en || '').trim(), ml: (name_ml || '').trim() },
+      description: { en: (description_en || '').trim(), ml: (description_ml || '').trim() },
       style: style || 'Cotton',
       price: parseFloat(price) || 0,
       images: finalImages,
@@ -955,6 +955,7 @@ exports.postStylistUpload = async (req, res) => {
       return res.status(400).json({ error: 'No photos uploaded.' });
     }
     const { productId, draftId, mode, hanger, background } = req.body;
+    const isStylistAvailable = await photoStylist.isAvailable(1000);
     const jobs = [];
 
     for (const file of req.files) {
@@ -964,7 +965,8 @@ exports.postStylistUpload = async (req, res) => {
           draftId: draftId || null,
           mode: mode || 'auto',
           hanger: hanger || 'auto',
-          background: background || 'pink'
+          background: background || 'pink',
+          isStylistAvailable
         });
         jobs.push({
           jobId: result.job._id,
@@ -973,7 +975,8 @@ exports.postStylistUpload = async (req, res) => {
           options: result.job.options,
           warning: result.lowResWarning,
           width: result.width,
-          height: result.height
+          height: result.height,
+          meta: result.job.meta
         });
       } catch (uploadErr) {
         return res.status(422).json({ error: uploadErr.message });

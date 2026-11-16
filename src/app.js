@@ -357,7 +357,10 @@ app.use((req, res, next) => {
     req.path === '/admin/login' ||
     req.path === '/account/wishlist/sync' ||
     req.path === '/account/delete' ||
-    req.path === '/cart/validate'
+    req.path === '/cart/validate' ||
+    req.path === '/admin/products/add' ||
+    req.path.startsWith('/admin/products/edit/') ||
+    req.path === '/admin/stylist/upload'
   ) {
     return next();
   }

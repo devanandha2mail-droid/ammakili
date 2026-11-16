@@ -278,6 +278,22 @@
       else if (action === 'remove') window.removeStylistCard(jobId);
       else if (action === 'restyle') window.restyleJob(jobId);
     });
+
+    cardsContainer.addEventListener('change', function(e) {
+      const radio = e.target.closest('input[type="radio"][data-choice-job]');
+      if (radio && window.setJobChoice) {
+        window.setJobChoice(radio.dataset.choiceJob, radio.value);
+      }
+    });
+  }
+
+  if (strip) {
+    strip.addEventListener('change', function(e) {
+      const sel = e.target.closest('.a-photo-tag-select[data-tag-index]');
+      if (sel && window.setPhotoTag) {
+        window.setPhotoTag(parseInt(sel.dataset.tagIndex, 10), sel.value);
+      }
+    });
   }
 
   // 1. Initialize existing images
@@ -365,15 +381,29 @@
 
     fetch('/admin/stylist/upload', {
       method: 'POST',
+      headers: {
+        'X-CSRF-Token': csrfToken
+      },
       body: formData
     })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
+    .then(async function(res) {
+      let data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        if (res.status === 403) throw new Error('Security token or admin session expired. Please refresh the page and try again.');
+        if (res.status === 413) throw new Error('File size too large (maximum 12 MB).');
+        throw new Error('Upload error from server (HTTP ' + res.status + ').');
+      }
+      return { status: res.status, ok: res.ok, data: data };
+    })
+    .then(function(result) {
       uploadStatus.style.display = 'none';
-      if (data.error) {
-        alert(data.error);
+      if (!result.ok || result.data.error) {
+        alert(result.data.error || 'Upload failed (HTTP ' + result.status + ').');
         return;
       }
+      const data = result.data;
       if (data.jobs && data.jobs.length) {
         data.jobs.forEach(function(j) {
           const jobObj = {
@@ -383,18 +413,23 @@
             warning: j.warning,
             width: j.width,
             height: j.height,
+            meta: j.meta || {},
             options: j.options || { mode: 'auto', hanger: 'auto', background: 'pink' }
           };
           jobsMap.set(String(j.jobId), jobObj);
           renderJobCard(jobObj);
-          startPollingJob(String(j.jobId));
+          if (jobObj.status === 'done') {
+            applyJobToGallery(jobObj);
+          } else {
+            startPollingJob(String(j.jobId));
+          }
         });
       }
     })
     .catch(function(err) {
       uploadStatus.style.display = 'none';
       console.error(err);
-      alert('Upload failed. Please check network connection.');
+      alert(err.message || 'Upload failed. Please check network connection.');
     });
   }
 
@@ -485,6 +520,50 @@
       lowResHtml = '<div class="a-stylist-warn" style="margin-bottom:12px;">⚠️ ' + lowResNote + '</div>';
     }
 
+    if (meta.offline || job.offline) {
+      card.className = 'a-stylist-card';
+      const defaultChoice = job._choice || 'original';
+      job._choice = defaultChoice;
+      const previewUrl = job.originalUrl;
+
+      card.innerHTML =
+        '<div style="display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start;">' +
+          '<div>' +
+            '<div style="position:relative; width:100%; aspect-ratio:4/5; border-radius:14px; overflow:hidden; border:1px solid var(--a-line); background:#000;">' +
+              '<img src="' + previewUrl + '" alt="Original photo preview" style="width:100%; height:100%; object-fit:cover; display:block;">' +
+              '<span class="a-tag a-tag--orig" style="position:absolute; bottom:8px; left:8px;">Original Photo</span>' +
+            '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+              '<span class="a-tag a-tag--orig">Original Photo (Saved)</span>' +
+            '</div>' +
+            lowResHtml +
+            '<div class="a-alert a-alert--info" style="font-size:0.88rem; line-height:1.5; margin-bottom:14px;">' +
+              'ℹ️ <strong>Photo saved as original.</strong> Styling service is currently offline, so this photo is placed directly into the storefront gallery as an original photo.' +
+            '</div>' +
+            '<div style="margin:16px 0; padding:14px; background:var(--a-bg2); border-radius:12px; border:1px solid var(--a-line);">' +
+              '<div style="font-weight:600; font-size:0.88rem; margin-bottom:10px; color:var(--a-ink);">Photo Role in Storefront:</div>' +
+              '<div style="display:flex; flex-direction:column; gap:8px;">' +
+                '<label class="a-check" style="font-size:0.88rem;">' +
+                  '<input type="radio" name="choice_' + jobId + '" value="original" data-choice-job="' + jobId + '" ' + (defaultChoice === 'original' ? 'checked' : '') + '>' +
+                  '<span><strong>Use as original product photo</strong> (Whole dress)</span>' +
+                '</label>' +
+                '<label class="a-check" style="font-size:0.88rem;">' +
+                  '<input type="radio" name="choice_' + jobId + '" value="detail" data-choice-job="' + jobId + '" ' + (defaultChoice === 'detail' ? 'checked' : '') + '>' +
+                  '<span>Use as detail photo (Close-up of print/neckline)</span>' +
+                '</label>' +
+                '<label class="a-check" style="font-size:0.88rem; color:var(--a-bad);">' +
+                  '<input type="radio" name="choice_' + jobId + '" value="remove" data-choice-job="' + jobId + '" ' + (defaultChoice === 'remove' ? 'checked' : '') + '>' +
+                  '<span>Remove photo</span>' +
+                '</label>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      return;
+    }
+
     if (isRefused) {
       card.className = 'a-stylist-card a-stylist-card--amber';
       const defaultChoice = job._choice || 'detail';
@@ -516,15 +595,15 @@
               '<div style="font-weight:600; font-size:0.88rem; margin-bottom:10px; color:var(--a-ink);">Photo Choice for Storefront:</div>' +
               '<div style="display:flex; flex-direction:column; gap:8px;">' +
                 '<label class="a-check" style="font-size:0.88rem;">' +
-                  '<input type="radio" name="choice_' + jobId + '" value="detail" ' + (defaultChoice === 'detail' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'detail\')">' +
+                  '<input type="radio" name="choice_' + jobId + '" value="detail" data-choice-job="' + jobId + '" ' + (defaultChoice === 'detail' ? 'checked' : '') + '>' +
                   '<span><strong>Use as detail photo</strong> (Recommended)</span>' +
                 '</label>' +
                 '<label class="a-check" style="font-size:0.88rem;">' +
-                  '<input type="radio" name="choice_' + jobId + '" value="original" ' + (defaultChoice === 'original' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'original\')">' +
+                  '<input type="radio" name="choice_' + jobId + '" value="original" data-choice-job="' + jobId + '" ' + (defaultChoice === 'original' ? 'checked' : '') + '>' +
                   '<span>Use original only</span>' +
                 '</label>' +
                 '<label class="a-check" style="font-size:0.88rem; color:var(--a-bad);">' +
-                  '<input type="radio" name="choice_' + jobId + '" value="remove" ' + (defaultChoice === 'remove' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'remove\')">' +
+                  '<input type="radio" name="choice_' + jobId + '" value="remove" data-choice-job="' + jobId + '" ' + (defaultChoice === 'remove' ? 'checked' : '') + '>' +
                   '<span>Remove photo</span>' +
                 '</label>' +
               '</div>' +
@@ -586,15 +665,15 @@
             '<div style="font-weight:600; font-size:0.88rem; margin-bottom:10px; color:var(--a-ink);">Photo Choice for Storefront:</div>' +
             '<div style="display:flex; flex-direction:column; gap:8px;">' +
               '<label class="a-check" style="font-size:0.88rem;">' +
-                '<input type="radio" name="choice_' + jobId + '" value="both" ' + (defaultChoice === 'both' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'both\')">' +
+                '<input type="radio" name="choice_' + jobId + '" value="both" data-choice-job="' + jobId + '" ' + (defaultChoice === 'both' ? 'checked' : '') + '>' +
                 '<span><strong>Use styled + keep original</strong> (Recommended: styled first, original second)</span>' +
               '</label>' +
               '<label class="a-check" style="font-size:0.88rem;">' +
-                '<input type="radio" name="choice_' + jobId + '" value="original" ' + (defaultChoice === 'original' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'original\')">' +
+                '<input type="radio" name="choice_' + jobId + '" value="original" data-choice-job="' + jobId + '" ' + (defaultChoice === 'original' ? 'checked' : '') + '>' +
                 '<span>Use original only</span>' +
               '</label>' +
               '<label class="a-check" style="font-size:0.88rem; color:var(--a-bad);">' +
-                '<input type="radio" name="choice_' + jobId + '" value="remove" ' + (defaultChoice === 'remove' ? 'checked' : '') + ' onchange="window.setJobChoice(\'' + jobId + '\', \'remove\')">' +
+                '<input type="radio" name="choice_' + jobId + '" value="remove" data-choice-job="' + jobId + '" ' + (defaultChoice === 'remove' ? 'checked' : '') + '>' +
                 '<span>Remove photo</span>' +
               '</label>' +
             '</div>' +
@@ -732,8 +811,9 @@
   function applyJobToGallery(job) {
     const jobId = String(job._id || job.id);
     const meta = job.meta || {};
+    const isOffline = meta.offline === true || job.offline === true;
     const isRefused = (job.styled_ok === false || job.mode_used === 'closeup' || meta.styled_ok === false || meta.mode_used === 'closeup');
-    const defaultChoice = isRefused ? 'detail' : (meta.quality === 'poor' ? 'original' : 'both');
+    const defaultChoice = isOffline ? 'original' : (isRefused ? 'detail' : (meta.quality === 'poor' ? 'original' : 'both'));
     const choice = job._choice || defaultChoice;
 
     // Remove existing entries for this job
@@ -820,7 +900,7 @@
           '<span class="a-tag ' + tagClass + '" style="position:absolute; bottom:3px; left:3px; font-size:0.6rem; padding:2px 5px; pointer-events:none;">' + tagText + '</span>' +
           (idx === 0 ? '<span class="a-tag a-tag--main" style="position:absolute; top:3px; left:3px; font-size:0.55rem; padding:1px 4px; pointer-events:none;">★ Main</span>' : '') +
         '</div>' +
-        '<select class="a-photo-tag-select" onchange="window.setPhotoTag(' + idx + ', this.value)" style="width:88px; font-size:0.68rem; padding:2px 2px; border-radius:6px; border:1px solid var(--a-line); background:var(--a-bg); color:var(--a-ink);">' +
+        '<select class="a-photo-tag-select" data-tag-index="' + idx + '" style="width:88px; font-size:0.68rem; padding:2px 2px; border-radius:6px; border:1px solid var(--a-line); background:var(--a-bg); color:var(--a-ink);">' +
           '<option value="original" ' + (item.kind === 'original' || item.kind === 'styled' ? 'selected' : '') + '>Whole dress</option>' +
           '<option value="detail" ' + (item.kind === 'detail' ? 'selected' : '') + '>Detail (print or neckline)</option>' +
           '<option value="extra" ' + (item.kind === 'extra' ? 'selected' : '') + '>Other</option>' +

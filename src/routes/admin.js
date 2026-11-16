@@ -7,6 +7,7 @@ const adminUserController = require('../controllers/adminUserController');
 const { requireAdmin, requireOwner, requireFreshAuth, redirectIfAuthenticated } = require('../middleware/auth');
 const { upload } = require('../services/upload');
 const stylistUpload = require('../services/stylistUpload');
+const { doubleCsrfProtection } = require('../middleware/csrf');
 
 const stylistLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -41,13 +42,13 @@ router.get('/', adminController.getDashboard);
 // Products (Staff & Owner)
 router.get('/products', adminController.getProducts);
 router.get('/products/add', adminController.getAddProduct);
-router.post('/products/add', upload.array('images', 10), adminController.postAddProduct);
+router.post('/products/add', upload.array('images', 10), doubleCsrfProtection, adminController.postAddProduct);
 router.get('/products/edit/:id', adminController.getEditProduct);
-router.post('/products/edit/:id', upload.array('images', 10), adminController.postEditProduct);
+router.post('/products/edit/:id', upload.array('images', 10), doubleCsrfProtection, adminController.postEditProduct);
 router.post('/products/delete/:id', adminController.deleteProduct);
 
 // Photo Stylist Routes (Staff & Owner)
-router.post('/stylist/upload', stylistLimiter, stylistUpload.upload.array('photos', 10), adminController.postStylistUpload);
+router.post('/stylist/upload', stylistLimiter, stylistUpload.upload.array('photos', 10), doubleCsrfProtection, adminController.postStylistUpload);
 router.get('/stylist/job/:id', adminController.getStylistJobStatus);
 router.post('/stylist/restyle/:id', stylistLimiter, adminController.postStylistRestyle);
 router.post('/stylist/retry/:id', stylistLimiter, adminController.postStylistRetry);
