@@ -81,6 +81,24 @@ test.describe('Section 4.1: Admin Accounts, Google Allowlist & Role Separation',
     expect(replayedText).toContain('Not Authorised');
   });
 
+  test('3c. Unified callback: /auth/google/callback with admin state successfully authenticates admin', async ({ page }) => {
+    const initRes = await page.request.get('/admin/auth/google', { maxRedirects: 0 });
+    const location = initRes.headers()['location'] || '';
+    const stateMatch = location.match(/state=([^&]+)/);
+    expect(stateMatch).toBeTruthy();
+    const state = stateMatch[1];
+    expect(state.startsWith('admin_')).toBe(true);
+
+    const callbackRes = await page.request.get(`/auth/google/callback?code=code_valid&state=${state}`, { maxRedirects: 0 });
+    expect(callbackRes.status()).toBe(302);
+    expect(callbackRes.headers()['location']).toBe('/admin');
+
+    // Access /admin with this authenticated context
+    const adminRes = await page.goto('/admin');
+    expect(adminRes.status()).toBe(200);
+    expect(page.url()).toContain('/admin');
+  });
+
   test('4. Google OAuth login: unverified email is refused with 403', async ({ page }) => {
     // 1. Initiate OAuth
     const initRes = await page.request.get('/admin/auth/google', { maxRedirects: 0 });

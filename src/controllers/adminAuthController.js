@@ -33,6 +33,9 @@ function getCallbackUrl(req) {
   if (process.env.GOOGLE_ADMIN_CALLBACK_URL) {
     return process.env.GOOGLE_ADMIN_CALLBACK_URL;
   }
+  if (process.env.NODE_ENV !== 'test' && process.env.GOOGLE_CALLBACK_URL) {
+    return process.env.GOOGLE_CALLBACK_URL;
+  }
   const siteUrl = process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
   return `${siteUrl}/admin/auth/google/callback`;
 }
@@ -65,7 +68,7 @@ exports.getLogin = (req, res) => {
 
 // 2. GET /admin/auth/google
 exports.startGoogleAuth = (req, res) => {
-  const state = crypto.randomBytes(32).toString('hex');
+  const state = 'admin_' + crypto.randomBytes(32).toString('hex');
   const nonce = crypto.randomBytes(32).toString('hex');
   const codeVerifier = crypto.randomBytes(32).toString('base64url');
   const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');

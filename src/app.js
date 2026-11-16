@@ -206,7 +206,11 @@ const adminSessionMiddleware = session({
 app.set('adminSessionMiddleware', adminSessionMiddleware);
 
 app.use((req, res, next) => {
-  if (req.path === '/admin' || req.path.startsWith('/admin/')) {
+  const isAdminCallback = req.path === '/auth/google/callback' &&
+    typeof req.query.state === 'string' &&
+    req.query.state.startsWith('admin_');
+
+  if (req.path === '/admin' || req.path.startsWith('/admin/') || isAdminCallback) {
     return adminSessionMiddleware(req, res, next);
   }
   return customerSessionMiddleware(req, res, next);
@@ -214,7 +218,11 @@ app.use((req, res, next) => {
 
 // 8. Passport Authentication (Customer Google Sign-in on non-admin routes only)
 app.use((req, res, next) => {
-  if (req.path.startsWith('/admin')) {
+  const isAdminCallback = req.path === '/auth/google/callback' &&
+    typeof req.query.state === 'string' &&
+    req.query.state.startsWith('admin_');
+
+  if (req.path.startsWith('/admin') || isAdminCallback) {
     return next();
   }
   passport.initialize()(req, res, (err) => {
