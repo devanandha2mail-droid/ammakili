@@ -45,6 +45,8 @@
 .ft-bar{max-width:1240px;margin:0 auto;padding:14px 28px calc(18px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:6px 28px;flex-wrap:wrap;
   border-top:1px solid rgba(255,255,255,.14);font-size:.8rem;opacity:.78}
 .ft-bar p{margin:0}
+.ft-powered-link{color:inherit;text-decoration:underline;text-underline-offset:3px;font-weight:500;transition:opacity .2s,color .2s}
+.ft-powered-link:hover{opacity:1;color:var(--hd-accent,#ec4899)}
 
 @media (max-width:900px){
   .ft{grid-template-columns:1fr;justify-items:center;text-align:center;gap:18px;padding:26px 20px 18px}
