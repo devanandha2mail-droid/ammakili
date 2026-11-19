@@ -21,8 +21,12 @@ if (hasCloudinary) {
 
 // Local disk storage fallback directory
 const uploadDir = path.join(__dirname, '../../public/uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (e) {
+  // Read-only filesystem in serverless environments (e.g. Vercel)
 }
 
 // Always use memory storage to inspect magic bytes & re-encode before writing

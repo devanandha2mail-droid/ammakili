@@ -6,8 +6,12 @@ const PhotoJob = require('../models/PhotoJob');
 const photoStylist = require('./photoStylist');
 
 const STYLIST_UPLOADS_DIR = path.join(__dirname, '../../public/uploads/stylist');
-if (!fs.existsSync(STYLIST_UPLOADS_DIR)) {
-  fs.mkdirSync(STYLIST_UPLOADS_DIR, { recursive: true });
+try {
+  if (!fs.existsSync(STYLIST_UPLOADS_DIR)) {
+    fs.mkdirSync(STYLIST_UPLOADS_DIR, { recursive: true });
+  }
+} catch (e) {
+  // Read-only filesystem in serverless environments (e.g. Vercel)
 }
 
 // Memory storage so we inspect content bytes before writing to disk
