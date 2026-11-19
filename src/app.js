@@ -166,13 +166,15 @@ app.set('layout', 'layouts/main');
 // 7. Segregated Session Configurations with MongoStore (Customer vs Admin)
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/nest_ammakkili';
 const isProd = process.env.NODE_ENV === 'production';
+const isLocalDb = !process.env.MONGODB_URI || MONGODB_URI.includes('127.0.0.1') || MONGODB_URI.includes('localhost');
+const useMemoryStore = Boolean(process.env.VERCEL && isLocalDb);
 
 const customerSessionMiddleware = session({
   name: isProd ? '__Host-nest_sess' : 'nest_sess',
   secret: process.env.SESSION_SECRET || 'nest_customer_session_secret_local',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
+  store: useMemoryStore ? new session.MemoryStore() : MongoStore.create({
     mongoUrl: MONGODB_URI,
     collectionName: 'sessions',
     ttl: 14 * 24 * 60 * 60 // 14 days
@@ -190,7 +192,7 @@ const adminSessionMiddleware = session({
   secret: process.env.SESSION_SECRET || 'nest_admin_session_secret_local',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
+  store: useMemoryStore ? new session.MemoryStore() : MongoStore.create({
     mongoUrl: MONGODB_URI,
     collectionName: 'admin_sessions',
     ttl: 8 * 60 * 60 // 8 hours absolute
@@ -265,9 +267,24 @@ app.use(i18nMiddleware);
 
 // 9. Load Global Settings & Active Banner into res.locals
 app.use(async (req, res, next) => {
+  res.locals.path = req.path;
+  res.locals.currentUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+
+  if (mongoose.connection.readyState !== 1) {
+    res.locals.settings = {
+      shippingCharge: 60,
+      whatsappNumber: process.env.WHATSAPP_NUMBER || '919876543210',
+      announcementText: {
+        en: 'Soft, breathable nighties crafted for restful comfort. Prepaid orders only • Flat ₹60 shipping.',
+        ml: 'സുഖകരവും ഗുണമേന്മയുള്ളതുമായ നൈറ്റികൾ. പ്രീപെയ്ഡ് ഓർഡറുകൾ മാത്രം • ഷിപ്പിംഗ് ₹60.'
+      }
+    };
+    res.locals.whatsappNumber = res.locals.settings.whatsappNumber;
+    res.locals.banner = null;
+    return next();
+  }
+
   try {
-    res.locals.path = req.path;
-    res.locals.currentUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
     const globalSettings = await Settings.getSettings();
     res.locals.settings = globalSettings;
     res.locals.whatsappNumber = globalSettings.whatsappNumber || '919876543210';

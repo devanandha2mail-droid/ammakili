@@ -8,7 +8,7 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "{src/views/**,locales/**,public/**}"
+      "includeFiles": "{src/views/**,locales/**,public/**,tests/fixtures/**}"
     }
   }
 }
