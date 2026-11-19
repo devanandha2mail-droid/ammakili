@@ -3,18 +3,7 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const { trackOrderFailure, resetOrderTrackingFailures } = require('../middleware/trackOrderLimiter');
 
-let sampleProductsCache = null;
-function getSampleProducts() {
-  if (!sampleProductsCache) {
-    try {
-      const list = require('../../tests/fixtures/test-products.json');
-      sampleProductsCache = list.map(item => new Product(item));
-    } catch (e) {
-      sampleProductsCache = [];
-    }
-  }
-  return sampleProductsCache;
-}
+const { getSampleProducts } = require('../utils/sampleCatalog');
 
 // Home Page
 exports.getHome = async (req, res, next) => {

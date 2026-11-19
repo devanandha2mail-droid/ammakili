@@ -1,5 +1,7 @@
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Settings = require('../models/Settings');
+const { getSampleProducts } = require('../utils/sampleCatalog');
 
 exports.getCart = async (req, res) => {
   const settings = res.locals.settings || { shippingCharge: 60 };
@@ -18,21 +20,49 @@ exports.validateCart = async (req, res) => {
       return res.json({ items: [], subtotal: 0, shipping: 0, total: 0, removed: [], valid: true, removedCount: 0 });
     }
 
-    const settings = await Settings.getSettings();
-    const mongoose = require('mongoose');
+    let shippingChargeSetting = 60;
+    if (res.locals && res.locals.settings && typeof res.locals.settings.shippingCharge === 'number') {
+      shippingChargeSetting = res.locals.settings.shippingCharge;
+    } else if (mongoose.connection.readyState === 1) {
+      try {
+        const settings = await Settings.getSettings();
+        if (settings && typeof settings.shippingCharge === 'number') {
+          shippingChargeSetting = settings.shippingCharge;
+        }
+      } catch (e) {}
+    }
 
-    // Extract valid ObjectIds
-    const rawIds = items.map(it => it.productId || it.id).filter(Boolean);
-    const validIds = rawIds.filter(id => mongoose.Types.ObjectId.isValid(id));
-    const dbProducts = await Product.find({ _id: { $in: validIds }, active: true });
+    // Extract valid ObjectIds or slugs
+    const rawIds = items.map(it => it.productId || it.id || it.slug).filter(Boolean);
+    let dbProducts = [];
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const validIds = rawIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+        if (validIds.length > 0) {
+          dbProducts = await Product.find({ _id: { $in: validIds }, active: true });
+        }
+      } catch (e) {
+        dbProducts = [];
+      }
+    }
+
+    // Fallback to sample catalog if DB is disconnected or returns empty
+    if (!dbProducts || dbProducts.length === 0) {
+      const sampleList = getSampleProducts();
+      dbProducts = sampleList.filter(p => {
+        const idStr = p._id ? p._id.toString() : '';
+        return rawIds.some(rid => rid === idStr || rid === p.slug);
+      });
+    }
 
     let subtotal = 0;
     const validatedItems = [];
     const removed = [];
 
     for (const item of items) {
-      const pid = String(item.productId || item.id || '');
-      const p = dbProducts.find(doc => doc._id.toString() === pid);
+      const pid = String(item.productId || item.id || item.slug || '');
+      const p = dbProducts.find(doc => (doc._id && doc._id.toString() === pid) || doc.slug === pid);
       if (!p) {
         removed.push({ productId: pid, size: item.size, qty: item.qty || item.quantity || 1 });
         continue;
@@ -71,7 +101,7 @@ exports.validateCart = async (req, res) => {
       });
     }
 
-    const shippingCharge = validatedItems.length > 0 ? (settings.shippingCharge ?? 60) : 0;
+    const shippingCharge = validatedItems.length > 0 ? shippingChargeSetting : 0;
     const total = subtotal + shippingCharge;
 
     res.json({
@@ -88,4 +118,3 @@ exports.validateCart = async (req, res) => {
     res.status(500).json({ error: 'Failed to validate cart' });
   }
 };
-
