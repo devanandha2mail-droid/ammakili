@@ -1,11 +1,11 @@
 # Multi-stage production build for Nest by Ammakkili Storefront & Admin
 # Pinned to Node.js 22 Alpine LTS
-FROM node:22-alpine3.20 AS deps
+FROM node:24-alpine3.20 AS deps
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-FROM node:22-alpine3.20 AS runner
+FROM node:24-alpine3.20 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
