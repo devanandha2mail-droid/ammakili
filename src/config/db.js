@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) {
+    return;
+  }
   try {
     const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/nest_ammakkili';
 
@@ -32,6 +35,9 @@ const connectDB = async () => {
     }
   } catch (err) {
     console.error('[MongoDB] Connection error:', err.message);
+    if (process.env.VERCEL) {
+      throw err;
+    }
     process.exit(1);
   }
 };
