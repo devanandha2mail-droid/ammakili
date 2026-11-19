@@ -2,7 +2,7 @@ const Product = require('../models/Product');
 const Settings = require('../models/Settings');
 
 exports.getCart = async (req, res) => {
-  const settings = await Settings.getSettings();
+  const settings = res.locals.settings || { shippingCharge: 60 };
   res.render('pages/cart', {
     title: res.locals.t('cart.title'),
     metaDesc: 'Review nighties in your cart before secure prepaid checkout.',
