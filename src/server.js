@@ -8,6 +8,7 @@ require('dotenv').config({ path: envPath });
 const { validateEnvironment } = require('./utils/envGuard');
 validateEnvironment();
 const http = require('http');
+const mongoose = require('mongoose');
 const app = require('./app');
 const connectDB = require('./config/db');
 const { ensureInitialOwner } = require('./services/adminInit');
@@ -22,15 +23,29 @@ async function startServer() {
   try {
     // 1. Connect to Database
     await connectDB();
-    await ensureInitialOwner();
+  } catch (err) {
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+      process.exit(1);
+    }
+    console.warn(`[Server] Note: MongoDB connection to "${process.env.MONGODB_URI || '127.0.0.1:27017'}" was not established.`);
+  }
 
-    // 2. Run data migrations (migrate string images to object structure)
-    await migrateProductImages();
+  const dbConnected = (mongoose.connection.readyState === 1);
+  if (!dbConnected) {
+    console.log('[Server] Starting in Resilient Development / Preview Mode (Mock catalog, PDP, sizes, cart, policies).');
+  } else {
+    try {
+      // 2. Run data migrations and background jobs
+      await ensureInitialOwner();
+      await migrateProductImages();
+      startOrderCleanupJob();
+      startWorker();
+    } catch (e) {
+      console.warn('[Server] Background task warning:', e.message);
+    }
+  }
 
-    // 3. Start scheduled background tasks & photo stylist worker
-    startOrderCleanupJob();
-    startWorker();
-
+  try {
     // 4. Start HTTP Server
     const server = http.createServer(app);
     server.listen(PORT, async () => {

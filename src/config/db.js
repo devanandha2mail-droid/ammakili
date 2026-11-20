@@ -1,11 +1,33 @@
 const mongoose = require('mongoose');
+const net = require('net');
+
+function checkLocalPort(host, port, timeout = 150) {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    socket.setTimeout(timeout);
+    socket.on('connect', () => { socket.destroy(); resolve(true); });
+    socket.on('timeout', () => { socket.destroy(); resolve(false); });
+    socket.on('error', () => { socket.destroy(); resolve(false); });
+    socket.connect(port, host);
+  });
+}
 
 const connectDB = async () => {
   if (mongoose.connection.readyState >= 1) {
     return;
   }
+  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/nest_ammakkili';
+  const isLocal = !process.env.MONGODB_URI || uri.includes('127.0.0.1') || uri.includes('localhost');
+
+  if (isLocal && process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    const isRunning = await checkLocalPort('127.0.0.1', 27017);
+    if (!isRunning) {
+      console.warn('[MongoDB] Local MongoDB (127.0.0.1:27017) is offline. Starting in resilient preview mode.');
+      return;
+    }
+  }
+
   try {
-    const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/nest_ammakkili';
 
     // Safety guard: Never run tests against real/production database
     if (process.env.NODE_ENV === 'test') {
@@ -38,10 +60,10 @@ const connectDB = async () => {
     }
   } catch (err) {
     console.error('[MongoDB] Connection error:', err.message);
-    if (process.env.VERCEL) {
-      throw err;
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+      process.exit(1);
     }
-    process.exit(1);
+    throw err;
   }
 };
 

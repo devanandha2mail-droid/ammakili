@@ -167,7 +167,11 @@ app.set('layout', 'layouts/main');
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/nest_ammakkili';
 const isProd = process.env.NODE_ENV === 'production';
 const isLocalDb = !process.env.MONGODB_URI || MONGODB_URI.includes('127.0.0.1') || MONGODB_URI.includes('localhost');
-const useMemoryStore = Boolean(process.env.VERCEL && isLocalDb);
+const useMemoryStore = Boolean(
+  (process.env.VERCEL && isLocalDb) ||
+  process.env.MEMORY_STORE === 'true' ||
+  (process.env.NODE_ENV !== 'production' && isLocalDb)
+);
 
 const customerSessionMiddleware = session({
   name: isProd ? '__Host-nest_sess' : 'nest_sess',
