@@ -35,7 +35,31 @@ const requireAdmin = async (req, res, next) => {
   }
 
   try {
-    const adminUser = await AdminUser.findById(req.session.adminId);
+    const mongoose = require('mongoose');
+    let adminUser = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        adminUser = await AdminUser.findById(req.session.adminId);
+      } catch (e) {
+        adminUser = null;
+      }
+    }
+
+    // Resilient fallback for owner email
+    if (!adminUser) {
+      const ownerEmail = (process.env.ADMIN_OWNER_EMAIL || '').trim().toLowerCase();
+      if (req.session.adminEmail && req.session.adminEmail.toLowerCase() === ownerEmail) {
+        adminUser = {
+          _id: req.session.adminId,
+          email: ownerEmail,
+          role: 'owner',
+          active: true,
+          googleSub: req.session.adminGoogleSub || 'owner_sub',
+          save: async () => {}
+        };
+      }
+    }
+
     if (!adminUser || !adminUser.active) {
       req.session.destroy(() => {
         res.redirect('/admin/login?reason=deactivated');

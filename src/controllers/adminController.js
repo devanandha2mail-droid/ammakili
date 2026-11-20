@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const slugify = require('slugify');
 const fs = require('fs');
 const path = require('path');
@@ -17,52 +18,58 @@ const { logAdminAction } = require('../services/auditLogger');
 // Admin Dashboard
 exports.getDashboard = async (req, res, next) => {
   try {
-    const settings = await Settings.getSettings();
-    const lowStockThreshold = settings.lowStockThreshold || 3;
+    let settings = res.locals.settings || { lowStockThreshold: 3 };
+    let todayOrdersCount = 0;
+    let weekOrders = [];
+    let monthOrders = [];
+    let ordersToPackCount = 0;
+    let lowStockProducts = [];
+    let recentOrders = [];
+    let activeProducts = [];
+    let activeAdmins = [];
 
-    // Time ranges
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const dbSettings = await Settings.getSettings();
+        if (dbSettings) settings = dbSettings;
+        const lowStockThreshold = settings.lowStockThreshold || 3;
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Queries
-    const [
-      todayOrdersCount,
-      weekOrders,
-      monthOrders,
-      ordersToPackCount,
-      lowStockProducts,
-      recentOrders,
-      activeProducts,
-      activeAdmins
-    ] = await Promise.all([
-      // Today orders
-      Order.countDocuments({ createdAt: { $gte: startOfToday } }),
-      // Revenue this week (paid orders)
-      Order.find({
-        status: { $in: ['paid', 'packed', 'shipped', 'delivered'] },
-        createdAt: { $gte: sevenDaysAgo }
-      }),
-      // Revenue this month (paid orders)
-      Order.find({
-        status: { $in: ['paid', 'packed', 'shipped', 'delivered'] },
-        createdAt: { $gte: startOfMonth }
-      }),
-      // Orders waiting to be packed
-      Order.countDocuments({ status: 'paid' }),
-      // Products with any size <= threshold
-      Product.find({
-        active: true,
-        'sizes.stock': { $lte: lowStockThreshold }
-      }),
-      // Recent 8 orders
-      Order.find().sort({ createdAt: -1 }).limit(8),
-      // Active products for Launch Checklist
-      Product.find({ active: true }).select('photos'),
-      // Active admins for 2SV checklist
-      AdminUser.find({ active: true })
-    ]);
+        [
+          todayOrdersCount,
+          weekOrders,
+          monthOrders,
+          ordersToPackCount,
+          lowStockProducts,
+          recentOrders,
+          activeProducts,
+          activeAdmins
+        ] = await Promise.all([
+          Order.countDocuments({ createdAt: { $gte: startOfToday } }),
+          Order.find({
+            status: { $in: ['paid', 'packed', 'shipped', 'delivered'] },
+            createdAt: { $gte: sevenDaysAgo }
+          }),
+          Order.find({
+            status: { $in: ['paid', 'packed', 'shipped', 'delivered'] },
+            createdAt: { $gte: startOfMonth }
+          }),
+          Order.countDocuments({ status: 'paid' }),
+          Product.find({
+            active: true,
+            'sizes.stock': { $lte: lowStockThreshold }
+          }),
+          Order.find().sort({ createdAt: -1 }).limit(8),
+          Product.find({ active: true }).select('photos'),
+          AdminUser.find({ active: true })
+        ]);
+      } catch (e) {
+        console.warn('[Admin Dashboard] DB Query warning:', e.message);
+      }
+    }
 
     const revenueWeek = weekOrders.reduce((sum, o) => sum + (o.total || 0), 0);
     const revenueMonth = monthOrders.reduce((sum, o) => sum + (o.total || 0), 0);
