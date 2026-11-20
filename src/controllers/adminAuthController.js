@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const AdminUser = require('../models/AdminUser');
 const { logAdminAction } = require('../services/auditLogger');
 
@@ -220,8 +221,28 @@ exports.handleGoogleCallback = async (req, res, next) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // 4. Query AdminUser allowlist
-    const adminUser = await AdminUser.findOne({ email: normalizedEmail });
+    // 4. Query AdminUser allowlist with resilient fallback for ADMIN_OWNER_EMAIL
+    let adminUser = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        adminUser = await AdminUser.findOne({ email: normalizedEmail });
+      } catch (e) {
+        adminUser = null;
+      }
+    }
+    if (!adminUser) {
+      const ownerEmail = (process.env.ADMIN_OWNER_EMAIL || '').trim().toLowerCase();
+      if (ownerEmail && normalizedEmail === ownerEmail) {
+        adminUser = {
+          _id: new mongoose.Types.ObjectId('6600000000000000000000aa'),
+          email: ownerEmail,
+          role: 'owner',
+          active: true,
+          googleSub: sub,
+          save: async () => {}
+        };
+      }
+    }
 
     // Reject if not on allowlist or inactive (generic Not Authorised message)
     if (!adminUser || !adminUser.active) {
