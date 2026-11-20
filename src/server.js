@@ -1,6 +1,10 @@
 const path = require('path');
+const fs = require('fs');
 const envFile = process.env.ENV_FILE || (process.env.NODE_ENV === 'test' ? '.env.test' : '.env');
-require('dotenv').config({ path: path.resolve(process.cwd(), envFile) });
+const envPath = fs.existsSync(path.resolve(process.cwd(), envFile))
+  ? path.resolve(process.cwd(), envFile)
+  : path.resolve(__dirname, '..', envFile);
+require('dotenv').config({ path: envPath });
 const { validateEnvironment } = require('./utils/envGuard');
 validateEnvironment();
 const http = require('http');
