@@ -20,13 +20,14 @@
   <meta name="description" content="<%= typeof metaDesc !== 'undefined' ? metaDesc : t('site.description') %>">
   
   <!-- Canonical & Open Graph -->
-  <link rel="canonical" href="<%= typeof canonicalUrl !== 'undefined' ? canonicalUrl : 'http://localhost:3000' + path %>">
+  <link rel="canonical" href="<%= typeof canonicalUrl !== 'undefined' ? canonicalUrl : ((typeof siteUrl !== 'undefined' ? siteUrl : '') + path) %>">
   <meta property="og:site_name" content="Nest by Ammakkili">
   <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Nest by Ammakkili' %>">
   <meta property="og:description" content="<%= typeof metaDesc !== 'undefined' ? metaDesc : t('site.description') %>">
   <meta property="og:type" content="<%= typeof ogType !== 'undefined' ? ogType : 'website' %>">
   <% 
-    const defaultOg = 'http://localhost:3000/img/brand/og-image-1200x630.png';
+    const baseDomain = typeof siteUrl !== 'undefined' ? siteUrl : '';
+    const defaultOg = baseDomain + '/img/brand/og-image-1200x630.png';
     const resolvedOg = typeof ogImage !== 'undefined' ? ogImage : defaultOg;
   %>
   <meta property="og:image" content="<%= resolvedOg %>">

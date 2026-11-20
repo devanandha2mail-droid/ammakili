@@ -18,6 +18,10 @@ try {
 
 const connectDB = require('../src/config/db');
 
+let isConnecting = false;
+let lastDbAttempt = 0;
+const DB_RETRY_INTERVAL = 60000; // 60 seconds
+
 module.exports = async (req, res) => {
   // If app failed to initialize
   if (appInitError || !app) {
@@ -49,14 +53,21 @@ module.exports = async (req, res) => {
     `);
   }
 
-  // Attempt database connection if not yet connected and cloud URI is configured
-  if (mongoose.connection.readyState === 0) {
+  // Attempt database connection with throttling to prevent 30-second blocking on unreachable DB
+  if (mongoose.connection.readyState === 0 && !isConnecting) {
     const isLocalDb = !process.env.MONGODB_URI || process.env.MONGODB_URI.includes('127.0.0.1') || process.env.MONGODB_URI.includes('localhost');
     if (!isLocalDb) {
-      try {
-        await connectDB();
-      } catch (dbErr) {
-        console.warn('[Vercel Serverless] Cloud database connection attempt failed:', dbErr.message);
+      const now = Date.now();
+      if (now - lastDbAttempt > DB_RETRY_INTERVAL) {
+        lastDbAttempt = now;
+        isConnecting = true;
+        try {
+          await connectDB();
+        } catch (dbErr) {
+          console.warn('[Vercel Serverless] Cloud database connection attempt failed:', dbErr.message);
+        } finally {
+          isConnecting = false;
+        }
       }
     } else {
       console.log('[Vercel Serverless] Running in preview mode with sample products.');

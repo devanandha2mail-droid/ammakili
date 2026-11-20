@@ -21,7 +21,10 @@ const connectDB = async () => {
       }
     }
 
-    await mongoose.connect(uri);
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 3000,
+      connectTimeoutMS: 3000
+    });
     console.log(`[MongoDB] Connected to ${mongoose.connection.host}/${mongoose.connection.name}`);
 
     // Ensure TTL index on sessions collection

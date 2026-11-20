@@ -176,6 +176,10 @@ const customerSessionMiddleware = session({
   saveUninitialized: false,
   store: useMemoryStore ? new session.MemoryStore() : MongoStore.create({
     mongoUrl: MONGODB_URI,
+    mongoOptions: {
+      serverSelectionTimeoutMS: 3000,
+      connectTimeoutMS: 3000
+    },
     collectionName: 'sessions',
     ttl: 14 * 24 * 60 * 60 // 14 days
   }),
@@ -194,6 +198,10 @@ const adminSessionMiddleware = session({
   saveUninitialized: false,
   store: useMemoryStore ? new session.MemoryStore() : MongoStore.create({
     mongoUrl: MONGODB_URI,
+    mongoOptions: {
+      serverSelectionTimeoutMS: 3000,
+      connectTimeoutMS: 3000
+    },
     collectionName: 'admin_sessions',
     ttl: 8 * 60 * 60 // 8 hours absolute
   }),
@@ -268,7 +276,11 @@ app.use(i18nMiddleware);
 // 9. Load Global Settings & Active Banner into res.locals
 app.use(async (req, res, next) => {
   res.locals.path = req.path;
-  res.locals.currentUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+  const computedHost = req.get('host');
+  const baseProto = (req.headers['x-forwarded-proto'] || req.protocol || 'https');
+  const hostUrl = `${baseProto}://${computedHost}`;
+  res.locals.siteUrl = (process.env.SITE_URL && !process.env.SITE_URL.includes('localhost')) ? process.env.SITE_URL : hostUrl;
+  res.locals.currentUrl = `${hostUrl}${req.originalUrl}`;
 
   if (mongoose.connection.readyState !== 1) {
     res.locals.settings = {

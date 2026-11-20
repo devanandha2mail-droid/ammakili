@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const Settings = require('../models/Settings');
@@ -138,7 +139,13 @@ exports.getCheckout = async (req, res) => {
     return res.redirect('/login?returnTo=/checkout');
   }
 
-  const settings = await Settings.getSettings();
+  let settings = res.locals.settings || { shippingCharge: 60 };
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const dbSettings = await Settings.getSettings();
+      if (dbSettings) settings = dbSettings;
+    } catch (e) {}
+  }
   let savedAddresses = [];
   if (req.user) {
     savedAddresses = req.user.addresses || [];
@@ -392,7 +399,13 @@ exports.createOrder = async (req, res) => {
     }
 
     // 6. Add shipping charge from Settings
-    const settings = await Settings.getSettings();
+    let settings = res.locals.settings || { shippingCharge: 60 };
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const dbSettings = await Settings.getSettings();
+      if (dbSettings) settings = dbSettings;
+    } catch (e) {}
+  }
     const shipping = settings.shippingCharge || 60;
     const total = subtotal + shipping;
 
@@ -764,7 +777,13 @@ exports.getConfirmation = async (req, res, next) => {
       });
     }
 
-    const settings = await Settings.getSettings();
+    let settings = res.locals.settings || { shippingCharge: 60 };
+  if (mongoose.connection.readyState === 1) {
+    try {
+      const dbSettings = await Settings.getSettings();
+      if (dbSettings) settings = dbSettings;
+    } catch (e) {}
+  }
     const whatsappNumber = settings.whatsappNumber || '919876543210';
 
     // Build prefilled WhatsApp message
