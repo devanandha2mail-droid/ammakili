@@ -30,13 +30,18 @@ function sanitizeReturnTo(url) {
 
 // Helper to construct callback URL
 function getCallbackUrl(req) {
-  if (process.env.GOOGLE_ADMIN_CALLBACK_URL) {
-    return process.env.GOOGLE_ADMIN_CALLBACK_URL;
+  let cb = process.env.GOOGLE_ADMIN_CALLBACK_URL;
+  if (cb) {
+    cb = cb.trim();
+    // Normalize accidental /admin/login/auth/... to /admin/auth/...
+    cb = cb.replace('/admin/login/auth/google/callback', '/admin/auth/google/callback');
+    return cb;
   }
-  if (process.env.NODE_ENV !== 'test' && process.env.GOOGLE_CALLBACK_URL) {
-    return process.env.GOOGLE_CALLBACK_URL;
-  }
-  const siteUrl = process.env.SITE_URL || `${req.protocol}://${req.get('host')}`;
+  const host = req.get('host') || 'ammakili.vercel.app';
+  const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'https');
+  const siteUrl = (process.env.SITE_URL && !process.env.SITE_URL.includes('localhost'))
+    ? process.env.SITE_URL.replace(/\/admin(\/login)?\/?$/, '').replace(/\/$/, '')
+    : `${proto}://${host}`;
   return `${siteUrl}/admin/auth/google/callback`;
 }
 

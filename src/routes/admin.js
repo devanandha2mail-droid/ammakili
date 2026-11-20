@@ -29,7 +29,7 @@ const adminAuthLimiter = rateLimit({
 // 1. Administrative Authentication Routes (Google OAuth Only)
 router.get('/login', redirectIfAuthenticated, adminAuthController.getLogin);
 router.get('/auth/google', adminAuthLimiter, adminAuthController.startGoogleAuth);
-router.get('/auth/google/callback', adminAuthLimiter, adminAuthController.handleGoogleCallback);
+router.get(['/auth/google/callback', '/login/auth/google/callback'], adminAuthLimiter, adminAuthController.handleGoogleCallback);
 router.get('/logout', adminAuthController.logout);
 router.post('/sign-out-everywhere', requireAdmin, adminAuthController.signOutEverywhere);
 
