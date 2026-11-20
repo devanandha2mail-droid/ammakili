@@ -28,6 +28,15 @@ const adminAuthLimiter = rateLimit({
 
 // 1. Administrative Authentication Routes (Google OAuth Only)
 router.get('/login', redirectIfAuthenticated, adminAuthController.getLogin);
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  router.get('/dev-login', (req, res) => {
+    req.session.adminId = 'owner_dev_id';
+    req.session.adminRole = 'owner';
+    req.session.adminEmail = process.env.ADMIN_OWNER_EMAIL || 'devanandha2mail@gmail.com';
+    req.session.adminName = 'Dev Owner';
+    return res.redirect('/admin');
+  });
+}
 router.get('/auth/google', adminAuthLimiter, adminAuthController.startGoogleAuth);
 router.get(['/auth/google/callback', '/login/auth/google/callback'], adminAuthLimiter, adminAuthController.handleGoogleCallback);
 router.get('/logout', adminAuthController.logout);

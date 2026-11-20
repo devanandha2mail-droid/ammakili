@@ -54,6 +54,14 @@
       </a>
     </div>
 
+    <% if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') { %>
+      <div style="margin: -8px 0 16px;">
+        <a href="/admin/dev-login" style="font-size: 0.85rem; color: #94a3b8; text-decoration: underline;">
+          🛠️ Localhost Developer Bypass: Sign In as Owner
+        </a>
+      </div>
+    <% } %>
+
     <div style="padding:12px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); font-size:0.8rem; color:var(--a-muted); text-align:left; line-height:1.4;">
       <strong style="color:var(--a-fg); display:block; margin-bottom:2px;">Security Notice</strong>
       Access is strictly limited to pre-authorized accounts. Sessions automatically expire after 30 minutes of inactivity. Zero passwords are used or stored.
