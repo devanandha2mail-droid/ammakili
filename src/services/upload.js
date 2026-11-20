@@ -19,14 +19,19 @@ if (hasCloudinary) {
   });
 }
 
+const os = require('os');
+
 // Local disk storage fallback directory
-const uploadDir = path.join(__dirname, '../../public/uploads');
+const uploadDir = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'uploads')
+  : path.join(__dirname, '../../public/uploads');
+
 try {
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
 } catch (e) {
-  // Read-only filesystem in serverless environments (e.g. Vercel)
+  // Guard against filesystem errors
 }
 
 // Always use memory storage to inspect magic bytes & re-encode before writing
@@ -81,11 +86,18 @@ const processUploadedFiles = async (files) => {
     const randomId = crypto.randomUUID();
 
     if (!hasCloudinary) {
-      // Local storage: write re-encoded WebP with randomized UUID
-      const destFilename = `${randomId}.webp`;
-      const destPath = path.join(uploadDir, destFilename);
-      await fs.promises.writeFile(destPath, sanitizedBuffer);
-      processedUrls.push(`/uploads/${destFilename}`);
+      try {
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        const destFilename = `${randomId}.webp`;
+        const destPath = path.join(uploadDir, destFilename);
+        await fs.promises.writeFile(destPath, sanitizedBuffer);
+        processedUrls.push(`/uploads/${destFilename}`);
+      } catch (err) {
+        console.warn('[Upload] Disk write failed, using Data URL fallback:', err.message);
+        processedUrls.push(`data:image/webp;base64,${sanitizedBuffer.toString('base64')}`);
+      }
     } else {
       // Upload sanitized buffer to Cloudinary
       const uploadResult = await new Promise((resolve, reject) => {

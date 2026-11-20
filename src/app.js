@@ -61,6 +61,11 @@ app.use(express.static(path.join(__dirname, '../public'), {
   lastModified: true
 }));
 
+const os = require('os');
+if (process.env.VERCEL) {
+  app.use('/uploads', express.static(path.join(os.tmpdir(), 'uploads')));
+}
+
 // 4. Per-request CSP Nonce Generation for strict script execution
 app.use((req, res, next) => {
   res.locals.cspNonce = crypto.randomBytes(16).toString('base64');

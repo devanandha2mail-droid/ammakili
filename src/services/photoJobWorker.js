@@ -7,13 +7,17 @@ const photoStylist = require('./photoStylist');
 let pollInterval = null;
 let isProcessing = false;
 
-const STYLIST_UPLOADS_DIR = path.join(__dirname, '../../public/uploads/stylist');
+const os = require('os');
+const STYLIST_UPLOADS_DIR = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'uploads', 'stylist')
+  : path.join(__dirname, '../../public/uploads/stylist');
+
 try {
   if (!fs.existsSync(STYLIST_UPLOADS_DIR)) {
     fs.mkdirSync(STYLIST_UPLOADS_DIR, { recursive: true });
   }
 } catch (e) {
-  // Read-only filesystem in serverless environments (e.g. Vercel)
+  // Guard against filesystem errors
 }
 
 /**

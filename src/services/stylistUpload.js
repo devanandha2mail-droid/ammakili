@@ -1,20 +1,40 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const multer = require('multer');
 const sharp = require('sharp');
+const mongoose = require('mongoose');
 const PhotoJob = require('../models/PhotoJob');
 const photoStylist = require('./photoStylist');
+const cloudinary = require('cloudinary').v2;
 
-const STYLIST_UPLOADS_DIR = path.join(__dirname, '../../public/uploads/stylist');
+const hasCloudinary = Boolean(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (hasCloudinary) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+  });
+}
+
+const STYLIST_UPLOADS_DIR = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'uploads', 'stylist')
+  : path.join(__dirname, '../../public/uploads/stylist');
+
 try {
   if (!fs.existsSync(STYLIST_UPLOADS_DIR)) {
     fs.mkdirSync(STYLIST_UPLOADS_DIR, { recursive: true });
   }
 } catch (e) {
-  // Read-only filesystem in serverless environments (e.g. Vercel)
+  // Guard against filesystem errors
 }
 
-// Memory storage so we inspect content bytes before writing to disk
+// Memory storage so we inspect content bytes before writing to disk or cloud
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -25,7 +45,6 @@ const upload = multer({
 
 /**
  * Validates file magic bytes (JPEG, PNG, WebP, HEIC).
- * Reject everything else with a clear message.
  */
 function validateMagicBytes(buffer) {
   if (!buffer || buffer.length < 12) return null;
@@ -61,8 +80,9 @@ function validateMagicBytes(buffer) {
  * Processes an uploaded buffer:
  * 1. Checks magic bytes
  * 2. Applies EXIF rotation & strips GPS/metadata
- * 3. Resizes to max 2000px long side, WebP quality 85
- * 4. Saves original to disk and creates a queued PhotoJob
+ * 3. Resizes to max 2000px long side, WebP quality 85 in-memory
+ * 4. Uploads to Cloudinary (if configured) or writes to writable disk (or Data URL fallback)
+ * 5. Creates or mocks a PhotoJob
  */
 async function processStylistUpload(file, { productId = null, draftId = null, mode = 'auto', hanger = 'auto', background = 'pink', isStylistAvailable = null } = {}) {
   const format = validateMagicBytes(file.buffer);
@@ -77,8 +97,6 @@ async function processStylistUpload(file, { productId = null, draftId = null, mo
 
   const uniqueId = Date.now() + '-' + Math.round(Math.random() * 1e9);
   const origFileName = `orig-${uniqueId}.webp`;
-  const origFilePath = path.join(STYLIST_UPLOADS_DIR, origFileName);
-  const originalUrl = `/uploads/stylist/${origFileName}`;
 
   const origMeta = await sharp(file.buffer).metadata();
   const origW = origMeta.width || 0;
@@ -93,7 +111,7 @@ async function processStylistUpload(file, { productId = null, draftId = null, mo
   }
 
   // Rotate based on EXIF, strip metadata, resize to at most 2000px long side (without enlargement)
-  const info = await sharp(file.buffer)
+  const sharpTransform = sharp(file.buffer)
     .rotate()
     .resize({
       width: 2000,
@@ -101,33 +119,108 @@ async function processStylistUpload(file, { productId = null, draftId = null, mo
       fit: 'inside',
       withoutEnlargement: true
     })
-    .webp({ quality: 85 })
-    .toFile(origFilePath);
+    .webp({ quality: 85 });
 
-  const job = await PhotoJob.create({
-    productId: productId || null,
-    draftId: draftId || null,
-    sourceKey: origFilePath,
-    originalUrl: originalUrl,
-    options: {
-      mode: ['auto', 'hanging', 'flat', 'worn'].includes(mode) ? mode : 'auto',
-      hanger: ['auto', 'yes', 'no'].includes(hanger) ? hanger : 'auto',
-      background: ['pink', 'cream', 'white'].includes(background) ? background : 'pink'
-    },
-    meta: {
-      ...(lowResWarning ? { lowResWarning } : {}),
-      ...(isOnline ? {} : { offline: true })
-    },
-    status: isOnline ? 'queued' : 'done',
-    styled_ok: false,
-    finishedAt: isOnline ? null : new Date()
-  });
+  const [processedBuffer, info] = await Promise.all([
+    sharpTransform.toBuffer(),
+    sharpTransform.metadata()
+  ]);
+
+  let originalUrl = null;
+  let origFilePath = null;
+
+  // 1. Try Cloudinary if available
+  if (hasCloudinary) {
+    try {
+      originalUrl = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'nest-ammakkili/stylist',
+            public_id: `orig-${uniqueId}`,
+            transformation: [{ quality: 'auto', fetch_format: 'auto' }]
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result.secure_url);
+          }
+        );
+        uploadStream.end(processedBuffer);
+      });
+      origFilePath = originalUrl;
+    } catch (cldErr) {
+      console.warn('[Stylist Upload] Cloudinary upload warning:', cldErr.message);
+    }
+  }
+
+  // 2. Try disk storage (in writable tmp on Vercel, or public/uploads on localhost)
+  if (!originalUrl) {
+    try {
+      if (!fs.existsSync(STYLIST_UPLOADS_DIR)) {
+        fs.mkdirSync(STYLIST_UPLOADS_DIR, { recursive: true });
+      }
+      origFilePath = path.join(STYLIST_UPLOADS_DIR, origFileName);
+      await fs.promises.writeFile(origFilePath, processedBuffer);
+      originalUrl = `/uploads/stylist/${origFileName}`;
+    } catch (fsErr) {
+      console.warn('[Stylist Upload] Writable disk unavailable, using resilient Data URL fallback:', fsErr.message);
+      originalUrl = `data:image/webp;base64,${processedBuffer.toString('base64')}`;
+      origFilePath = originalUrl;
+    }
+  }
+
+  let job = null;
+  if (mongoose.connection.readyState === 1) {
+    try {
+      job = await PhotoJob.create({
+        productId: productId || null,
+        draftId: draftId || null,
+        sourceKey: origFilePath,
+        originalUrl: originalUrl,
+        options: {
+          mode: ['auto', 'hanging', 'flat', 'worn'].includes(mode) ? mode : 'auto',
+          hanger: ['auto', 'yes', 'no'].includes(hanger) ? hanger : 'auto',
+          background: ['pink', 'cream', 'white'].includes(background) ? background : 'pink'
+        },
+        meta: {
+          ...(lowResWarning ? { lowResWarning } : {}),
+          ...(isOnline ? {} : { offline: true })
+        },
+        status: isOnline ? 'queued' : 'done',
+        styled_ok: false,
+        finishedAt: isOnline ? null : new Date()
+      });
+    } catch (dbErr) {
+      console.warn('[Stylist Upload] PhotoJob DB save failed:', dbErr.message);
+    }
+  }
+
+  if (!job) {
+    job = {
+      _id: new mongoose.Types.ObjectId(),
+      productId: productId || null,
+      draftId: draftId || null,
+      sourceKey: origFilePath,
+      originalUrl: originalUrl,
+      options: {
+        mode: ['auto', 'hanging', 'flat', 'worn'].includes(mode) ? mode : 'auto',
+        hanger: ['auto', 'yes', 'no'].includes(hanger) ? hanger : 'auto',
+        background: ['pink', 'cream', 'white'].includes(background) ? background : 'pink'
+      },
+      meta: {
+        ...(lowResWarning ? { lowResWarning } : {}),
+        offline: true
+      },
+      status: 'done',
+      styled_ok: false,
+      finishedAt: new Date()
+    };
+  }
 
   return {
     job,
     originalUrl,
-    width: info.width,
-    height: info.height,
+    width: info?.width || origW || 1200,
+    height: info?.height || origH || 1600,
     lowResWarning,
     offline: !isOnline
   };
@@ -139,4 +232,3 @@ module.exports = {
   processStylistUpload,
   STYLIST_UPLOADS_DIR
 };
-
