@@ -161,8 +161,16 @@ exports.getDashboard = async (req, res, next) => {
       }
     ];
 
-    const stylistStats = await photoJobWorker.getStylistStats();
-    const failedStylistJobs = await PhotoJob.find({ status: 'failed' }).sort({ finishedAt: -1 }).limit(10);
+    let stylistStats = { queueLength: 0, activeJobs: 0, completedToday: 0, failedToday: 0, totalProcessed: 0 };
+    let failedStylistJobs = [];
+    if (mongoose.connection.readyState === 1) {
+      try {
+        stylistStats = await photoJobWorker.getStylistStats();
+        failedStylistJobs = await PhotoJob.find({ status: 'failed' }).sort({ finishedAt: -1 }).limit(10);
+      } catch (e) {
+        console.warn('[Admin Dashboard] Stylist stats warning:', e.message);
+      }
+    }
 
     res.render('admin/dashboard', {
       layout: 'layouts/admin',
