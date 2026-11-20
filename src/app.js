@@ -445,26 +445,37 @@ if (process.env.NODE_ENV === 'test') {
 }
 
 // Import and mount routers
-const storefrontRouter = require('./routes/storefront');
-const authRouter = require('./routes/auth');
-const accountRouter = require('./routes/account');
-const cartRouter = require('./routes/cart');
-const checkoutRouter = require('./routes/checkout');
 const adminRouter = require('./routes/admin');
 const webhookRouter = require('./routes/webhook');
+const cartRouter = require('./routes/cart');
+const checkoutRouter = require('./routes/checkout');
+const accountRouter = require('./routes/account');
 const seoRouter = require('./routes/seo');
+const authRouter = require('./routes/auth');
+const storefrontRouter = require('./routes/storefront');
 
-app.use('/', seoRouter); // sitemap.xml, robots.txt
-app.use('/', authRouter); // /login, /logout, /auth/google
-app.use('/account', accountRouter); // /account
-app.use('/', storefrontRouter);
+// Admin and Webhook routes take precedence over root ('/') matchers
+app.use('/admin', adminRouter);
+app.use('/webhooks', webhookRouter);
 app.use('/cart', cartRouter);
 app.use('/checkout', checkoutRouter);
-app.use('/webhooks', webhookRouter);
-app.use('/admin', adminRouter);
+app.use('/account', accountRouter);
+app.use('/', seoRouter); // sitemap.xml, robots.txt
+app.use('/', authRouter); // /login, /logout, /auth/google
+app.use('/', storefrontRouter);
 
 // 404 Handler
 app.use((req, res, next) => {
+  if (req.path.startsWith('/admin')) {
+    if (req.session && req.session.adminId) {
+      return res.status(404).render('admin/404', {
+        layout: 'layouts/admin',
+        title: 'Page Not Found',
+        message: 'The requested admin page, order, or resource could not be found.'
+      });
+    }
+    return res.redirect('/admin/login');
+  }
   res.status(404).render('pages/404', {
     title: 'Page Not Found',
     metaDesc: 'The requested page could not be found.'
@@ -486,6 +497,17 @@ app.use((err, req, res, next) => {
     return res.status(403).send('Forbidden: Invalid or missing CSRF token');
   }
   console.error(`[Request ${req.id}] [Unhandled Error]:`, err);
+  if (req.path.startsWith('/admin')) {
+    if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+      return res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
+    }
+    return res.status(err.status || 500).render('admin/error', {
+      layout: 'layouts/admin',
+      title: 'Admin Error',
+      error: process.env.NODE_ENV === 'development' ? err : null,
+      message: err.message || 'An unexpected error occurred in the admin portal.'
+    });
+  }
   if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json')) || req.path.startsWith('/checkout') || req.path.startsWith('/cart')) {
     return res.status(err.status || 500).json({
       error: {

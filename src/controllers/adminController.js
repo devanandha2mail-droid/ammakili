@@ -544,24 +544,57 @@ exports.getOrders = async (req, res, next) => {
 // Order Detail GET
 exports.getOrderDetail = async (req, res, next) => {
   try {
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.redirect('/admin/orders');
-
-    const settings = await Settings.getSettings();
-
-    // Prefill WhatsApp message based on current order status
-    let statusText = `Your order ${order.orderId} status has been updated to ${order.status.toUpperCase()}.`;
-    if (order.status === 'packed') {
-      statusText = `Hello ${order.customer.name},\nYour Nest by Ammakkili nighty order (${order.orderId}) has been packed with care and is ready for courier pickup!`;
-    } else if (order.status === 'shipped') {
-      statusText = `Hello ${order.customer.name},\nGreat news! Your order (${order.orderId}) has been shipped via ${order.tracking?.courier || 'courier'}. Tracking ID: ${order.tracking?.trackingId || 'In transit'}. You can track your parcel on our website.`;
+    let order = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        order = await Order.findById(req.params.id);
+        if (!order) {
+          order = await Order.findOne({ orderId: req.params.id });
+        }
+      } catch (e) {
+        order = await Order.findOne({ orderId: req.params.id }).catch(() => null);
+      }
     }
 
-    const waLink = `https://wa.me/${order.customer.phone}?text=${encodeURIComponent(statusText)}`;
+    if (!order) {
+      return res.redirect('/admin/orders');
+    }
+
+    // Ensure nested structures are always safe objects
+    if (!order.customer) order.customer = {};
+    if (!order.payment) order.payment = { status: 'pending', method: 'Razorpay' };
+    if (!order.tracking) order.tracking = { courier: '', trackingId: '' };
+
+    // Resilient settings retrieval
+    let settings = res.locals.settings;
+    if (!settings && mongoose.connection.readyState === 1) {
+      try {
+        settings = await Settings.getSettings();
+      } catch (e) {
+        settings = { shippingCharge: 60 };
+      }
+    }
+    if (!settings) settings = { shippingCharge: 60 };
+
+    // Prefill WhatsApp message based on current order status
+    const custName = order.customer.name || 'Customer';
+    const orderDisplayId = order.orderId || String(order._id);
+    const orderStatusUpper = (order.status || 'pending').toUpperCase();
+
+    let statusText = `Your order ${orderDisplayId} status has been updated to ${orderStatusUpper}.`;
+    if (order.status === 'packed') {
+      statusText = `Hello ${custName},\nYour Nest by Ammakkili nighty order (${orderDisplayId}) has been packed with care and is ready for courier pickup!`;
+    } else if (order.status === 'shipped') {
+      statusText = `Hello ${custName},\nGreat news! Your order (${orderDisplayId}) has been shipped via ${order.tracking?.courier || 'courier'}. Tracking ID: ${order.tracking?.trackingId || 'In transit'}. You can track your parcel on our website.`;
+    }
+
+    const rawPhone = (order.customer.phone || '').replace(/\D/g, '');
+    const cleanPhone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
+    const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(statusText)}` : '#';
 
     res.render('admin/order-detail', {
       layout: 'layouts/admin',
-      title: `Order ${order.orderId}`,
+      title: `Order ${orderDisplayId}`,
       order,
       waLink,
       settings
@@ -575,7 +608,17 @@ exports.getOrderDetail = async (req, res, next) => {
 exports.postUpdateOrderStatus = async (req, res, next) => {
   try {
     const { status, courier, trackingId, adminNotes } = req.body;
-    const order = await Order.findById(req.params.id);
+    let order = null;
+    if (mongoose.connection.readyState === 1) {
+      try {
+        order = await Order.findById(req.params.id);
+        if (!order) {
+          order = await Order.findOne({ orderId: req.params.id });
+        }
+      } catch (e) {
+        order = await Order.findOne({ orderId: req.params.id }).catch(() => null);
+      }
+    }
     if (!order) return res.redirect('/admin/orders');
 
     if (status) {
@@ -584,6 +627,9 @@ exports.postUpdateOrderStatus = async (req, res, next) => {
         const { returnStockForOrder } = require('./checkoutController');
         await returnStockForOrder(order);
       }
+    }
+    if (!order.tracking) {
+      order.tracking = { courier: '', trackingId: '' };
     }
     if (courier !== undefined) order.tracking.courier = courier.trim();
     if (trackingId !== undefined) order.tracking.trackingId = trackingId.trim();
@@ -594,8 +640,8 @@ exports.postUpdateOrderStatus = async (req, res, next) => {
     await logAdminAction({
       req,
       action: 'ORDER_STATUS_UPDATED',
-      target: order.readableId || String(order._id),
-      details: { status: order.status, courier, trackingId }
+      target: order.orderId || String(order._id),
+      details: { status: order.status, courier: order.tracking?.courier, trackingId: order.tracking?.trackingId }
     });
 
     res.redirect(`/admin/orders/${order._id}`);

@@ -1,0 +1,11 @@
+<div class="a-card" style="max-width:600px; margin:40px auto; text-align:center; padding:40px 24px;">
+  <div style="font-size:3.5rem; color:var(--a-accent); font-family:var(--a-serif); font-weight:700; line-height:1;">404</div>
+  <h1 style="font-size:1.6rem; margin:16px 0 8px; font-family:var(--a-serif); color:var(--a-ink);">Resource Not Found</h1>
+  <p style="color:var(--a-muted); margin-bottom:24px; line-height:1.6;">
+    <%= typeof message !== 'undefined' && message ? message : 'The requested admin page, order, or record does not exist or has been removed.' %>
+  </p>
+  <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+    <a href="/admin/orders" class="a-btn a-btn--sm">View Orders</a>
+    <a href="/admin" class="a-btn a-btn--ghost a-btn--sm">Admin Dashboard</a>
+  </div>
+</div>

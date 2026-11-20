@@ -1,0 +1,14 @@
+<div class="a-card" style="max-width:650px; margin:40px auto; text-align:center; padding:40px 24px;">
+  <div style="font-size:3rem; color:var(--a-bad); font-family:var(--a-serif); font-weight:700; line-height:1;">⚠️</div>
+  <h1 style="font-size:1.6rem; margin:16px 0 8px; font-family:var(--a-serif); color:var(--a-ink);">Administrative Error</h1>
+  <p style="color:var(--a-muted); margin-bottom:24px; line-height:1.6;">
+    <%= typeof message !== 'undefined' && message ? message : 'An unexpected error occurred while processing this administrative request.' %>
+  </p>
+  <% if (typeof error !== 'undefined' && error && error.stack) { %>
+    <pre style="text-align:left; background:rgba(0,0,0,0.3); border:1px solid var(--a-line); padding:14px; border-radius:8px; overflow-x:auto; font-size:0.8rem; color:#fca5a5; margin-bottom:24px;"><%= error.stack %></pre>
+  <% } %>
+  <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap;">
+    <a href="/admin/orders" class="a-btn a-btn--sm">Back to Orders</a>
+    <a href="/admin" class="a-btn a-btn--ghost a-btn--sm">Admin Dashboard</a>
+  </div>
+</div>
